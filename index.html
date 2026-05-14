@@ -94,7 +94,7 @@
     
     async function loadDataFromAPI() {
         try {
-            const response = await fetch(API_URL);
+            const response = await fetch(API_URL, { mode: 'cors' });
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const data = await response.json();
             if (data.error) throw new Error(data.error);
@@ -277,7 +277,7 @@
         const allColumns = [...baseColumns, ...extraColumns];
         const thead = document.getElementById("tableHeader");
         if (thead) {
-            let headerHtml = `<tr><th>ДЕЙСТВИЯ</th>`;
+            let headerHtml = `<td><th>ДЕЙСТВИЯ</th>`;
             for (let col of allColumns) {
                 let displayName = col;
                 if (col === "requestNumber") displayName = "N ЗАЯВКИ";
@@ -289,7 +289,7 @@
             thead.innerHTML = headerHtml;
         }
         if (currentDoors.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="${allColumns.length+1}">НЕТ ДОБАВЛЕННЫХ ДВЕРЕЙ</tr</tbody>`;
+            tbody.innerHTML = `<tr><td colspan="${allColumns.length+1}">НЕТ ДОБАВЛЕННЫХ ДВЕРЕЙ</td></tr>`;
             return;
         }
         let bodyHtml = "";
