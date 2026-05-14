@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Конфигуратор дверей | Технический расчёт</title>
+    <link href="https://fonts.googleapis.com/css2?family=Play:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #1a1e24; font-family: 'Play', sans-serif; padding: 24px; color: #eef2ff; }
+        .open-btn { background: #0f172a; color: #e2e8f0; border: 1px solid #334155; padding: 14px 28px; font-size: 1.2rem; font-weight: 700; letter-spacing: 0.5px; cursor: pointer; width: 100%; text-transform: uppercase; }
+        .open-btn:hover { background: #1e293b; border-color: #5b6e8c; }
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0f1117; z-index: 10000; display: flex; flex-direction: column; }
+        .overlay.hidden { display: none; }
+        .overlay-header { background: #090c10; padding: 12px 24px; display: flex; justify-content: space-between; border-bottom: 1px solid #2d3748; }
+        .overlay-header h2 { font-size: 1.4rem; font-weight: 700; color: #cbd5e6; }
+        .close-btn { background: none; border: 1px solid #4b5563; color: #9ca3af; padding: 6px 16px; cursor: pointer; font-weight: 700; }
+        .close-btn:hover { background: #2d3748; color: white; }
+        .main-layout { flex: 1; display: flex; gap: 20px; padding: 24px; overflow: hidden; }
+        .config-panel { flex: 1; background: #1e2430; padding: 20px; overflow-y: auto; border: 1px solid #2d3748; }
+        .list-panel { flex: 2; background: #1e2430; display: flex; flex-direction: column; overflow: hidden; border: 1px solid #2d3748; }
+        .list-header { padding: 16px 20px; border-bottom: 1px solid #2d3748; display: flex; justify-content: space-between; background: #181e28; }
+        .list-header h3 { font-weight: 700; font-size: 1.1rem; }
+        .table-wrapper { overflow: auto; flex: 1; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 1200px; }
+        th { background: #11161f; padding: 12px 8px; position: sticky; top: 0; font-weight: 700; color: #b9c7db; border-bottom: 1px solid #2d3748; }
+        td { padding: 10px 6px; border-bottom: 1px solid #2a3342; text-align: center; color: #e2e8f0; }
+        .editable-cell { cursor: pointer; background-color: #232a36; }
+        .editable-cell:hover { background-color: #2f3a48; }
+        .door-actions button { background: none; border: none; font-size: 18px; cursor: pointer; margin: 0 4px; opacity: 0.7; }
+        .add-btn, .refresh-btn { background: #0f172a; color: #e2e8f0; border: 1px solid #334155; padding: 10px; width: 100%; font-weight: 700; margin-top: 20px; cursor: pointer; text-transform: uppercase; }
+        .refresh-btn { background: #1a2538; margin-top: 10px; }
+        .add-btn:hover, .refresh-btn:hover { background: #1e293b; border-color: #5b6e8c; }
+        .form-group { margin-bottom: 18px; }
+        .form-group label { font-weight: 700; display: block; margin-bottom: 6px; font-size: 0.85rem; color: #b9c7db; }
+        select, input { width: 100%; padding: 8px 10px; background: #0f1117; border: 1px solid #334155; color: #e2e8f0; font-size: 0.85rem; font-family: 'Play', monospace; }
+        .toast { position: fixed; bottom: 24px; right: 24px; background: #0f172a; border: 1px solid #334155; color: #cbd5e6; padding: 8px 18px; font-size: 13px; z-index: 10001; }
+        button.small-icon { background: #11161f; border: 1px solid #2d3748; padding: 5px 12px; cursor: pointer; color: #b9c7db; font-weight: 700; }
+        .hidden-field { display: none; }
+    </style>
+</head>
+<body>
+<button id="openOverlayBtn" class="open-btn">СОБРАТЬ КОНФИГУРАЦИЮ</button>
+<div id="configOverlay" class="overlay hidden">
+    <div class="overlay-header">
+        <h2>ТЕХНИЧЕСКИЙ КОНФИГУРАТОР ДВЕРЕЙ</h2>
+        <button id="closeOverlayBtn" class="close-btn">СВЕРНУТЬ</button>
+    </div>
+    <div class="main-layout">
+        <div class="config-panel">
+            <h3 style="margin-bottom:20px;">НОВАЯ ДВЕРЬ</h3>
+            <div id="configForm">ЗАГРУЗКА ПАРАМЕТРОВ...</div>
+            <button id="addDoorBtn" class="add-btn">ДОБАВИТЬ В СПИСОК</button>
+            <button id="refreshDataBtn" class="refresh-btn">ОБНОВИТЬ ДАННЫЕ ИЗ ТАБЛИЦЫ</button>
+        </div>
+        <div class="list-panel">
+            <div class="list-header">
+                <h3>СПИСОК ДВЕРЕЙ (ЗАЯВКА)</h3>
+                <button id="copyAllBtn" class="small-icon">КОПИРОВАТЬ JSON</button>
+            </div>
+            <div class="table-wrapper">
+                <table id="doorsTable">
+                    <thead>
+                        <tr><th>ДЕЙСТВИЯ</th><th>N ЗАЯВКИ</th><th>ТИП ДВЕРИ</th><th>ВЫСОТА, ММ</th><th>ШИРИНА, ММ</th>
+                        <th>КОРОБКА</th><th>МЕТАЛЛ</th><th>ОТКРЫВАНИЕ</th><th>ЦВЕТ</th><th>ПОРОГ</th>
+                        <th>ДОВОДЧИК</th><th>ОСТЕКЛЕНИЕ</th><th>ТОЛЩ.СТЕНЫ, ММ</th><th>ЦИЛИНДР</th><th>КОЛ-ВО</th>
+                    </tr>
+                    </thead>
+                    <tbody id="doorsTbody"><tr><td colspan="15">НЕТ ДОБАВЛЕННЫХ ДВЕРЕЙ</tr</tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbwZQwEIaexDnu02g9XlmY-hTTeVECs2XmiANy-2habELNBJ2DA/exec";
+    const CONFIG_FIELDS = ["Коробка", "Открывание", "Металл", "Порог", "Цилиндр", "Доводчик", "Цвет", "Остекление"];
+    
+    let doorTypes = [];
+    let currentDoors = [];
+    let currentTypeKey = "";
+    let nextRequestNumber = 1;
+    
+    async function loadDataFromAPI() {
+        try {
+            const response = await fetch(API_URL);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const data = await response.json();
+            if (data.error) throw new Error(data.error);
+            parseDoorTypes(data);
+            showToast("Данные из таблицы загружены");
+            if (doorTypes.length) {
+                currentTypeKey = doorTypes[0].key;
+                renderConfigForm();
+                renderRightTable();
+            } else {
+                document.getElementById("configForm").innerHTML = '<div style="color:#f87171;">НЕТ ДАННЫХ. ПРОВЕРЬТЕ ЛИСТ "LIBR".</div>';
+            }
+        } catch (err) {
+            console.error(err);
+            showToast("Ошибка загрузки: " + err.message);
+            document.getElementById("configForm").innerHTML = '<div style="color:#f87171;">ОШИБКА ЗАГРУЗКИ ДАННЫХ. ПРОВЕРЬТЕ ПОДКЛЮЧЕНИЕ.</div>';
+        }
+    }
+    
+    function parseDoorTypes(rows) {
+        doorTypes = [];
+        for (const row of rows) {
+            const key = row["Ключ"];
+            if (!key) continue;
+            const name = row["Имя"] || key;
+            let widthMin=600, widthMax=1200, heightMin=1900, heightMax=2500;
+            const wMatch = (row["Ширина"] || "").match(/(\d+)\s*-\s*(\d+)/);
+            if (wMatch) { widthMin = +wMatch[1]; widthMax = +wMatch[2]; }
+            const hMatch = (row["Высота"] || "").match(/(\d+)\s*-\s*(\d+)/);
+            if (hMatch) { heightMin = +hMatch[1]; heightMax = +hMatch[2]; }
+            let options = {};
+            for (let f of CONFIG_FIELDS) {
+                let raw = row[f] || "";
+                options[f] = raw.split(" -|- ").map(s => s.trim()).filter(s => s && s !== "-");
+            }
+            doorTypes.push({ key, name, widthMin, widthMax, heightMin, heightMax, options });
+        }
+    }
+    
+    function escapeHtml(str) { return String(str).replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+    function showToast(msg) {
+        let t = document.querySelector(".toast");
+        if(!t){ t=document.createElement("div"); t.className="toast"; document.body.appendChild(t); }
+        t.textContent = msg; t.style.display="block";
+        setTimeout(()=> t.style.display="none", 2000);
+    }
+    function clamp(v, min, max) { return Math.min(max, Math.max(min, v || min)); }
+    
+    function renderConfigForm() {
+        const type = doorTypes.find(t => t.key === currentTypeKey);
+        if (!type) return;
+        let html = `<div class="form-group"><label>ТИП ДВЕРИ (КЛЮЧ)</label><select id="doorTypeSelect">`;
+        doorTypes.forEach(t => {
+            html += `<option value="${t.key}" ${t.key===currentTypeKey ? 'selected' : ''}>${escapeHtml(t.key)} — ${escapeHtml(t.name)}</option>`;
+        });
+        html += `</select></div>`;
+        html += `<div class="form-group"><label>ВЫСОТА (${type.heightMin}–${type.heightMax})</label><input type="number" id="heightVal" value="${type.heightMin}" min="${type.heightMin}" max="${type.heightMax}"></div>`;
+        html += `<div class="form-group"><label>ШИРИНА (${type.widthMin}–${type.widthMax})</label><input type="number" id="widthVal" value="${type.widthMin}" min="${type.widthMin}" max="${type.widthMax}"></div>`;
+        for (let f of CONFIG_FIELDS) {
+            let opts = type.options[f];
+            if (opts && opts.length) {
+                html += `<div class="form-group"><label>${f.toUpperCase()}</label><select id="cfg_${f}">`;
+                opts.forEach(opt => html += `<option>${escapeHtml(opt)}</option>`);
+                html += `</select></div>`;
+            } else {
+                html += `<div class="form-group hidden-field"><label>${f.toUpperCase()}</label><select id="cfg_${f}" disabled><option>—</option></select></div>`;
+            }
+        }
+        html += `<div class="form-group"><label>ТОЛЩИНА СТЕНЫ, ММ</label><input type="number" id="wallThick" value="100" step="10"></div>`;
+        html += `<div class="form-group"><label>КОЛИЧЕСТВО</label><input type="number" id="quantity" value="1" min="1"></div>`;
+        document.getElementById("configForm").innerHTML = html;
+        document.getElementById("doorTypeSelect").addEventListener("change", (e) => {
+            currentTypeKey = e.target.value;
+            renderConfigForm();
+        });
+    }
+    
+    function getCurrentConfig() {
+        const type = doorTypes.find(t => t.key === currentTypeKey);
+        if (!type) return null;
+        let cfg = {
+            requestNumber: "", doorKey: currentTypeKey, doorName: type.name,
+            Высота: clamp(parseInt(document.getElementById("heightVal")?.value), type.heightMin, type.heightMax),
+            Ширина: clamp(parseInt(document.getElementById("widthVal")?.value), type.widthMin, type.widthMax),
+            "Толщина стены, мм": parseInt(document.getElementById("wallThick")?.value) || 100,
+            "Кол-во": parseInt(document.getElementById("quantity")?.value) || 1,
+        };
+        for (let f of CONFIG_FIELDS) {
+            let s = document.getElementById(`cfg_${f}`);
+            cfg[f] = s ? s.value : "—";
+        }
+        return cfg;
+    }
+    
+    function addCurrentDoor() {
+        const cfg = getCurrentConfig();
+        if (!cfg) return;
+        const reqNum = nextRequestNumber++;
+        currentDoors.push({ id: Date.now() + Math.random(), requestNumber: reqNum, ...cfg });
+        renderRightTable();
+        showToast(`Дверь N${reqNum} добавлена`);
+    }
+    
+    function renderRightTable() {
+        const tbody = document.getElementById("doorsTbody");
+        if (!tbody) return;
+        if (currentDoors.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="15">НЕТ ДОБАВЛЕННЫХ ДВЕРЕЙ</tr</tbody>';
+            return;
+        }
+        let html = "";
+        for (let i=0; i<currentDoors.length; i++) {
+            const d = currentDoors[i];
+            const typeInfo = doorTypes.find(t => t.key === d.doorKey);
+            html += `<tr data-idx="${i}">
+                <td class="door-actions"><button class="copy-row" data-idx="${i}">📋</button><button class="del-row" data-idx="${i}">❌</button></td>
+                <td class="editable-cell" data-field="requestNumber" data-idx="${i}">${d.requestNumber}</td>
+                <td class="editable-cell" data-field="doorKey" data-idx="${i}">${escapeHtml(d.doorKey)}</td>
+                <td class="editable-cell" data-field="Высота" data-idx="${i}">${d.Высота}</td>
+                <td class="editable-cell" data-field="Ширина" data-idx="${i}">${d.Ширина}</td>`;
+            for (let f of CONFIG_FIELDS) {
+                let hasOpt = typeInfo && typeInfo.options[f] && typeInfo.options[f].length;
+                let val = d[f] || "—";
+                if (!hasOpt) val = "—";
+                html += `<td class="editable-cell" data-field="${f}" data-idx="${i}" data-has-options="${!!hasOpt}">${escapeHtml(val)}</td>`;
+            }
+            html += `<td class="editable-cell" data-field="Толщина стены, мм" data-idx="${i}">${d["Толщина стены, мм"]}</td>
+                <td class="editable-cell" data-field="Кол-во" data-idx="${i}">${d["Кол-во"]}</td>
+               </tr>`;
+        }
+        tbody.innerHTML = html;
+        attachRowActions();
+        attachInlineEditors();
+    }
+    
+    function attachRowActions() {
+        document.querySelectorAll(".copy-row").forEach(btn => {
+            btn.onclick = () => {
+                let idx = parseInt(btn.dataset.idx);
+                let copy = JSON.parse(JSON.stringify(currentDoors[idx]));
+                copy.id = Date.now() + Math.random();
+                copy.requestNumber = nextRequestNumber++;
+                currentDoors.splice(idx+1, 0, copy);
+                renderRightTable();
+                showToast(`Скопировано как N${copy.requestNumber}`);
+            };
+        });
+        document.querySelectorAll(".del-row").forEach(btn => {
+            btn.onclick = () => {
+                let idx = parseInt(btn.dataset.idx);
+                currentDoors.splice(idx,1);
+                renderRightTable();
+                showToast("Удалено");
+            };
+        });
+    }
+    
+    function attachInlineEditors() {
+        document.querySelectorAll(".editable-cell").forEach(cell => {
+            cell.removeEventListener("click", cell._handler);
+            const handler = (e) => {
+                e.stopPropagation();
+                const field = cell.dataset.field;
+                const idx = parseInt(cell.dataset.idx);
+                const door = currentDoors[idx];
+                if (!door) return;
+                const val = door[field];
+                let options = null;
+                if (CONFIG_FIELDS.includes(field) && cell.dataset.hasOptions === "true") {
+                    const type = doorTypes.find(t => t.key === door.doorKey);
+                    if (type && type.options[field]) options = type.options[field];
+                } else if (field === "doorKey") {
+                    options = doorTypes.map(t => t.key);
+                }
+                inlineEditor(cell, idx, field, val, options);
+            };
+            cell.addEventListener("click", handler);
+            cell._handler = handler;
+        });
+    }
+    
+    function inlineEditor(cell, idx, field, currentVal, options) {
+        let input;
+        if (options && options.length) {
+            input = document.createElement("select");
+            options.forEach(opt => {
+                let optEl = document.createElement("option");
+                optEl.value = opt;
+                optEl.text = opt;
+                if (opt == currentVal) optEl.selected = true;
+                input.appendChild(optEl);
+            });
+            input.addEventListener("change", () => save(input.value));
+        } else if (["Высота","Ширина","Кол-во","Толщина стены, мм"].includes(field)) {
+            input = document.createElement("input");
+            input.type = "number";
+            input.value = currentVal;
+            if (field === "Высота") {
+                let t = doorTypes.find(t => t.key === currentDoors[idx].doorKey);
+                if (t) { input.min = t.heightMin; input.max = t.heightMax; }
+            } else if (field === "Ширина") {
+                let t = doorTypes.find(t => t.key === currentDoors[idx].doorKey);
+                if (t) { input.min = t.widthMin; input.max = t.widthMax; }
+            } else if (field === "Кол-во") { input.min = 1; input.max = 999; }
+            input.addEventListener("keydown", (e) => { if (e.key === "Enter") save(input.value); });
+            input.addEventListener("blur", () => save(input.value));
+        } else if (field === "requestNumber") {
+            input = document.createElement("input");
+            input.type = "number";
+            input.value = currentVal;
+            input.min = 1;
+            input.addEventListener("keydown", (e) => { if (e.key === "Enter") save(input.value); });
+            input.addEventListener("blur", () => save(input.value));
+        } else {
+            input = document.createElement("input");
+            input.type = "text";
+            input.value = currentVal;
+            input.addEventListener("keydown", (e) => { if (e.key === "Enter") save(input.value); });
+            input.addEventListener("blur", () => save(input.value));
+        }
+        const save = (newVal) => {
+            if (field === "doorKey") {
+                const newType = doorTypes.find(t => t.key === newVal);
+                if (newType) {
+                    currentDoors[idx].doorKey = newVal;
+                    currentDoors[idx].doorName = newType.name;
+                    for (let f of CONFIG_FIELDS) {
+                        let opts = newType.options[f];
+                        if (opts && opts.length) {
+                            let old = currentDoors[idx][f];
+                            if (!opts.includes(old)) currentDoors[idx][f] = opts[0] || "—";
+                        } else currentDoors[idx][f] = "—";
+                    }
+                }
+            } else {
+                if (input.type === "number") newVal = parseInt(newVal);
+                currentDoors[idx][field] = newVal;
+            }
+            renderRightTable();
+        };
+        cell.innerHTML = "";
+        cell.appendChild(input);
+        input.focus();
+        if (options && options.length) return;
+    }
+    
+    function openOverlay() {
+        document.getElementById("configOverlay").classList.remove("hidden");
+        if (doorTypes.length === 0) loadDataFromAPI();
+        else { renderConfigForm(); renderRightTable(); }
+    }
+    function closeOverlay() { document.getElementById("configOverlay").classList.add("hidden"); }
+    
+    document.getElementById("openOverlayBtn").addEventListener("click", openOverlay);
+    document.getElementById("closeOverlayBtn").addEventListener("click", closeOverlay);
+    document.getElementById("addDoorBtn").addEventListener("click", addCurrentDoor);
+    document.getElementById("refreshDataBtn").addEventListener("click", loadDataFromAPI);
+    document.getElementById("copyAllBtn").addEventListener("click", () => {
+        const data = currentDoors.map(({id, ...rest}) => rest);
+        console.log(JSON.stringify(data, null, 2));
+        alert("JSON в консоли (F12)");
+        showToast("JSON в консоли");
+    });
+    
+    loadDataFromAPI();
+</script>
+</body>
+</html>
