@@ -72,7 +72,7 @@
     </div>
 </div>
 <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbwZQwEIaexDnu02g9XlmY-hTTeVECs2XmiANy-2habELNBJ2DA/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbxvY2Pt-MNqFFkhm-ETP12L2jrr3vepUJrGYQRBDLhEOhJQMH3ZUHnfhRhrO509yKma/exec";
     const CONFIG_FIELDS = ["Коробка", "Открывание", "Металл", "Порог", "Цилиндр", "Доводчик", "Цвет", "Остекление"];
     
     let doorTypes = [];
@@ -211,7 +211,7 @@
             }
             html += `<td class="editable-cell" data-field="Толщина стены, мм" data-idx="${i}">${d["Толщина стены, мм"]}</td>
                 <td class="editable-cell" data-field="Кол-во" data-idx="${i}">${d["Кол-во"]}</td>
-               </tr>`;
+               </td>`;
         }
         tbody.innerHTML = html;
         attachRowActions();
