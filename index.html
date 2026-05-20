@@ -13,7 +13,7 @@
         .btn-secondary { background: #1a2538; }
         .client-select { width: 100%; padding: 10px; background: #0f1117; border: 1px solid #334155; color: #e2e8f0; font-size: 1rem; margin-bottom: 20px; }
         .orders-list { margin-top: 20px; }
-        .order-item { background: #1e2430; border: 1px solid #2d3748; padding: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .order-item { background: #1e2430; border: 1px solid #2d3748; padding: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
         .order-info { flex: 1; }
         .order-actions button { margin-left: 10px; }
         .hidden { display: none; }
@@ -47,7 +47,6 @@
 </head>
 <body>
 
-<!-- СТАРТОВЫЙ ЭКРАН -->
 <div id="startScreen">
     <h1 style="margin-bottom:20px;">УПРАВЛЕНИЕ ЗАКАЗАМИ</h1>
     <div class="form-group">
@@ -63,7 +62,6 @@
     </div>
 </div>
 
-<!-- КОНФИГУРАТОР -->
 <div id="configuratorScreen" class="overlay hidden">
     <div class="overlay-header">
         <h2 id="configTitle">ТЕХНИЧЕСКИЙ КОНФИГУРАТОР ДВЕРЕЙ</h2>
@@ -88,7 +86,7 @@
             <div class="table-wrapper">
                 <table id="doorsTable">
                     <thead id="tableHeader"></thead>
-                    <tbody id="doorsTbody"><tr><td colspan="20">НЕТ ДВЕРЕЙ</tr</tbody>
+                    <tbody id="doorsTbody"><tr><td colspan="20">НЕТ ДВЕРЕЙ</td></tr></tbody>
                 </table>
             </div>
         </div>
@@ -96,8 +94,8 @@
 </div>
 
 <script>
-    // ⚠️ ЗАМЕНИТЕ ID НА РЕАЛЬНЫЙ (ТОТ ЖЕ, ЧТО РАБОТАЛ РАНЬШЕ ИЛИ НОВЫЙ ПОСЛЕ ДЕПЛОЯ)
-    const API_URL = "https://script.google.com/macros/s/AKfycbwi53HhkSBfPwvENZDvqCmIVGQkHTLaI2nMF3dTR44mae_QL4u1SAfaIzmHWRm0iES-/exec";
+    // ⚠️ ВСТАВЬ СЮДА СВОЙ URL ВЕБ-ПРИЛОЖЕНИЯ
+    const API_URL = "https://script.google.com/macros/s/ВАШ_НОВЫЙ_ID/exec";
     
     const CORE_FIELDS = ["Коробка", "Открывание", "Металл", "Порог", "Цилиндр", "Доводчик", "Цвет", "Остекление"];
     const ALL_POSSIBLE_FIELDS = [
@@ -115,6 +113,7 @@
     let currentClient = "";
     let currentOrderId = null;
 
+    // ------------------- ВСПОМОГАТЕЛЬНЫЕ -------------------
     function escapeHtml(str) { return String(str).replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
     function showToast(msg) {
         let t = document.querySelector(".toast");
@@ -124,7 +123,7 @@
     }
     function clamp(v, min, max) { return Math.min(max, Math.max(min, v || min)); }
 
-    // ------------------- ЗАГРУЗКА СПРАВОЧНИКА -------------------
+    // ------------------- ЗАГРУЗКА СПРАВОЧНИКА ДВЕРЕЙ -------------------
     async function loadDoorTypes() {
         try {
             const resp = await fetch(API_URL);
@@ -200,7 +199,6 @@
     }
     async function saveOrderToServer(orderId, client, doors) {
         try {
-            // Отправляем без заголовка Content-Type, чтобы избежать preflight
             const resp = await fetch(API_URL, {
                 method: "POST",
                 body: JSON.stringify({ action: "saveOrder", orderId, clientName: client, doorsData: doors })
@@ -222,15 +220,22 @@
         const clients = await loadClients();
         const select = document.getElementById("clientSelect");
         select.innerHTML = '<option value="">-- ВЫБЕРИТЕ КЛИЕНТА --</option>';
-        clients.forEach(c => { select.innerHTML += `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`; });
+        
+        clients.forEach(c => { 
+            // Обрабатываем оба варианта ответа: и массив строк, и массив объектов {name: "..."}
+            const clientName = (typeof c === 'object' && c !== null) ? c.name : c;
+            if (clientName) {
+                select.innerHTML += `<option value="${escapeHtml(clientName)}">${escapeHtml(clientName)}</option>`; 
+            }
+        });
     }
     async function refreshOrdersList() {
         const client = document.getElementById("clientSelect").value;
-        if (!client) { document.getElementById("ordersContainer").innerHTML = '<p>Выберите клиента</p>'; return; }
-        document.getElementById("ordersContainer").innerHTML = '<p>Загрузка...</p>';
+        if (!client) { document.getElementById("ordersContainer").innerHTML = '<p style="text-align:center;">Выберите клиента</p>'; return; }
+        document.getElementById("ordersContainer").innerHTML = '<p style="text-align:center;">Загрузка...</p>';
         const orders = await loadOrders(client);
         if (orders.length === 0) {
-            document.getElementById("ordersContainer").innerHTML = '<p>Нет заказов для этого клиента</p>';
+            document.getElementById("ordersContainer").innerHTML = '<p style="text-align:center;">Нет заказов для этого клиента</p>';
             return;
         }
         let html = "";
@@ -240,8 +245,8 @@
                             <strong>Заказ №${ord.orderId}</strong> | ${ord.date} | Дверей: ${ord.doorCount}
                         </div>
                         <div class="order-actions">
-                            <button class="edit-order" data-id="${ord.orderId}">✏️ РЕДАКТИРОВАТЬ</button>
-                            <button class="copy-order" data-id="${ord.orderId}">📋 КОПИРОВАТЬ</button>
+                            <button class="btn-primary edit-order" data-id="${ord.orderId}" style="padding: 5px 10px; font-size:11px;">✏️ РЕДАКТИРОВАТЬ</button>
+                            <button class="btn-primary btn-secondary copy-order" data-id="${ord.orderId}" style="padding: 5px 10px; font-size:11px;">📋 КОПИРОВАТЬ</button>
                         </div>
                     </div>`;
         }
@@ -297,16 +302,18 @@
             if (opts && opts.length) {
                 html += `<div class="form-group"><label>${f.toUpperCase()}</label><select id="cfg_${f}">${opts.map(opt => `<option>${escapeHtml(opt)}</option>`).join('')}</select></div>`;
             } else {
-                html += `<div class="form-group hidden-field"><label>${f.toUpperCase()}</label><select id="cfg_${f}" disabled><option>—</option></select></div>`;
+                html += `<div class="form-group" style="display:none;"><label>${f.toUpperCase()}</label><select id="cfg_${f}" disabled><option>—</option></select></div>`;
             }
         }
         html += `<div class="form-group"><label>ТОЛЩИНА СТЕНЫ, ММ</label><input type="number" id="wallThick" value="100" step="10"></div>`;
         html += `<div class="form-group"><label>КОЛИЧЕСТВО</label><input type="number" id="quantity" value="1" min="1"></div>`;
         document.getElementById("configForm").innerHTML = html;
+        
         const heightInput = document.getElementById("heightVal");
         const widthInput = document.getElementById("widthVal");
         const heightError = document.getElementById("heightError");
         const widthError = document.getElementById("widthError");
+        
         const validateHeight = () => {
             let val = parseInt(heightInput.value);
             if (isNaN(val)) val = type.heightMin;
@@ -342,7 +349,7 @@
             if (opts && opts.length) {
                 html += `<div class="form-group"><label>${f.toUpperCase()}</label><select id="extra_${f}"><option value="">— НЕ ВЫБРАНО —</option>${opts.map(opt => `<option>${escapeHtml(opt)}</option>`).join('')}</select></div>`;
             } else {
-                html += `<div class="form-group hidden-field"><label>${f.toUpperCase()}</label><select id="extra_${f}" disabled><option>—</option></select></div>`;
+                html += `<div class="form-group" style="display:none;"><label>${f.toUpperCase()}</label><select id="extra_${f}" disabled><option>—</option></select></div>`;
             }
         }
         container.innerHTML = html;
@@ -407,7 +414,7 @@
             thead.innerHTML = h;
         }
         if (currentDoors.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="${allCols.length+1}">НЕТ ДОБАВЛЕННЫХ ДВЕРЕЙ</tr</tbody>`;
+            tbody.innerHTML = `<tr><td colspan="${allCols.length+1}">НЕТ ДОБАВЛЕННЫХ ДВЕРЕЙ</td></tr>`;
             return;
         }
         let body = "";
@@ -547,7 +554,6 @@
         cell.innerHTML = "";
         cell.appendChild(input);
         input.focus();
-        if (options && options.length) return;
     }
 
     // ------------------- УПРАВЛЕНИЕ ЭКРАНАМИ -------------------
@@ -584,7 +590,14 @@
 
     // ------------------- ИНИЦИАЛИЗАЦИЯ -------------------
     window.onload = async () => {
+        // Сначала загружаем типы дверей, чтобы сразу определить дефолтный ключ
+        const ok = await loadDoorTypes();
+        if (ok && doorTypes.length > 0) {
+            currentTypeKey = doorTypes[0].key;
+        }
+        
         await refreshClientList();
+        
         document.getElementById("newOrderBtn").onclick = () => {
             const client = document.getElementById("clientSelect").value;
             if (!client) { showToast("Выберите клиента"); return; }
@@ -604,7 +617,6 @@
             console.log(JSON.stringify(data, null, 2));
             alert("JSON в консоли (F12)");
         };
-        await loadDoorTypes();
     };
 </script>
 </body>
