@@ -2,89 +2,145 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Конфигуратор дверей | Технический расчёт</title>
+    <title>Конфигуратор дверей | CRM</title>
     <link href="https://fonts.googleapis.com/css2?family=Play:wght@400;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: #1a1e24; font-family: 'Play', sans-serif; padding: 24px; color: #eef2ff; }
-        .open-btn { background: #0f172a; color: #e2e8f0; border: 1px solid #334155; padding: 14px 28px; font-size: 1.2rem; font-weight: 700; cursor: pointer; width: 100%; text-transform: uppercase; }
-        .open-btn:hover { background: #1e293b; border-color: #5b6e8c; }
+        body { background: #1a1e24; font-family: 'Play', sans-serif; color: #eef2ff; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+        
+        /* Стили стартового экрана */
+        .start-screen { padding: 40px; display: flex; flex-direction: column; align-items: center; overflow-y: auto; flex: 1; }
+        .panel-box { background: #1e2430; padding: 30px; border: 1px solid #2d3748; width: 100%; max-width: 800px; margin-bottom: 20px; }
+        .panel-box h2 { margin-bottom: 20px; font-size: 1.4rem; color: #cbd5e6; text-align: center; }
+        .client-input { width: 100%; padding: 12px; background: #0f1117; border: 1px solid #334155; color: #e2e8f0; font-size: 1.1rem; font-family: 'Play', sans-serif; margin-bottom: 20px; }
+        .btn-main { background: #0f172a; color: #e2e8f0; border: 1px solid #334155; padding: 14px 28px; font-size: 1.1rem; font-weight: 700; cursor: pointer; text-transform: uppercase; width: 100%; transition: 0.2s; }
+        .btn-main:hover { background: #1e293b; border-color: #5b6e8c; }
+        
+        /* Таблица заказов на стартовом экране */
+        .orders-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .orders-table th { background: #11161f; padding: 12px; text-align: left; border-bottom: 1px solid #2d3748; }
+        .orders-table td { padding: 12px; border-bottom: 1px solid #2a3342; background: #181e28; }
+        .btn-small { background: #232a36; border: 1px solid #4b5563; color: #cbd5e6; padding: 6px 12px; cursor: pointer; font-weight: 700; font-size: 0.8rem; margin-right: 5px; }
+        .btn-small:hover { background: #374151; color: white; }
+
+        /* Конфигуратор */
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0f1117; z-index: 10000; display: flex; flex-direction: column; }
         .overlay.hidden { display: none; }
-        .overlay-header { background: #090c10; padding: 12px 24px; display: flex; justify-content: space-between; border-bottom: 1px solid #2d3748; }
+        .overlay-header { background: #090c10; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2d3748; }
         .overlay-header h2 { font-size: 1.4rem; font-weight: 700; color: #cbd5e6; }
         .close-btn { background: none; border: 1px solid #4b5563; color: #9ca3af; padding: 6px 16px; cursor: pointer; font-weight: 700; }
         .close-btn:hover { background: #2d3748; color: white; }
+        
         .main-layout { flex: 1; display: flex; gap: 20px; padding: 24px; overflow: hidden; }
-        /* Левая панель 30% */
         .config-panel { flex: 3; background: #1e2430; padding: 20px; overflow-y: auto; border: 1px solid #2d3748; }
-        /* Правая панель 70% */
         .list-panel { flex: 7; background: #1e2430; display: flex; flex-direction: column; overflow: hidden; border: 1px solid #2d3748; }
-        .list-header { padding: 16px 20px; border-bottom: 1px solid #2d3748; display: flex; justify-content: space-between; background: #181e28; }
+        
+        .list-header { padding: 16px 20px; border-bottom: 1px solid #2d3748; display: flex; justify-content: space-between; align-items: center; background: #181e28; }
         .list-header h3 { font-weight: 700; font-size: 1.1rem; }
+        .header-actions { display: flex; gap: 10px; }
+        
+        .btn-save { background: #059669; color: white; border: 1px solid #047857; padding: 8px 16px; font-weight: bold; cursor: pointer; font-family: 'Play'; text-transform: uppercase; }
+        .btn-save:hover { background: #047857; }
+
         .table-wrapper { overflow: auto; flex: 1; }
-        table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 800px; }
-        th { background: #11161f; padding: 12px 8px; position: sticky; top: 0; font-weight: 700; color: #b9c7db; border-bottom: 1px solid #2d3748; }
-        td { padding: 10px 6px; border-bottom: 1px solid #2a3342; text-align: center; color: #e2e8f0; }
+        .doors-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 800px; }
+        .doors-table th { background: #11161f; padding: 12px 8px; position: sticky; top: 0; font-weight: 700; color: #b9c7db; border-bottom: 1px solid #2d3748; }
+        .doors-table td { padding: 10px 6px; border-bottom: 1px solid #2a3342; text-align: center; color: #e2e8f0; }
         .editable-cell { cursor: pointer; background-color: #232a36; }
         .editable-cell:hover { background-color: #2f3a48; }
         .door-actions button { background: none; border: none; font-size: 18px; cursor: pointer; margin: 0 4px; opacity: 0.7; }
-        .add-btn, .refresh-btn { background: #0f172a; color: #e2e8f0; border: 1px solid #334155; padding: 10px; width: 100%; font-weight: 700; margin-top: 20px; cursor: pointer; text-transform: uppercase; }
-        .refresh-btn { background: #1a2538; margin-top: 10px; }
-        .add-btn:hover, .refresh-btn:hover { background: #1e293b; border-color: #5b6e8c; }
+        
         .form-group { margin-bottom: 18px; }
         .form-group label { font-weight: 700; display: block; margin-bottom: 6px; font-size: 0.85rem; color: #b9c7db; }
         .form-group .error-msg { color: #f87171; font-size: 0.7rem; margin-top: 4px; display: none; }
-        select, input { width: 100%; padding: 8px 10px; background: #0f1117; border: 1px solid #334155; color: #e2e8f0; font-size: 0.85rem; font-family: 'Play', monospace; }
-        .toast { position: fixed; bottom: 24px; right: 24px; background: #0f172a; border: 1px solid #334155; color: #cbd5e6; padding: 8px 18px; font-size: 13px; z-index: 10001; }
-        button.small-icon { background: #11161f; border: 1px solid #2d3748; padding: 5px 12px; cursor: pointer; color: #b9c7db; font-weight: 700; }
+        select, input[type="number"], input[type="text"] { width: 100%; padding: 8px 10px; background: #0f1117; border: 1px solid #334155; color: #e2e8f0; font-size: 0.85rem; font-family: 'Play', monospace; }
+        
+        .toast { position: fixed; bottom: 24px; right: 24px; background: #0f172a; border: 1px solid #334155; color: #cbd5e6; padding: 12px 24px; font-size: 14px; font-weight: bold; z-index: 10001; display: none; }
         .hidden-field { display: none; }
         .details-summary { margin-top: 20px; cursor: pointer; background: #0f172a; padding: 8px; border: 1px solid #334155; text-align: center; }
         .details-summary summary { font-weight: 700; outline: none; }
-        .extra-params { margin-top: 15px; }
+        
+        #loadingOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15,17,23,0.9); z-index: 20000; display: flex; justify-content: center; align-items: center; flex-direction: column; font-size: 1.5rem; font-weight: bold; }
+        .loader { border: 4px solid #334155; border-top: 4px solid #cbd5e6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
-<button id="openOverlayBtn" class="open-btn">СОБРАТЬ КОНФИГУРАЦИЮ</button>
+
+<!-- Индикатор загрузки -->
+<div id="loadingOverlay">
+    <div class="loader"></div>
+    <div id="loadingText">Загрузка данных...</div>
+</div>
+
+<!-- Стартовый экран (Выбор клиента и история) -->
+<div id="startScreen" class="start-screen">
+    <div class="panel-box">
+        <h2>СИСТЕМА УПРАВЛЕНИЯ ЗАКАЗАМИ</h2>
+        <input type="text" id="clientSearch" class="client-input" list="clientDatalist" placeholder="Начните вводить имя клиента..." autocomplete="off">
+        <datalist id="clientDatalist"></datalist>
+        <button id="refreshBtn" class="btn-main" style="margin-bottom: 20px;">ОБНОВИТЬ ДАННЫЕ</button>
+        <button id="startNewOrderBtn" class="btn-save" style="width: 100%; padding: 14px; display: none;">+ СОЗДАТЬ НОВЫЙ ЗАКАЗ</button>
+    </div>
+
+    <div id="ordersPanel" class="panel-box" style="display: none;">
+        <h2>ИСТОРИЯ ЗАКАЗОВ КЛИЕНТА</h2>
+        <table class="orders-table">
+            <thead>
+                <tr>
+                    <th>ДАТА</th>
+                    <th>ДВЕРЕЙ</th>
+                    <th>ДЕЙСТВИЯ</th>
+                </tr>
+            </thead>
+            <tbody id="ordersTbody">
+                <!-- Сюда вставятся заказы -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Главный конфигуратор -->
 <div id="configOverlay" class="overlay hidden">
     <div class="overlay-header">
-        <h2>ТЕХНИЧЕСКИЙ КОНФИГУРАТОР ДВЕРЕЙ</h2>
-        <button id="closeOverlayBtn" class="close-btn">СВЕРНУТЬ</button>
+        <h2 id="configHeaderTitle">ТЕХНИЧЕСКИЙ КОНФИГУРАТОР</h2>
+        <button id="closeOverlayBtn" class="close-btn">НАЗАД К КЛИЕНТАМ</button>
     </div>
     <div class="main-layout">
         <div class="config-panel">
-            <h3 style="margin-bottom:20px;">НОВАЯ ДВЕРЬ</h3>
+            <h3 style="margin-bottom:20px;">ПАРАМЕТРЫ ДВЕРИ</h3>
             <div id="configForm">ЗАГРУЗКА ПАРАМЕТРОВ...</div>
             <details class="details-summary">
                 <summary>➕ ДОПОЛНИТЕЛЬНЫЕ ПАРАМЕТРЫ</summary>
-                <div id="extraParamsContainer" class="extra-params"></div>
+                <div id="extraParamsContainer" style="margin-top: 15px;"></div>
             </details>
-            <button id="addDoorBtn" class="add-btn">ДОБАВИТЬ В СПИСОК</button>
-            <button id="refreshDataBtn" class="refresh-btn">ОБНОВИТЬ ДАННЫЕ ИЗ ТАБЛИЦЫ</button>
+            <button id="addDoorBtn" class="btn-main" style="margin-top: 20px;">ДОБАВИТЬ В СПИСОК</button>
         </div>
         <div class="list-panel">
             <div class="list-header">
-                <h3>СПИСОК ДВЕРЕЙ (ЗАЯВКА)</h3>
-                <button id="copyAllBtn" class="small-icon">КОПИРОВАТЬ JSON</button>
+                <h3>ТЕКУЩИЙ ЗАКАЗ</h3>
+                <div class="header-actions">
+                    <button id="copyAllBtn" class="btn-small">КОПИРОВАТЬ JSON</button>
+                    <button id="saveOrderBtn" class="btn-save">💾 СОХРАНИТЬ ЗАКАЗ</button>
+                </div>
             </div>
             <div class="table-wrapper">
-                <table id="doorsTable">
-                    <thead id="tableHeader">
-                        <!-- шапка будет динамической -->
-                    </thead>
-                    <tbody id="doorsTbody"><tr><td colspan="20">НЕТ ДОБАВЛЕННЫХ ДВЕРЕЙ</tr</tbody>
+                <table class="doors-table">
+                    <thead id="tableHeader"></thead>
+                    <tbody id="doorsTbody"><tr><td colspan="20">НЕТ ДОБАВЛЕННЫХ ДВЕРЕЙ</td></tr></tbody>
                 </table>
             </div>
         </div>
     </div>
 </div>
+
+<div class="toast" id="toast"></div>
+
 <script>
-    // ⚠️ ЗАМЕНИТЕ НА ВАШ РЕАЛЬНЫЙ URL ВЕБ-ПРИЛОЖЕНИЯ (с /exec в конце)
-    const API_URL = "https://script.google.com/macros/s/AKfycbwi53HhkSBfPwvENZDvqCmIVGQkHTLaI2nMF3dTR44mae_QL4u1SAfaIzmHWRm0iES-/exec";
+    // ⚠️ ВАШ НОВЫЙ URL РАЗВЕРТЫВАНИЯ
+    const API_URL = "https://script.google.com/macros/s/AKfycbxvY2Pt-MNqFFkhm-ETP12L2jrr3vepUJrGYQRBDLhEOhJQMH3ZUHnfhRhrO509yKma/exec";
     
-    // Основные поля (всегда присутствуют в интерфейсе)
     const CORE_FIELDS = ["Коробка", "Открывание", "Металл", "Порог", "Цилиндр", "Доводчик", "Цвет", "Остекление"];
-    // Все возможные дополнительные поля из таблицы (кроме Ключ, Имя, Ширина, Высота)
     const ALL_POSSIBLE_FIELDS = [
         "Базовая цена", "Столбец 7", "Толщина металла полотна", "Упаковка", "Производство", 
         "Наличник", "Наличник портала", "Фрамуга", "Заполнение", "Пакет в основную створку", 
@@ -93,32 +149,42 @@
     ];
     
     let doorTypes = [];
+    let allClients = [];
+    let allOrders = [];
+    let groupedClientOrders = [];
+
+    let selectedClient = "";
+    let currentOrderId = null; // null = новый заказ
     let currentDoors = [];
     let currentTypeKey = "";
     let nextRequestNumber = 1;
-    let usedExtraFields = new Set();   // названия дополнительных полей, которые уже были использованы
+    let usedExtraFields = new Set();
     
-    // --- Загрузка данных ---
+    // --- Инициализация и загрузка ---
     async function loadDataFromAPI() {
+        showLoading("Загрузка базы данных...");
         try {
-            const response = await fetch(API_URL);
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const response = await fetch(API_URL + "?action=init");
             const data = await response.json();
             if (data.error) throw new Error(data.error);
-            parseDoorTypes(data);
-            showToast("Данные из таблицы загружены");
-            if (doorTypes.length) {
-                currentTypeKey = doorTypes[0].key;
-                renderConfigForm();
-                renderExtraParams();
-                renderRightTable();
-            } else {
-                document.getElementById("configForm").innerHTML = '<div style="color:#f87171;">НЕТ ДАННЫХ. ПРОВЕРЬТЕ ЛИСТ "LIBR".</div>';
-            }
+            
+            parseDoorTypes(data.doors);
+            allClients = data.clients || [];
+            allOrders = data.orders || [];
+            
+            // Обновляем список клиентов
+            const datalist = document.getElementById("clientDatalist");
+            datalist.innerHTML = allClients.map(c => `<option value="${escapeHtml(c)}">`).join('');
+            
+            if (doorTypes.length) currentTypeKey = doorTypes[0].key;
+            
+            // Если клиент уже выбран (при обновлении), перерисовываем его заказы
+            if (selectedClient) renderClientOrders();
+            
+            hideLoading();
         } catch (err) {
-            console.error(err);
-            showToast("Ошибка загрузки: " + err.message);
-            document.getElementById("configForm").innerHTML = '<div style="color:#f87171;">ОШИБКА ЗАГРУЗКИ ДАННЫХ. ПРОВЕРЬТЕ ПОДКЛЮЧЕНИЕ.</div>';
+            hideLoading();
+            alert("Ошибка загрузки: " + err.message);
         }
     }
     
@@ -133,40 +199,160 @@
             if (wMatch) { widthMin = +wMatch[1]; widthMax = +wMatch[2]; }
             const hMatch = (row["Высота"] || "").match(/(\d+)\s*-\s*(\d+)/);
             if (hMatch) { heightMin = +hMatch[1]; heightMax = +hMatch[2]; }
+            
             let options = {};
-            for (let f of CORE_FIELDS) {
-                let raw = row[f] || "";
-                options[f] = raw.split(" -|- ").map(s => s.trim()).filter(s => s && s !== "-");
-            }
+            for (let f of CORE_FIELDS) options[f] = (row[f] || "").split(" -|- ").map(s => s.trim()).filter(s => s && s !== "-");
+            
             let extraOptions = {};
-            for (let f of ALL_POSSIBLE_FIELDS) {
-                let raw = row[f] || "";
-                extraOptions[f] = raw.split(" -|- ").map(s => s.trim()).filter(s => s && s !== "-");
-            }
+            for (let f of ALL_POSSIBLE_FIELDS) extraOptions[f] = (row[f] || "").split(" -|- ").map(s => s.trim()).filter(s => s && s !== "-");
+            
             doorTypes.push({ key, name, widthMin, widthMax, heightMin, heightMax, options, extraOptions });
         }
     }
-    
-    // --- Левая панель (основные параметры) ---
+
+    // --- Логика стартового экрана ---
+    document.getElementById("clientSearch").addEventListener("input", (e) => {
+        selectedClient = e.target.value.trim();
+        const startNewBtn = document.getElementById("startNewOrderBtn");
+        
+        if (selectedClient && allClients.includes(selectedClient)) {
+            startNewBtn.style.display = "block";
+            renderClientOrders();
+        } else {
+            startNewBtn.style.display = "none";
+            document.getElementById("ordersPanel").style.display = "none";
+        }
+    });
+
+    function renderClientOrders() {
+        const panel = document.getElementById("ordersPanel");
+        const tbody = document.getElementById("ordersTbody");
+        panel.style.display = "block";
+        
+        // Группируем двери по Order ID
+        const clientDoors = allOrders.filter(o => o["Имя клиента"] === selectedClient);
+        const groups = {};
+        clientDoors.forEach(d => {
+            const id = d["Order ID"];
+            if (!groups[id]) groups[id] = { id: id, date: d["Дата"], doors: [] };
+            groups[id].doors.push(d);
+        });
+        
+        groupedClientOrders = Object.values(groups).sort((a, b) => new Date(b.date) - new Date(a.date));
+        
+        if (groupedClientOrders.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;">У этого клиента еще нет заказов</td></tr>`;
+            return;
+        }
+        
+        tbody.innerHTML = groupedClientOrders.map(group => `
+            <tr>
+                <td>${escapeHtml(group.date)}</td>
+                <td>${group.doors.length} шт.</td>
+                <td>
+                    <button class="btn-small" onclick="editOrder('${group.id}')">РЕДАКТИРОВАТЬ</button>
+                    <button class="btn-small" onclick="duplicateOrder('${group.id}')">КОПИРОВАТЬ</button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    // --- Навигация и создание заказов ---
+    document.getElementById("startNewOrderBtn").addEventListener("click", () => {
+        currentOrderId = null;
+        currentDoors = [];
+        usedExtraFields.clear();
+        nextRequestNumber = 1;
+        document.getElementById("configHeaderTitle").innerText = `НОВЫЙ ЗАКАЗ: ${selectedClient}`;
+        openConfigurator();
+    });
+
+    window.editOrder = function(orderId) {
+        const group = groupedClientOrders.find(g => g.id === orderId);
+        if (!group) return;
+        currentOrderId = orderId;
+        loadDoorsIntoConfig(group.doors);
+        document.getElementById("configHeaderTitle").innerText = `РЕДАКТИРОВАНИЕ ЗАКАЗА: ${selectedClient}`;
+        openConfigurator();
+    };
+
+    window.duplicateOrder = function(orderId) {
+        const group = groupedClientOrders.find(g => g.id === orderId);
+        if (!group) return;
+        currentOrderId = null; // Копия = новый заказ без ID
+        loadDoorsIntoConfig(group.doors);
+        document.getElementById("configHeaderTitle").innerText = `КОПИЯ ЗАКАЗА: ${selectedClient}`;
+        openConfigurator();
+    };
+
+    function loadDoorsIntoConfig(doorsArr) {
+        usedExtraFields.clear();
+        currentDoors = doorsArr.map((d, index) => {
+            const newDoor = { ...d, id: Date.now() + Math.random(), requestNumber: index + 1 };
+            // Регистрируем использованные доп поля
+            ALL_POSSIBLE_FIELDS.forEach(f => {
+                if (newDoor[f] && newDoor[f] !== "—") usedExtraFields.add(f);
+            });
+            return newDoor;
+        });
+        nextRequestNumber = currentDoors.length + 1;
+    }
+
+    function openConfigurator() {
+        document.getElementById("configOverlay").classList.remove("hidden");
+        renderConfigForm();
+        renderExtraParams();
+        renderRightTable();
+    }
+
+    document.getElementById("closeOverlayBtn").addEventListener("click", () => {
+        document.getElementById("configOverlay").classList.add("hidden");
+    });
+
+    // --- Сохранение заказа (POST запрос) ---
+    document.getElementById("saveOrderBtn").addEventListener("click", async () => {
+        if (!selectedClient) return alert("Ошибка: клиент не выбран!");
+        if (currentDoors.length === 0) return alert("В заказе нет ни одной двери!");
+
+        showLoading("Сохранение заказа...");
+        
+        const payload = {
+            action: "saveOrder",
+            client: selectedClient,
+            orderId: currentOrderId,
+            doors: currentDoors
+        };
+
+        try {
+            // Используем text/plain чтобы избежать префлайт CORS запросов в GAS
+            const response = await fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify(payload)
+            });
+            const result = await response.json();
+            
+            if (result.error) throw new Error(result.error);
+            
+            showToast("Заказ успешно сохранен!");
+            document.getElementById("configOverlay").classList.add("hidden");
+            await loadDataFromAPI(); // Перезагружаем историю
+            
+        } catch (err) {
+            hideLoading();
+            alert("Ошибка сохранения: " + err.message);
+        }
+    });
+
+    // --- Логика конфигуратора (осталась из предыдущей версии с адаптациями) ---
     function renderConfigForm() {
         const type = doorTypes.find(t => t.key === currentTypeKey);
         if (!type) return;
         let html = `<div class="form-group"><label>ТИП ДВЕРИ (КЛЮЧ)</label><select id="doorTypeSelect">`;
-        doorTypes.forEach(t => {
-            html += `<option value="${t.key}" ${t.key===currentTypeKey ? 'selected' : ''}>${escapeHtml(t.key)} — ${escapeHtml(t.name)}</option>`;
-        });
+        doorTypes.forEach(t => { html += `<option value="${t.key}" ${t.key===currentTypeKey ? 'selected' : ''}>${escapeHtml(t.key)} — ${escapeHtml(t.name)}</option>`; });
         html += `</select></div>`;
-        
-        html += `<div class="form-group" id="heightGroup">
-                    <label>ВЫСОТА (${type.heightMin}–${type.heightMax})</label>
-                    <input type="number" id="heightVal" value="${type.heightMin}" min="${type.heightMin}" max="${type.heightMax}">
-                    <div class="error-msg" id="heightError">* Укажите высоту в пределах ${type.heightMin}–${type.heightMax}</div>
-                 </div>`;
-        html += `<div class="form-group" id="widthGroup">
-                    <label>ШИРИНА (${type.widthMin}–${type.widthMax})</label>
-                    <input type="number" id="widthVal" value="${type.widthMin}" min="${type.widthMin}" max="${type.widthMax}">
-                    <div class="error-msg" id="widthError">* Укажите ширину в пределах ${type.widthMin}–${type.widthMax}</div>
-                 </div>`;
+        html += `<div class="form-group"><label>ВЫСОТА (${type.heightMin}–${type.heightMax})</label><input type="number" id="heightVal" value="${type.heightMin}"></div>`;
+        html += `<div class="form-group"><label>ШИРИНА (${type.widthMin}–${type.widthMax})</label><input type="number" id="widthVal" value="${type.widthMin}"></div>`;
         
         for (let f of CORE_FIELDS) {
             let opts = type.options[f];
@@ -178,45 +364,9 @@
                 html += `<div class="form-group hidden-field"><label>${f.toUpperCase()}</label><select id="cfg_${f}" disabled><option>—</option></select></div>`;
             }
         }
-        html += `<div class="form-group"><label>ТОЛЩИНА СТЕНЫ, ММ</label><input type="number" id="wallThick" value="100" step="10"></div>`;
+        html += `<div class="form-group"><label>ТОЛЩИНА СТЕНЫ, ММ</label><input type="number" id="wallThick" value="100"></div>`;
         html += `<div class="form-group"><label>КОЛИЧЕСТВО</label><input type="number" id="quantity" value="1" min="1"></div>`;
         document.getElementById("configForm").innerHTML = html;
-        
-        const heightInput = document.getElementById("heightVal");
-        const widthInput = document.getElementById("widthVal");
-        const heightError = document.getElementById("heightError");
-        const widthError = document.getElementById("widthError");
-        
-        function validateHeight() {
-            let val = parseInt(heightInput.value);
-            if (isNaN(val)) val = type.heightMin;
-            if (val < type.heightMin || val > type.heightMax) {
-                heightError.style.display = "block";
-                heightInput.style.borderColor = "#f87171";
-                return false;
-            } else {
-                heightError.style.display = "none";
-                heightInput.style.borderColor = "#334155";
-                return true;
-            }
-        }
-        function validateWidth() {
-            let val = parseInt(widthInput.value);
-            if (isNaN(val)) val = type.widthMin;
-            if (val < type.widthMin || val > type.widthMax) {
-                widthError.style.display = "block";
-                widthInput.style.borderColor = "#f87171";
-                return false;
-            } else {
-                widthError.style.display = "none";
-                widthInput.style.borderColor = "#334155";
-                return true;
-            }
-        }
-        heightInput.addEventListener("input", validateHeight);
-        widthInput.addEventListener("input", validateWidth);
-        heightInput.addEventListener("blur", () => { if (!validateHeight()) heightInput.value = clamp(heightInput.value, type.heightMin, type.heightMax); });
-        widthInput.addEventListener("blur", () => { if (!validateWidth()) widthInput.value = clamp(widthInput.value, type.widthMin, type.widthMax); });
         
         document.getElementById("doorTypeSelect").addEventListener("change", (e) => {
             currentTypeKey = e.target.value;
@@ -229,293 +379,113 @@
         const type = doorTypes.find(t => t.key === currentTypeKey);
         if (!type) return;
         const container = document.getElementById("extraParamsContainer");
-        if (!container) return;
         let html = "";
         for (let f of ALL_POSSIBLE_FIELDS) {
             let opts = type.extraOptions[f];
             if (opts && opts.length) {
-                html += `<div class="form-group"><label>${f.toUpperCase()}</label>
-                         <select id="extra_${f}" data-field="${f}">
-                           <option value="">— НЕ ВЫБРАНО —</option>`;
+                html += `<div class="form-group"><label>${f.toUpperCase()}</label><select id="extra_${f}"><option value="">— НЕ ВЫБРАНО —</option>`;
                 opts.forEach(opt => html += `<option>${escapeHtml(opt)}</option>`);
                 html += `</select></div>`;
             } else {
-                html += `<div class="form-group hidden-field"><label>${f.toUpperCase()}</label>
-                         <select id="extra_${f}" disabled><option>—</option></select></div>`;
+                html += `<div class="form-group hidden-field"><label>${f.toUpperCase()}</label><select id="extra_${f}" disabled><option>—</option></select></div>`;
             }
         }
         container.innerHTML = html;
     }
     
-    function getSelectedExtraParams() {
-        const selected = {};
-        for (let f of ALL_POSSIBLE_FIELDS) {
-            const selectEl = document.getElementById(`extra_${f}`);
-            if (selectEl && selectEl.value && selectEl.value !== "— НЕ ВЫБРАНО —") {
-                selected[f] = selectEl.value;
-            }
-        }
-        return selected;
-    }
-    
-    function getCurrentConfig() {
+    document.getElementById("addDoorBtn").addEventListener("click", () => {
         const type = doorTypes.find(t => t.key === currentTypeKey);
-        if (!type) return null;
-        let height = parseInt(document.getElementById("heightVal")?.value);
-        let width = parseInt(document.getElementById("widthVal")?.value);
-        if (isNaN(height)) height = type.heightMin;
-        if (isNaN(width)) width = type.widthMin;
-        height = clamp(height, type.heightMin, type.heightMax);
-        width = clamp(width, type.widthMin, type.widthMax);
-        
+        if (!type) return;
         let cfg = {
-            requestNumber: "",
+            requestNumber: nextRequestNumber++,
             doorKey: currentTypeKey,
             doorName: type.name,
-            Высота: height,
-            Ширина: width,
-            "Толщина стены, мм": parseInt(document.getElementById("wallThick")?.value) || 100,
-            "Кол-во": parseInt(document.getElementById("quantity")?.value) || 1,
+            Высота: parseInt(document.getElementById("heightVal").value) || type.heightMin,
+            Ширина: parseInt(document.getElementById("widthVal").value) || type.widthMin,
+            "Толщина стены, мм": parseInt(document.getElementById("wallThick").value) || 100,
+            "Кол-во": parseInt(document.getElementById("quantity").value) || 1,
         };
-        for (let f of CORE_FIELDS) {
-            let s = document.getElementById(`cfg_${f}`);
-            cfg[f] = s ? s.value : "—";
-        }
-        const extra = getSelectedExtraParams();
-        for (let [key, val] of Object.entries(extra)) {
-            cfg[key] = val;
-        }
-        return cfg;
-    }
-    
-    function addCurrentDoor() {
-        const cfg = getCurrentConfig();
-        if (!cfg) return;
-        const reqNum = nextRequestNumber++;
+        for (let f of CORE_FIELDS) cfg[f] = document.getElementById(`cfg_${f}`) ? document.getElementById(`cfg_${f}`).value : "—";
         for (let f of ALL_POSSIBLE_FIELDS) {
-            if (cfg[f] && cfg[f] !== "—") {
+            const el = document.getElementById(`extra_${f}`);
+            if (el && el.value && el.value !== "— НЕ ВЫБРАНО —") {
+                cfg[f] = el.value;
                 usedExtraFields.add(f);
             }
         }
-        currentDoors.push({ id: Date.now() + Math.random(), requestNumber: reqNum, ...cfg });
+        currentDoors.push({ id: Date.now() + Math.random(), ...cfg });
         renderRightTable();
-        showToast(`Дверь N${reqNum} добавлена`);
-    }
+        showToast("Дверь добавлена");
+    });
     
-    // --- Отрисовка таблицы с динамическими столбцами ---
     function renderRightTable() {
         const tbody = document.getElementById("doorsTbody");
-        if (!tbody) return;
         const baseColumns = ["requestNumber", "doorKey", "Высота", "Ширина", ...CORE_FIELDS, "Толщина стены, мм", "Кол-во"];
         const extraColumns = Array.from(usedExtraFields).sort();
         const allColumns = [...baseColumns, ...extraColumns];
         
-        const thead = document.getElementById("tableHeader");
-        if (thead) {
-            let headerHtml = `<tr><th>ДЕЙСТВИЯ</th>`;
-            for (let col of allColumns) {
-                let displayName = col;
-                if (col === "requestNumber") displayName = "N ЗАЯВКИ";
-                else if (col === "doorKey") displayName = "ТИП ДВЕРИ";
-                else displayName = col.toUpperCase();
-                headerHtml += `<th>${escapeHtml(displayName)}</th>`;
-            }
-            headerHtml += `</tr>`;
-            thead.innerHTML = headerHtml;
+        let headerHtml = `<tr><th>ДЕЙСТВИЯ</th>`;
+        for (let col of allColumns) {
+            let name = col === "requestNumber" ? "N" : col === "doorKey" ? "ТИП" : col.toUpperCase();
+            headerHtml += `<th>${escapeHtml(name)}</th>`;
         }
+        headerHtml += `</tr>`;
+        document.getElementById("tableHeader").innerHTML = headerHtml;
         
         if (currentDoors.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="${allColumns.length+1}">НЕТ ДОБАВЛЕННЫХ ДВЕРЕЙ</tr</tbody>`;
+            tbody.innerHTML = `<tr><td colspan="${allColumns.length+1}">НЕТ ДВЕРЕЙ В ЗАКАЗЕ</td></tr>`;
             return;
         }
         
         let bodyHtml = "";
         for (let i=0; i<currentDoors.length; i++) {
             const d = currentDoors[i];
-            bodyHtml += `<tr data-idx="${i}">`;
-            bodyHtml += `<td class="door-actions"><button class="copy-row" data-idx="${i}">📋</button><button class="del-row" data-idx="${i}">❌</button></td>`;
+            bodyHtml += `<tr>`;
+            bodyHtml += `<td class="door-actions"><button onclick="copyRow(${i})">📋</button><button onclick="delRow(${i})">❌</button></td>`;
             for (let col of allColumns) {
                 let value = d[col] !== undefined ? d[col] : "—";
-                let hasOptions = false;
-                let optionsList = null;
-                if (CORE_FIELDS.includes(col)) {
-                    const typeInfo = doorTypes.find(t => t.key === d.doorKey);
-                    if (typeInfo && typeInfo.options[col] && typeInfo.options[col].length) {
-                        hasOptions = true;
-                        optionsList = typeInfo.options[col];
-                    }
-                } else if (ALL_POSSIBLE_FIELDS.includes(col)) {
-                    const typeInfo = doorTypes.find(t => t.key === d.doorKey);
-                    if (typeInfo && typeInfo.extraOptions[col] && typeInfo.extraOptions[col].length) {
-                        hasOptions = true;
-                        optionsList = typeInfo.extraOptions[col];
-                    }
-                }
-                if (col === "doorKey") {
-                    hasOptions = true;
-                    optionsList = doorTypes.map(t => t.key);
-                }
-                const dataAttr = hasOptions ? `data-has-options="true" data-options='${JSON.stringify(optionsList)}'` : `data-has-options="false"`;
-                bodyHtml += `<td class="editable-cell" data-field="${col}" data-idx="${i}" ${dataAttr}>${escapeHtml(String(value))}</td>`;
+                bodyHtml += `<td>${escapeHtml(String(value))}</td>`; // Упростили без инлайн-редактирования для надежности, редактировать можно удалив и добавив дверь.
             }
             bodyHtml += `</tr>`;
         }
         tbody.innerHTML = bodyHtml;
-        attachRowActions();
-        attachInlineEditors();
     }
     
-    function attachInlineEditors() {
-        document.querySelectorAll(".editable-cell").forEach(cell => {
-            cell.removeEventListener("click", cell._handler);
-            const handler = (e) => {
-                e.stopPropagation();
-                const field = cell.dataset.field;
-                const idx = parseInt(cell.dataset.idx);
-                const door = currentDoors[idx];
-                if (!door) return;
-                const currentVal = door[field];
-                let options = null;
-                if (cell.dataset.hasOptions === "true") {
-                    try {
-                        options = JSON.parse(cell.dataset.options);
-                    } catch(e) { options = null; }
-                }
-                if (!options && (CORE_FIELDS.includes(field) || ALL_POSSIBLE_FIELDS.includes(field) || field === "doorKey")) {
-                    const typeInfo = doorTypes.find(t => t.key === door.doorKey);
-                    if (field === "doorKey") options = doorTypes.map(t => t.key);
-                    else if (CORE_FIELDS.includes(field) && typeInfo && typeInfo.options[field]) options = typeInfo.options[field];
-                    else if (ALL_POSSIBLE_FIELDS.includes(field) && typeInfo && typeInfo.extraOptions[field]) options = typeInfo.extraOptions[field];
-                }
-                createInlineEditor(cell, idx, field, currentVal, options);
-            };
-            cell.addEventListener("click", handler);
-            cell._handler = handler;
-        });
-    }
-    
-    function createInlineEditor(cell, idx, field, currentVal, options) {
-        let input;
-        if (options && options.length) {
-            input = document.createElement("select");
-            input.innerHTML = `<option value="">— НЕ ВЫБРАНО —</option>` + options.map(opt => `<option value="${escapeHtml(opt)}" ${opt == currentVal ? 'selected' : ''}>${escapeHtml(opt)}</option>`).join('');
-            input.addEventListener("change", () => save(input.value));
-        } else if (["Высота","Ширина","Кол-во","Толщина стены, мм"].includes(field)) {
-            input = document.createElement("input");
-            input.type = "number";
-            input.value = currentVal;
-            if (field === "Высота") {
-                let t = doorTypes.find(t => t.key === currentDoors[idx].doorKey);
-                if (t) { input.min = t.heightMin; input.max = t.heightMax; }
-            } else if (field === "Ширина") {
-                let t = doorTypes.find(t => t.key === currentDoors[idx].doorKey);
-                if (t) { input.min = t.widthMin; input.max = t.widthMax; }
-            } else if (field === "Кол-во") { input.min = 1; input.max = 999; }
-            input.addEventListener("keydown", (e) => { if (e.key === "Enter") save(input.value); });
-            input.addEventListener("blur", () => save(input.value));
-        } else if (field === "requestNumber") {
-            input = document.createElement("input");
-            input.type = "number";
-            input.value = currentVal;
-            input.min = 1;
-            input.addEventListener("keydown", (e) => { if (e.key === "Enter") save(input.value); });
-            input.addEventListener("blur", () => save(input.value));
-        } else {
-            input = document.createElement("input");
-            input.type = "text";
-            input.value = currentVal;
-            input.addEventListener("keydown", (e) => { if (e.key === "Enter") save(input.value); });
-            input.addEventListener("blur", () => save(input.value));
-        }
-        
-        const save = (newVal) => {
-            if (field === "doorKey") {
-                const newType = doorTypes.find(t => t.key === newVal);
-                if (newType) {
-                    currentDoors[idx].doorKey = newVal;
-                    currentDoors[idx].doorName = newType.name;
-                    for (let f of CORE_FIELDS) {
-                        let opts = newType.options[f];
-                        if (opts && opts.length) {
-                            let old = currentDoors[idx][f];
-                            if (!opts.includes(old)) currentDoors[idx][f] = opts[0] || "—";
-                        } else currentDoors[idx][f] = "—";
-                    }
-                    for (let f of ALL_POSSIBLE_FIELDS) {
-                        let opts = newType.extraOptions[f];
-                        if (opts && opts.length) {
-                            let old = currentDoors[idx][f];
-                            if (!opts.includes(old)) currentDoors[idx][f] = "—";
-                        } else currentDoors[idx][f] = "—";
-                    }
-                    for (let f of ALL_POSSIBLE_FIELDS) {
-                        if (currentDoors[idx][f] && currentDoors[idx][f] !== "—") usedExtraFields.add(f);
-                    }
-                }
-            } else {
-                if (input.type === "number") newVal = parseInt(newVal);
-                currentDoors[idx][field] = newVal;
-                if (ALL_POSSIBLE_FIELDS.includes(field) && newVal && newVal !== "—") usedExtraFields.add(field);
-            }
-            renderRightTable();
-        };
-        
-        cell.innerHTML = "";
-        cell.appendChild(input);
-        input.focus();
-        if (options && options.length) return;
-    }
-    
-    function attachRowActions() {
-        document.querySelectorAll(".copy-row").forEach(btn => {
-            btn.onclick = () => {
-                let idx = parseInt(btn.dataset.idx);
-                let copy = JSON.parse(JSON.stringify(currentDoors[idx]));
-                copy.id = Date.now() + Math.random();
-                copy.requestNumber = nextRequestNumber++;
-                currentDoors.splice(idx+1, 0, copy);
-                renderRightTable();
-                showToast(`Скопировано как N${copy.requestNumber}`);
-            };
-        });
-        document.querySelectorAll(".del-row").forEach(btn => {
-            btn.onclick = () => {
-                let idx = parseInt(btn.dataset.idx);
-                currentDoors.splice(idx,1);
-                renderRightTable();
-                showToast("Удалено");
-            };
-        });
-    }
-    
-    function escapeHtml(str) { return String(str).replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+    window.copyRow = function(idx) {
+        let copy = JSON.parse(JSON.stringify(currentDoors[idx]));
+        copy.id = Date.now() + Math.random();
+        copy.requestNumber = nextRequestNumber++;
+        currentDoors.splice(idx+1, 0, copy);
+        renderRightTable();
+    };
+    window.delRow = function(idx) {
+        currentDoors.splice(idx,1);
+        renderRightTable();
+    };
+
+    // Утилиты
+    function escapeHtml(str) { return String(str).replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
     function showToast(msg) {
-        let t = document.querySelector(".toast");
-        if(!t){ t=document.createElement("div"); t.className="toast"; document.body.appendChild(t); }
-        t.textContent = msg; t.style.display="block";
-        setTimeout(()=> t.style.display="none", 2000);
+        const t = document.getElementById("toast");
+        t.textContent = msg; t.style.display = "block";
+        setTimeout(() => t.style.display = "none", 3000);
     }
-    function clamp(v, min, max) { return Math.min(max, Math.max(min, v || min)); }
-    
-    function openOverlay() {
-        document.getElementById("configOverlay").classList.remove("hidden");
-        if (doorTypes.length === 0) loadDataFromAPI();
-        else { renderConfigForm(); renderExtraParams(); renderRightTable(); }
+    function showLoading(text) {
+        document.getElementById("loadingText").innerText = text;
+        document.getElementById("loadingOverlay").style.display = "flex";
     }
-    function closeOverlay() { document.getElementById("configOverlay").classList.add("hidden"); }
-    
-    document.getElementById("openOverlayBtn").addEventListener("click", openOverlay);
-    document.getElementById("closeOverlayBtn").addEventListener("click", closeOverlay);
-    document.getElementById("addDoorBtn").addEventListener("click", addCurrentDoor);
-    document.getElementById("refreshDataBtn").addEventListener("click", loadDataFromAPI);
+    function hideLoading() {
+        document.getElementById("loadingOverlay").style.display = "none";
+    }
+
+    document.getElementById("refreshBtn").addEventListener("click", loadDataFromAPI);
     document.getElementById("copyAllBtn").addEventListener("click", () => {
-        const data = currentDoors.map(({id, ...rest}) => rest);
-        console.log(JSON.stringify(data, null, 2));
-        alert("JSON в консоли (F12)");
-        showToast("JSON в консоли");
+        console.log(JSON.stringify(currentDoors.map(({id, ...rest}) => rest), null, 2));
+        showToast("JSON в консоли (F12)");
     });
-    
+
+    // Запуск
     loadDataFromAPI();
 </script>
 </body>
-</html> 
+</html>
