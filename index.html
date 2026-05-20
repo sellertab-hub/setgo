@@ -42,6 +42,7 @@
         .toast { position: fixed; bottom: 24px; right: 24px; background: #0f172a; border: 1px solid #334155; color: #cbd5e6; padding: 8px 18px; font-size: 13px; z-index: 10001; }
         .details-summary { margin-top: 20px; cursor: pointer; background: #0f172a; padding: 8px; border: 1px solid #334155; text-align: center; }
         .extra-params { margin-top: 15px; }
+        button.small-icon { background: #11161f; border: 1px solid #2d3748; padding: 5px 12px; cursor: pointer; color: #b9c7db; font-weight: 700; }
     </style>
 </head>
 <body>
@@ -87,7 +88,7 @@
             <div class="table-wrapper">
                 <table id="doorsTable">
                     <thead id="tableHeader"></thead>
-                    <tbody id="doorsTbody"><td><td colspan="20">НЕТ ДВЕРЕЙ</tr</tbody>
+                    <tbody id="doorsTbody"><tr><td colspan="20">НЕТ ДВЕРЕЙ</tr</tbody>
                 </table>
             </div>
         </div>
@@ -95,8 +96,9 @@
 </div>
 
 <script>
-    // ------------------- КОНФИГУРАЦИЯ -------------------
+    // ⚠️ ЗАМЕНИТЕ ID НА РЕАЛЬНЫЙ (ТОТ ЖЕ, ЧТО РАБОТАЛ РАНЬШЕ)
     const API_URL = "https://script.google.com/macros/s/AKfycbxvY2Pt-MNqFFkhm-ETP12L2jrr3vepUJrGYQRBDLhEOhJQMH3ZUHnfhRhrO509yKma/exec";
+    
     const CORE_FIELDS = ["Коробка", "Открывание", "Металл", "Порог", "Цилиндр", "Доводчик", "Цвет", "Остекление"];
     const ALL_POSSIBLE_FIELDS = [
         "Базовая цена", "Столбец 7", "Толщина металла полотна", "Упаковка", "Производство", 
@@ -111,9 +113,8 @@
     let nextRequestNumber = 1;
     let usedExtraFields = new Set();
     let currentClient = "";
-    let currentOrderId = null;  // null = новый заказ
+    let currentOrderId = null;
 
-    // ------------------- ВСПОМОГАТЕЛЬНЫЕ -------------------
     function escapeHtml(str) { return String(str).replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
     function showToast(msg) {
         let t = document.querySelector(".toast");
@@ -123,7 +124,7 @@
     }
     function clamp(v, min, max) { return Math.min(max, Math.max(min, v || min)); }
 
-    // ------------------- ЗАГРУЗКА СПРАВОЧНИКА ДВЕРЕЙ -------------------
+    // ------------------- ЗАГРУЗКА СПРАВОЧНИКА -------------------
     async function loadDoorTypes() {
         try {
             const resp = await fetch(API_URL);
@@ -215,7 +216,7 @@
         }
     }
     async function createNewOrderId() {
-        // Можно добавить отдельный эндпоинт, но проще пока генерировать на клиенте
+        // Можно добавить отдельный эндпоинт, но пока генерируем на клиенте
         return Date.now();
     }
 
@@ -254,7 +255,6 @@
                 if (orderData) {
                     currentOrderId = id;
                     currentDoors = orderData.doors.map(d => ({ ...d, id: Date.now()+Math.random() }));
-                    // Восстанавливаем usedExtraFields
                     usedExtraFields.clear();
                     for (let door of currentDoors) {
                         for (let f of ALL_POSSIBLE_FIELDS) if (door[f] && door[f] !== "—") usedExtraFields.add(f);
@@ -271,7 +271,6 @@
                 if (orderData) {
                     currentOrderId = null;
                     currentDoors = orderData.doors.map(d => ({ ...d, id: Date.now()+Math.random(), requestNumber: null }));
-                    // Пересчитаем номера заявок
                     currentDoors.forEach((d,i) => d.requestNumber = i+1);
                     nextRequestNumber = currentDoors.length+1;
                     usedExtraFields.clear();
@@ -572,7 +571,6 @@
         document.getElementById("startScreen").style.display = "block";
         refreshOrdersList();
     }
-
     async function saveCurrentOrder() {
         if (!currentClient) { showToast("Клиент не выбран"); return; }
         if (currentDoors.length === 0) { showToast("Нет дверей для сохранения"); return; }
