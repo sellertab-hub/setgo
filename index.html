@@ -153,30 +153,36 @@
         }
     }
 
-    function parseDoorTypes(rows) {
+  function parseDoorTypes(rows) {
         doorTypes = [];
         for (const row of rows) {
-            const key = row["Ключ"];
+            // Обязательно приводим всё к строке, чтобы избежать ошибок с числами из Google Sheets
+            const key = row["Ключ"] ? String(row["Ключ"]).trim() : null;
             if (!key) continue;
-            const name = row["Имя"] || key;
+            
+            const name = row["Имя"] ? String(row["Имя"]).trim() : key;
             let widthMin=600, widthMax=1200, heightMin=1900, heightMax=2500;
-            const wMatch = (row["Ширина"] || "").match(/(\d+)\s*-\s*(\d+)/);
+            
+            const wMatch = String(row["Ширина"] || "").match(/(\d+)\s*-\s*(\d+)/);
             if (wMatch) { widthMin = +wMatch[1]; widthMax = +wMatch[2]; }
-            const hMatch = (row["Высота"] || "").match(/(\d+)\s*-\s*(\d+)/);
+            
+            const hMatch = String(row["Высота"] || "").match(/(\d+)\s*-\s*(\d+)/);
             if (hMatch) { heightMin = +hMatch[1]; heightMax = +hMatch[2]; }
+            
             let options = {};
             for (let f of CORE_FIELDS) {
-                let raw = row[f] || "";
+                let raw = String(row[f] || "");
                 options[f] = raw.split(" -|- ").map(s => s.trim()).filter(s => s && s !== "-");
             }
             let extraOptions = {};
             for (let f of ALL_POSSIBLE_FIELDS) {
-                let raw = row[f] || "";
+                let raw = String(row[f] || "");
                 extraOptions[f] = raw.split(" -|- ").map(s => s.trim()).filter(s => s && s !== "-");
             }
             doorTypes.push({ key, name, widthMin, widthMax, heightMin, heightMax, options, extraOptions });
         }
     }
+
 
     async function loadClients() {
         try {
@@ -312,73 +318,92 @@
     }
 
     function renderConfigForm() {
-        if (doorTypes.length === 0) {
-            document.getElementById("configForm").innerHTML = '<div style="color:#f87171;">НЕТ ДАННЫХ О ТИПАХ ДВЕРЕЙ</div>';
-            return;
-        }
-        if (!currentTypeKey && doorTypes.length) currentTypeKey = doorTypes[0].key;
-        const type = doorTypes.find(t => t.key === currentTypeKey);
-        if (!type) return;
-        
-        let html = `<div class="form-group"><label>Тип конструкции</label><select id="doorTypeSelect">`;
-        for (const t of doorTypes) {
-            html += `<option value="${t.key}" ${t.key===currentTypeKey ? 'selected' : ''}>[${escapeHtml(t.key)}] ${escapeHtml(t.name)}</option>`;
-        }
-        html += `</select></div>`;
-        html += `<div class="form-group"><label>Высота (${type.heightMin}–${type.heightMax} мм)</label><input type="number" id="heightVal" value="${type.heightMin}" min="${type.heightMin}" max="${type.heightMax}"><div class="error-msg" id="heightError">* Вне диапазона</div></div>`;
-        html += `<div class="form-group"><label>Ширина (${type.widthMin}–${type.widthMax} мм)</label><input type="number" id="widthVal" value="${type.widthMin}" min="${type.widthMin}" max="${type.widthMax}"><div class="error-msg" id="widthError">* Вне диапазона</div></div>`;
-        for (let f of CORE_FIELDS) {
-            let opts = type.options[f];
-            if (opts && opts.length) {
-                html += `<div class="form-group"><label>${f}</label><select id="cfg_${f}">${opts.map(opt => `<option>${escapeHtml(opt)}</option>`).join('')}</select></div>`;
-            } else {
-                html += `<div class="form-group" style="display:none;"><select id="cfg_${f}" disabled><option>—</option></select></div>`;
+        try {
+            if (doorTypes.length === 0) {
+                document.getElementById("configForm").innerHTML = '<div style="color:#f87171;">НЕТ ДАННЫХ О ТИПАХ ДВЕРЕЙ</div>';
+                return;
             }
+            if (!currentTypeKey && doorTypes.length) currentTypeKey = doorTypes[0].key;
+            
+            // Защита: ищем по строковому значению, так как из селекта всегда падает строка, а в базе может быть число
+            const type = doorTypes.find(t => String(t.key) === String(currentTypeKey));
+            
+            if (!type) {
+                document.getElementById("configForm").innerHTML = `<div style="color:#f87171;">Ошибка: Тип двери "${currentTypeKey}" не найден. Проверьте справочник.</div>`;
+                return;
+            }
+
+            let html = `<div class="form-group"><label>Тип конструкции</label><select id="doorTypeSelect">`;
+            for (const t of doorTypes) {
+                html += `<option value="${t.key}" ${String(t.key) === String(currentTypeKey) ? 'selected' : ''}>[${escapeHtml(t.key)}] ${escapeHtml(t.name)}</option>`;
+            }
+            html += `</select></div>`;
+            html += `<div class="form-group"><label>Высота (${type.heightMin}–${type.heightMax} мм)</label><input type="number" id="heightVal" value="${type.heightMin}" min="${type.heightMin}" max="${type.heightMax}"><div class="error-msg" id="heightError">* Вне диапазона</div></div>`;
+            html += `<div class="form-group"><label>Ширина (${type.widthMin}–${type.widthMax} мм)</label><input type="number" id="widthVal" value="${type.widthMin}" min="${type.widthMin}" max="${type.widthMax}"><div class="error-msg" id="widthError">* Вне диапазона</div></div>`;
+            
+            for (let f of CORE_FIELDS) {
+                let opts = type.options[f];
+                if (opts && opts.length) {
+                    html += `<div class="form-group"><label>${f}</label><select id="cfg_${f}">${opts.map(opt => `<option>${escapeHtml(opt)}</option>`).join('')}</select></div>`;
+                } else {
+                    html += `<div class="form-group" style="display:none;"><select id="cfg_${f}" disabled><option>—</option></select></div>`;
+                }
+            }
+            html += `<div class="form-group"><label>Толщина стены, мм</label><input type="number" id="wallThick" value="100" step="10"></div>`;
+            html += `<div class="form-group"><label>Количество</label><input type="number" id="quantity" value="1" min="1"></div>`;
+            
+            document.getElementById("configForm").innerHTML = html;
+            
+            const heightInput = document.getElementById("heightVal");
+            const widthInput = document.getElementById("widthVal");
+            const validateHeight = () => {
+                let val = parseInt(heightInput.value);
+                if (val < type.heightMin || val > type.heightMax || isNaN(val)) {
+                    document.getElementById("heightError").style.display = "block"; heightInput.style.borderColor = "#f87171";
+                } else { document.getElementById("heightError").style.display = "none"; heightInput.style.borderColor = "#334155"; }
+            };
+            const validateWidth = () => {
+                let val = parseInt(widthInput.value);
+                if (val < type.widthMin || val > type.widthMax || isNaN(val)) {
+                    document.getElementById("widthError").style.display = "block"; widthInput.style.borderColor = "#f87171";
+                } else { document.getElementById("widthError").style.display = "none"; widthInput.style.borderColor = "#334155"; }
+            };
+            heightInput.addEventListener("input", validateHeight);
+            widthInput.addEventListener("input", validateWidth);
+            
+            document.getElementById("doorTypeSelect").addEventListener("change", (e) => {
+                currentTypeKey = e.target.value;
+                renderConfigForm();
+                renderExtraParams();
+            });
+        } catch(err) {
+            document.getElementById("configForm").innerHTML = `<div style="color:#f87171;"><b>Критическая ошибка отрисовки:</b><br>${err.message}</div>`;
+            console.error("Ошибка в renderConfigForm:", err);
         }
-        html += `<div class="form-group"><label>Толщина стены, мм</label><input type="number" id="wallThick" value="100" step="10"></div>`;
-        html += `<div class="form-group"><label>Количество</label><input type="number" id="quantity" value="1" min="1"></div>`;
-        document.getElementById("configForm").innerHTML = html;
-        
-        const heightInput = document.getElementById("heightVal");
-        const widthInput = document.getElementById("widthVal");
-        const validateHeight = () => {
-            let val = parseInt(heightInput.value);
-            if (val < type.heightMin || val > type.heightMax || isNaN(val)) {
-                document.getElementById("heightError").style.display = "block"; heightInput.style.borderColor = "#f87171";
-            } else { document.getElementById("heightError").style.display = "none"; heightInput.style.borderColor = "#334155"; }
-        };
-        const validateWidth = () => {
-            let val = parseInt(widthInput.value);
-            if (val < type.widthMin || val > type.widthMax || isNaN(val)) {
-                document.getElementById("widthError").style.display = "block"; widthInput.style.borderColor = "#f87171";
-            } else { document.getElementById("widthError").style.display = "none"; widthInput.style.borderColor = "#334155"; }
-        };
-        heightInput.addEventListener("input", validateHeight);
-        widthInput.addEventListener("input", validateWidth);
-        
-        document.getElementById("doorTypeSelect").addEventListener("change", (e) => {
-            currentTypeKey = e.target.value;
-            renderConfigForm();
-            renderExtraParams();
-        });
     }
 
-    function renderExtraParams() {
-        if (!currentTypeKey) return;
-        const type = doorTypes.find(t => t.key === currentTypeKey);
-        if (!type) return;
-        const container = document.getElementById("extraParamsContainer");
-        let html = "";
-        for (let f of ALL_POSSIBLE_FIELDS) {
-            let opts = type.extraOptions[f];
-            if (opts && opts.length) {
-                html += `<div class="form-group"><label>${f}</label><select id="extra_${f}"><option value="">— НЕ ВЫБРАНО —</option>${opts.map(opt => `<option>${escapeHtml(opt)}</option>`).join('')}</select></div>`;
-            } else {
-                html += `<div class="form-group" style="display:none;"><select id="extra_${f}" disabled><option>—</option></select></div>`;
+
+ function renderExtraParams() {
+        try {
+            if (!currentTypeKey) return;
+            const type = doorTypes.find(t => String(t.key) === String(currentTypeKey));
+            if (!type) return;
+            const container = document.getElementById("extraParamsContainer");
+            let html = "";
+            for (let f of ALL_POSSIBLE_FIELDS) {
+                let opts = type.extraOptions[f];
+                if (opts && opts.length) {
+                    html += `<div class="form-group"><label>${f}</label><select id="extra_${f}"><option value="">— НЕ ВЫБРАНО —</option>${opts.map(opt => `<option>${escapeHtml(opt)}</option>`).join('')}</select></div>`;
+                } else {
+                    html += `<div class="form-group" style="display:none;"><select id="extra_${f}" disabled><option>—</option></select></div>`;
+                }
             }
+            container.innerHTML = html;
+        } catch (err) {
+            console.error("Ошибка в renderExtraParams:", err);
         }
-        container.innerHTML = html;
     }
+
 
     function getSelectedExtraParams() {
         const sel = {};
