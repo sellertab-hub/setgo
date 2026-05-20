@@ -96,8 +96,8 @@
 </div>
 
 <script>
-    // ⚠️ ЗАМЕНИТЕ ID НА РЕАЛЬНЫЙ (ТОТ ЖЕ, ЧТО РАБОТАЛ РАНЬШЕ)
-    const API_URL = "https://script.google.com/macros/s/AKfycbxvY2Pt-MNqFFkhm-ETP12L2jrr3vepUJrGYQRBDLhEOhJQMH3ZUHnfhRhrO509yKma/exec";
+    // ⚠️ ЗАМЕНИТЕ ID НА РЕАЛЬНЫЙ (ТОТ ЖЕ, ЧТО РАБОТАЛ РАНЬШЕ ИЛИ НОВЫЙ ПОСЛЕ ДЕПЛОЯ)
+    const API_URL = "https://script.google.com/macros/s/AKfycbwi53HhkSBfPwvENZDvqCmIVGQkHTLaI2nMF3dTR44mae_QL4u1SAfaIzmHWRm0iES-/exec";
     
     const CORE_FIELDS = ["Коробка", "Открывание", "Металл", "Порог", "Цилиндр", "Доводчик", "Цвет", "Остекление"];
     const ALL_POSSIBLE_FIELDS = [
@@ -200,10 +200,9 @@
     }
     async function saveOrderToServer(orderId, client, doors) {
         try {
+            // Отправляем без заголовка Content-Type, чтобы избежать preflight
             const resp = await fetch(API_URL, {
                 method: "POST",
-                mode: "cors",
-                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ action: "saveOrder", orderId, clientName: client, doorsData: doors })
             });
             const data = await resp.json();
@@ -216,7 +215,6 @@
         }
     }
     async function createNewOrderId() {
-        // Можно добавить отдельный эндпоинт, но пока генерируем на клиенте
         return Date.now();
     }
 
