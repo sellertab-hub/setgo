@@ -8,7 +8,53 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background: #1a1e24; font-family: 'Play', sans-serif; color: #eef2ff; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
         
-        /* Стили стартового экрана */
+        /* Экран входа */
+        #loginScreen {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .login-box {
+            background: #1e2430;
+            padding: 40px;
+            border: 1px solid #2d3748;
+            width: 350px;
+        }
+        .login-box h2 { margin-bottom: 25px; text-align: center; color: #cbd5e6; }
+        .login-box label { display: block; margin-bottom: 5px; font-size: 0.9rem; color: #b9c7db; }
+        .login-box input {
+            width: 100%;
+            padding: 10px;
+            background: #0f1117;
+            border: 1px solid #334155;
+            color: #e2e8f0;
+            font-size: 1rem;
+            font-family: 'Play';
+            margin-bottom: 20px;
+        }
+        .login-box .error-msg {
+            color: #f87171;
+            font-size: 0.85rem;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .btn-login {
+            background: #0f172a;
+            color: #e2e8f0;
+            border: 1px solid #334155;
+            padding: 12px;
+            width: 100%;
+            font-weight: 700;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-login:hover { background: #1e293b; border-color: #5b6e8c; }
+
+        /* Основное приложение (скрыто до входа) */
+        #mainApp { display: none; flex-direction: column; height: 100vh; }
+
         .start-screen { padding: 40px; display: flex; flex-direction: column; align-items: center; overflow-y: auto; flex: 1; }
         .panel-box { background: #1e2430; padding: 30px; border: 1px solid #2d3748; width: 100%; max-width: 800px; margin-bottom: 20px; }
         .panel-box h2 { margin-bottom: 20px; font-size: 1.4rem; color: #cbd5e6; text-align: center; }
@@ -16,14 +62,12 @@
         .btn-main { background: #0f172a; color: #e2e8f0; border: 1px solid #334155; padding: 14px 28px; font-size: 1.1rem; font-weight: 700; cursor: pointer; text-transform: uppercase; width: 100%; transition: 0.2s; }
         .btn-main:hover { background: #1e293b; border-color: #5b6e8c; }
         
-        /* Таблица заказов на стартовом экране */
         .orders-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         .orders-table th { background: #11161f; padding: 12px; text-align: left; border-bottom: 1px solid #2d3748; }
         .orders-table td { padding: 12px; border-bottom: 1px solid #2a3342; background: #181e28; }
         .btn-small { background: #232a36; border: 1px solid #4b5563; color: #cbd5e6; padding: 6px 12px; cursor: pointer; font-weight: 700; font-size: 0.8rem; margin-right: 5px; }
         .btn-small:hover { background: #374151; color: white; }
 
-        /* Конфигуратор */
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0f1117; z-index: 10000; display: flex; flex-direction: column; }
         .overlay.hidden { display: none; }
         .overlay-header { background: #090c10; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2d3748; }
@@ -52,7 +96,6 @@
         
         .form-group { margin-bottom: 18px; }
         .form-group label { font-weight: 700; display: block; margin-bottom: 6px; font-size: 0.85rem; color: #b9c7db; }
-        .form-group .error-msg { color: #f87171; font-size: 0.7rem; margin-top: 4px; display: none; }
         select, input[type="number"], input[type="text"] { width: 100%; padding: 8px 10px; background: #0f1117; border: 1px solid #334155; color: #e2e8f0; font-size: 0.85rem; font-family: 'Play', monospace; }
         
         .toast { position: fixed; bottom: 24px; right: 24px; background: #0f172a; border: 1px solid #334155; color: #cbd5e6; padding: 12px 24px; font-size: 14px; font-weight: bold; z-index: 10001; display: none; }
@@ -68,67 +111,82 @@
 <body>
 
 <!-- Индикатор загрузки -->
-<div id="loadingOverlay">
+<div id="loadingOverlay" style="display: none;">
     <div class="loader"></div>
-    <div id="loadingText">Загрузка данных...</div>
+    <div id="loadingText"></div>
 </div>
 
-<!-- Стартовый экран (Выбор клиента и история) -->
-<div id="startScreen" class="start-screen">
-    <div class="panel-box">
-        <h2>СИСТЕМА УПРАВЛЕНИЯ ЗАКАЗАМИ</h2>
-        <input type="text" id="clientSearch" class="client-input" list="clientDatalist" placeholder="Начните вводить имя клиента..." autocomplete="off">
-        <datalist id="clientDatalist"></datalist>
-        <button id="refreshBtn" class="btn-main" style="margin-bottom: 20px;">ОБНОВИТЬ ДАННЫЕ</button>
-        <button id="startNewOrderBtn" class="btn-save" style="width: 100%; padding: 14px; display: none;">+ СОЗДАТЬ НОВЫЙ ЗАКАЗ</button>
-    </div>
-
-    <div id="ordersPanel" class="panel-box" style="display: none;">
-        <h2>ИСТОРИЯ ЗАКАЗОВ КЛИЕНТА</h2>
-        <table class="orders-table">
-            <thead>
-                <tr>
-                    <th>ДАТА</th>
-                    <th>ДВЕРЕЙ</th>
-                    <th>ДЕЙСТВИЯ</th>
-                </tr>
-            </thead>
-            <tbody id="ordersTbody">
-                <!-- Сюда вставятся заказы -->
-            </tbody>
-        </table>
+<!-- ЭКРАН ВХОДА -->
+<div id="loginScreen">
+    <div class="login-box">
+        <h2>ВХОД В СИСТЕМУ</h2>
+        <label for="loginInput">ЛОГИН</label>
+        <input type="text" id="loginInput" placeholder="Введите логин">
+        <label for="passwordInput">ПАРОЛЬ</label>
+        <input type="password" id="passwordInput" placeholder="Введите пароль">
+        <div id="loginError" class="error-msg"></div>
+        <button id="loginBtn" class="btn-login">ВОЙТИ</button>
     </div>
 </div>
 
-<!-- Главный конфигуратор -->
-<div id="configOverlay" class="overlay hidden">
-    <div class="overlay-header">
-        <h2 id="configHeaderTitle">ТЕХНИЧЕСКИЙ КОНФИГУРАТОР</h2>
-        <button id="closeOverlayBtn" class="close-btn">НАЗАД К КЛИЕНТАМ</button>
-    </div>
-    <div class="main-layout">
-        <div class="config-panel">
-            <h3 style="margin-bottom:20px;">ПАРАМЕТРЫ ДВЕРИ</h3>
-            <div id="configForm">ЗАГРУЗКА ПАРАМЕТРОВ...</div>
-            <details class="details-summary">
-                <summary>➕ ДОПОЛНИТЕЛЬНЫЕ ПАРАМЕТРЫ</summary>
-                <div id="extraParamsContainer" style="margin-top: 15px;"></div>
-            </details>
-            <button id="addDoorBtn" class="btn-main" style="margin-top: 20px;">ДОБАВИТЬ В СПИСОК</button>
+<!-- ОСНОВНОЙ ИНТЕРФЕЙС (скрыт до входа) -->
+<div id="mainApp">
+    <!-- Стартовый экран (Выбор клиента и история) -->
+    <div id="startScreen" class="start-screen">
+        <div class="panel-box">
+            <h2>СИСТЕМА УПРАВЛЕНИЯ ЗАКАЗАМИ</h2>
+            <input type="text" id="clientSearch" class="client-input" list="clientDatalist" placeholder="Начните вводить имя клиента..." autocomplete="off">
+            <datalist id="clientDatalist"></datalist>
+            <button id="refreshBtn" class="btn-main" style="margin-bottom: 20px;">ОБНОВИТЬ ДАННЫЕ</button>
+            <button id="startNewOrderBtn" class="btn-save" style="width: 100%; padding: 14px; display: none;">+ СОЗДАТЬ НОВЫЙ ЗАКАЗ</button>
         </div>
-        <div class="list-panel">
-            <div class="list-header">
-                <h3>ТЕКУЩИЙ ЗАКАЗ</h3>
-                <div class="header-actions">
-                    <button id="copyAllBtn" class="btn-small">КОПИРОВАТЬ JSON</button>
-                    <button id="saveOrderBtn" class="btn-save">💾 СОХРАНИТЬ ЗАКАЗ</button>
-                </div>
+
+        <div id="ordersPanel" class="panel-box" style="display: none;">
+            <h2>ИСТОРИЯ ЗАКАЗОВ КЛИЕНТА</h2>
+            <table class="orders-table">
+                <thead>
+                    <tr>
+                        <th>ДАТА</th>
+                        <th>ДВЕРЕЙ</th>
+                        <th>ДЕЙСТВИЯ</th>
+                    </tr>
+                </thead>
+                <tbody id="ordersTbody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Главный конфигуратор -->
+    <div id="configOverlay" class="overlay hidden">
+        <div class="overlay-header">
+            <h2 id="configHeaderTitle">ТЕХНИЧЕСКИЙ КОНФИГУРАТОР</h2>
+            <button id="closeOverlayBtn" class="close-btn">НАЗАД К КЛИЕНТАМ</button>
+        </div>
+        <div class="main-layout">
+            <div class="config-panel">
+                <h3 style="margin-bottom:20px;">ПАРАМЕТРЫ ДВЕРИ</h3>
+                <div id="configForm">ЗАГРУЗКА ПАРАМЕТРОВ...</div>
+                <details class="details-summary">
+                    <summary>➕ ДОПОЛНИТЕЛЬНЫЕ ПАРАМЕТРЫ</summary>
+                    <div id="extraParamsContainer" style="margin-top: 15px;"></div>
+                </details>
+                <button id="addDoorBtn" class="btn-main" style="margin-top: 20px;">ДОБАВИТЬ В СПИСОК</button>
             </div>
-            <div class="table-wrapper">
-                <table class="doors-table">
-                    <thead id="tableHeader"></thead>
-                    <tbody id="doorsTbody"><tr><td colspan="20">НЕТ ДОБАВЛЕННЫХ ДВЕРЕЙ</td></tr></tbody>
-                </table>
+            <div class="list-panel">
+                <div class="list-header">
+                    <h3>ТЕКУЩИЙ ЗАКАЗ</h3>
+                    <div class="header-actions">
+                        <button id="copyAllBtn" class="btn-small">КОПИРОВАТЬ JSON</button>
+                        <button id="saveOrderBtn" class="btn-save">💾 СОХРАНИТЬ ЗАКАЗ</button>
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <table class="doors-table">
+                        <thead id="tableHeader"></thead>
+                        <tbody id="doorsTbody"><tr><td colspan="20">НЕТ ДОБАВЛЕННЫХ ДВЕРЕЙ</td></tr></tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -137,7 +195,6 @@
 <div class="toast" id="toast"></div>
 
 <script>
-    // ⚠️ ВАШ НОВЫЙ URL РАЗВЕРТЫВАНИЯ
     const API_URL = "https://script.google.com/macros/s/AKfycbwi53HhkSBfPwvENZDvqCmIVGQkHTLaI2nMF3dTR44mae_QL4u1SAfaIzmHWRm0iES-/exec";
     
     const CORE_FIELDS = ["Коробка", "Открывание", "Металл", "Порог", "Цилиндр", "Доводчик", "Цвет", "Остекление"];
@@ -152,15 +209,59 @@
     let allClients = [];
     let allOrders = [];
     let groupedClientOrders = [];
-
     let selectedClient = "";
-    let currentOrderId = null; // null = новый заказ
+    let currentOrderId = null;
     let currentDoors = [];
     let currentTypeKey = "";
     let nextRequestNumber = 1;
     let usedExtraFields = new Set();
-    
-    // --- Инициализация и загрузка ---
+
+    // --- АУТЕНТИФИКАЦИЯ ---
+    const loginScreen = document.getElementById('loginScreen');
+    const mainApp = document.getElementById('mainApp');
+    const loginError = document.getElementById('loginError');
+
+    document.getElementById('loginBtn').addEventListener('click', async () => {
+        const login = document.getElementById('loginInput').value.trim();
+        const password = document.getElementById('passwordInput').value.trim();
+        if (!login || !password) {
+            loginError.textContent = 'Введите логин и пароль';
+            return;
+        }
+        loginError.textContent = '';
+        showLoading('Проверка учётных данных...');
+        try {
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ action: 'login', login, password })
+            });
+            const data = await response.json();
+            if (data.error) throw new Error(data.error);
+            if (data.success) {
+                // Успешный вход
+                loginScreen.style.display = 'none';
+                mainApp.style.display = 'flex';
+                await loadDataFromAPI(); // загружаем данные после входа
+            } else {
+                loginError.textContent = data.message || 'Неверный логин или пароль';
+            }
+        } catch (err) {
+            loginError.textContent = 'Ошибка соединения: ' + err.message;
+        } finally {
+            hideLoading();
+        }
+    });
+
+    // Разрешаем вход по Enter
+    document.getElementById('passwordInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') document.getElementById('loginBtn').click();
+    });
+    document.getElementById('loginInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') document.getElementById('passwordInput').focus();
+    });
+
+    // --- ДАННЫЕ (без изменений) ---
     async function loadDataFromAPI() {
         showLoading("Загрузка базы данных...");
         try {
@@ -172,15 +273,11 @@
             allClients = data.clients || [];
             allOrders = data.orders || [];
             
-            // Обновляем список клиентов
             const datalist = document.getElementById("clientDatalist");
             datalist.innerHTML = allClients.map(c => `<option value="${escapeHtml(c)}">`).join('');
             
             if (doorTypes.length) currentTypeKey = doorTypes[0].key;
-            
-            // Если клиент уже выбран (при обновлении), перерисовываем его заказы
             if (selectedClient) renderClientOrders();
-            
             hideLoading();
         } catch (err) {
             hideLoading();
@@ -210,11 +307,10 @@
         }
     }
 
-    // --- Логика стартового экрана ---
+    // --- Стартовый экран ---
     document.getElementById("clientSearch").addEventListener("input", (e) => {
         selectedClient = e.target.value.trim();
         const startNewBtn = document.getElementById("startNewOrderBtn");
-        
         if (selectedClient && allClients.includes(selectedClient)) {
             startNewBtn.style.display = "block";
             renderClientOrders();
@@ -229,7 +325,6 @@
         const tbody = document.getElementById("ordersTbody");
         panel.style.display = "block";
         
-        // Группируем двери по Order ID
         const clientDoors = allOrders.filter(o => o["Имя клиента"] === selectedClient);
         const groups = {};
         clientDoors.forEach(d => {
@@ -257,7 +352,6 @@
         `).join('');
     }
 
-    // --- Навигация и создание заказов ---
     document.getElementById("startNewOrderBtn").addEventListener("click", () => {
         currentOrderId = null;
         currentDoors = [];
@@ -279,7 +373,7 @@
     window.duplicateOrder = function(orderId) {
         const group = groupedClientOrders.find(g => g.id === orderId);
         if (!group) return;
-        currentOrderId = null; // Копия = новый заказ без ID
+        currentOrderId = null;
         loadDoorsIntoConfig(group.doors);
         document.getElementById("configHeaderTitle").innerText = `КОПИЯ ЗАКАЗА: ${selectedClient}`;
         openConfigurator();
@@ -289,7 +383,6 @@
         usedExtraFields.clear();
         currentDoors = doorsArr.map((d, index) => {
             const newDoor = { ...d, id: Date.now() + Math.random(), requestNumber: index + 1 };
-            // Регистрируем использованные доп поля
             ALL_POSSIBLE_FIELDS.forEach(f => {
                 if (newDoor[f] && newDoor[f] !== "—") usedExtraFields.add(f);
             });
@@ -309,42 +402,34 @@
         document.getElementById("configOverlay").classList.add("hidden");
     });
 
-    // --- Сохранение заказа (POST запрос) ---
     document.getElementById("saveOrderBtn").addEventListener("click", async () => {
         if (!selectedClient) return alert("Ошибка: клиент не выбран!");
         if (currentDoors.length === 0) return alert("В заказе нет ни одной двери!");
-
         showLoading("Сохранение заказа...");
-        
         const payload = {
             action: "saveOrder",
             client: selectedClient,
             orderId: currentOrderId,
             doors: currentDoors
         };
-
         try {
-            // Используем text/plain чтобы избежать префлайт CORS запросов в GAS
             const response = await fetch(API_URL, {
                 method: "POST",
                 headers: { "Content-Type": "text/plain;charset=utf-8" },
                 body: JSON.stringify(payload)
             });
             const result = await response.json();
-            
             if (result.error) throw new Error(result.error);
-            
             showToast("Заказ успешно сохранен!");
             document.getElementById("configOverlay").classList.add("hidden");
-            await loadDataFromAPI(); // Перезагружаем историю
-            
+            await loadDataFromAPI();
         } catch (err) {
             hideLoading();
             alert("Ошибка сохранения: " + err.message);
         }
     });
 
-    // --- Логика конфигуратора (осталась из предыдущей версии с адаптациями) ---
+    // --- Конфигуратор ---
     function renderConfigForm() {
         const type = doorTypes.find(t => t.key === currentTypeKey);
         if (!type) return;
@@ -444,7 +529,7 @@
             bodyHtml += `<td class="door-actions"><button onclick="copyRow(${i})">📋</button><button onclick="delRow(${i})">❌</button></td>`;
             for (let col of allColumns) {
                 let value = d[col] !== undefined ? d[col] : "—";
-                bodyHtml += `<td>${escapeHtml(String(value))}</td>`; // Упростили без инлайн-редактирования для надежности, редактировать можно удалив и добавив дверь.
+                bodyHtml += `<td>${escapeHtml(String(value))}</td>`;
             }
             bodyHtml += `</tr>`;
         }
@@ -484,8 +569,8 @@
         showToast("JSON в консоли (F12)");
     });
 
-    // Запуск
-    loadDataFromAPI();
+    // По умолчанию скрываем основной интерфейс, показываем логин
+    // (уже задано в стилях)
 </script>
 </body>
 </html>
