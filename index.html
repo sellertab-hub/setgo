@@ -287,25 +287,43 @@
     
     function parseDoorTypes(rows) {
         doorTypes = [];
+        if (!rows || rows.length === 0) return;
+        
         for (const row of rows) {
-            const key = row["Ключ"];
+            // Ищем колонку "Ключ" независимо от пробелов и регистра букв
+            const actualKeyName = Object.keys(row).find(k => k.trim().toLowerCase() === 'ключ');
+            const key = actualKeyName ? row[actualKeyName] : null;
+            
             if (!key) continue;
-            const name = row["Имя"] || key;
+            
+            // Вспомогательная функция для безопасного поиска остальных колонок
+            const findVal = (rowObj, name) => {
+                const foundKey = Object.keys(rowObj).find(k => k.trim().toLowerCase() === name.toLowerCase());
+                return foundKey ? rowObj[foundKey] : "";
+            };
+
+            const name = findVal(row, "Имя") || key;
             let widthMin=600, widthMax=1200, heightMin=1900, heightMax=2500;
-            const wMatch = (row["Ширина"] || "").match(/(\d+)\s*-\s*(\d+)/);
+            const wMatch = (findVal(row, "Ширина") || "").match(/(\d+)\s*-\s*(\d+)/);
             if (wMatch) { widthMin = +wMatch[1]; widthMax = +wMatch[2]; }
-            const hMatch = (row["Высота"] || "").match(/(\d+)\s*-\s*(\d+)/);
+            const hMatch = (findVal(row, "Высота") || "").match(/(\d+)\s*-\s*(\d+)/);
             if (hMatch) { heightMin = +hMatch[1]; heightMax = +hMatch[2]; }
             
             let options = {};
-            for (let f of CORE_FIELDS) options[f] = (row[f] || "").split(" -|- ").map(s => s.trim()).filter(s => s && s !== "-");
+            for (let f of CORE_FIELDS) {
+                options[f] = (findVal(row, f) || "").split(" -|- ").map(s => s.trim()).filter(s => s && s !== "-");
+            }
             
             let extraOptions = {};
-            for (let f of ALL_POSSIBLE_FIELDS) extraOptions[f] = (row[f] || "").split(" -|- ").map(s => s.trim()).filter(s => s && s !== "-");
+            for (let f of ALL_POSSIBLE_FIELDS) {
+                extraOptions[f] = (findVal(row, f) || "").split(" -|- ").map(s => s.trim()).filter(s => s && s !== "-");
+            }
             
             doorTypes.push({ key, name, widthMin, widthMax, heightMin, heightMax, options, extraOptions });
         }
     }
+    
+
 
     // --- Стартовый экран ---
     document.getElementById("clientSearch").addEventListener("input", (e) => {
@@ -431,8 +449,24 @@
 
     // --- Конфигуратор ---
     function renderConfigForm() {
-        const type = doorTypes.find(t => t.key === currentTypeKey);
-        if (!type) return;
+        const formContainer = document.getElementById("configForm");
+        
+        // Защита от пустого листа doors: если типов дверей нет, выводим понятную ошибку
+        if (!doorTypes || doorTypes.length === 0) {
+            formContainer.innerHTML = `<div style="color: #f87171; padding: 10px; border: 1px dashed #f87171;">
+                ❌ Ошибка: Не найдены данные дверей.<br>
+                Проверьте, что лист в таблице называется <b>doors</b>, а первая колонка на нем — <b>Ключ</b>.
+            </div>`;
+            return;
+        }
+
+        // Если текущий ключ не установлен или не найден, берем первый доступный из базы
+        let type = doorTypes.find(t => t.key === currentTypeKey);
+        if (!type) {
+            currentTypeKey = doorTypes[0].key;
+            type = doorTypes[0];
+        }
+
         let html = `<div class="form-group"><label>ТИП ДВЕРИ (КЛЮЧ)</label><select id="doorTypeSelect">`;
         doorTypes.forEach(t => { html += `<option value="${t.key}" ${t.key===currentTypeKey ? 'selected' : ''}>${escapeHtml(t.key)} — ${escapeHtml(t.name)}</option>`; });
         html += `</select></div>`;
@@ -451,7 +485,8 @@
         }
         html += `<div class="form-group"><label>ТОЛЩИНА СТЕНЫ, ММ</label><input type="number" id="wallThick" value="100"></div>`;
         html += `<div class="form-group"><label>КОЛИЧЕСТВО</label><input type="number" id="quantity" value="1" min="1"></div>`;
-        document.getElementById("configForm").innerHTML = html;
+        
+        formContainer.innerHTML = html;
         
         document.getElementById("doorTypeSelect").addEventListener("change", (e) => {
             currentTypeKey = e.target.value;
@@ -459,6 +494,7 @@
             renderExtraParams();
         });
     }
+
     
     function renderExtraParams() {
         const type = doorTypes.find(t => t.key === currentTypeKey);
