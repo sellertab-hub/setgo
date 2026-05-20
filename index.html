@@ -176,17 +176,23 @@
         }
     }
 
-    async function loadClients() {
+        async function loadClients() {
         try {
             const resp = await fetch(API_URL + "?action=getClients");
+            if (!resp.ok) throw new Error(`HTTP status ${resp.status}`);
+            
             const data = await resp.json();
+            console.log("ДАННЫЕ КЛИЕНТОВ С СЕРВЕРА:", data); // Отладочная информация (F12)
+            
             if (data.error) throw new Error(data.error);
             return data;
         } catch(e) {
-            showToast("Ошибка получения списка клиентов: " + e.message);
+            console.error("Ошибка сети или скрипта:", e);
+            showToast("Ошибка загрузки клиентов: " + e.message);
             return [];
         }
     }
+
 
     async function loadOrders(client) {
         try {
