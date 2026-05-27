@@ -582,6 +582,24 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        /* PDF Spec Modal */
+        .modal-backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.78); z-index: 30000; display: flex; justify-content: center; align-items: center; }
+        .modal-backdrop.hidden { display: none; }
+        .modal-box { background: #1e2430; border: 1px solid #2d3748; width: 580px; max-height: 90vh; overflow-y: auto; padding: 30px; }
+        .modal-box h2 { margin-bottom: 20px; color: #cbd5e6; font-size: 1.2rem; border-bottom: 1px solid #2d3748; padding-bottom: 12px; }
+        .modal-box .form-group { margin-bottom: 13px; }
+        .modal-box label { font-size: 0.78rem; color: #94a3b8; margin-bottom: 4px; display: block; font-weight: 700; text-transform: uppercase; }
+        .modal-box input[type="text"] { width: 100%; padding: 8px 10px; background: #0f1117; border: 1px solid #334155; color: #e2e8f0; font-size: 0.88rem; font-family: 'Play', monospace; }
+        .modal-actions { display: flex; gap: 12px; margin-top: 20px; }
+        .modal-actions button { flex: 1; padding: 12px; font-weight: 700; font-family: 'Play'; text-transform: uppercase; cursor: pointer; font-size: 0.9rem; border: none; }
+        .btn-cancel-modal { background: #232a36; color: #94a3b8; border: 1px solid #4b5563 !important; }
+        .btn-cancel-modal:hover { background: #2d3748; }
+        .btn-download-pdf { background: #1d4ed8; color: white; }
+        .btn-download-pdf:hover { background: #1e40af; }
+        .btn-pdf { background: #1d4ed8; color: white; border: 1px solid #1e40af; padding: 8px 16px; font-weight: bold; cursor: pointer; font-family: 'Play'; text-transform: uppercase; }
+        .btn-pdf:hover { background: #1e40af; }
+        .modal-section-title { font-size: 0.72rem; color: #4b5563; text-transform: uppercase; letter-spacing: 0.1em; margin: 14px 0 8px; border-top: 1px solid #2d3748; padding-top: 12px; }
     </style>
 </head>
 <body>
@@ -693,7 +711,7 @@
                 <div class="list-header">
                     <h3>ТЕКУЩИЙ ЗАКАЗ</h3>
                     <div class="header-actions">
-                        <button id="copyAllBtn" class="btn-small">КОПИРОВАТЬ JSON</button>
+                        <button id="downloadSpecBtn" class="btn-pdf">📄 СКАЧАТЬ СПЕЦИФИКАЦИЮ</button>
                         <button id="saveOrderBtn" class="btn-save">💾 СОХРАНИТЬ ЗАКАЗ</button>
                     </div>
                 </div>
@@ -764,7 +782,40 @@
     </div>
 </div>
 
+
+<!-- МОДАЛКА СКАЧАТЬ СПЕЦИФИКАЦИЮ -->
+<div id="pdfModal" class="modal-backdrop hidden">
+    <div class="modal-box">
+        <h2>📄 ПАРАМЕТРЫ СПЕЦИФИКАЦИИ</h2>
+
+        <div class="modal-section-title">Документ</div>
+        <div class="form-group"><label>Номер договора поставки</label><input type="text" id="m_dogovorNum" placeholder="781" value="781"></div>
+        <div class="form-group"><label>Дата договора</label><input type="text" id="m_dogovorDate" placeholder="25.02.2026" value="25.02.2026"></div>
+        <div class="form-group"><label>Номер счёта</label><input type="text" id="m_schetNum" placeholder="781-08"></div>
+        <div class="form-group"><label>Дата счёта</label><input type="text" id="m_schetDate" placeholder="25.02.2026"></div>
+
+        <div class="modal-section-title">Клиент и заказ</div>
+        <div class="form-group"><label>Номер клиента (имя + телефон)</label><input type="text" id="m_clientInfo" placeholder="Александр +375298717113"></div>
+        <div class="form-group"><label>Срок поставки</label><input type="text" id="m_deliveryDate" placeholder="05.03.2026"></div>
+        <div class="form-group"><label>Адрес объекта</label><input type="text" id="m_objectAddress" placeholder="Введите адрес"></div>
+        <div class="form-group"><label>Предоплата</label><input type="text" id="m_prepayment" placeholder="100%" value="100%"></div>
+        <div class="form-group"><label>Доставка</label><input type="text" id="m_delivery" placeholder="Самовывоз" value="Самовывоз"></div>
+
+        <div class="modal-section-title">Подпись продавца</div>
+        <div class="form-group"><label>ФИО подписанта (Продавец)</label><input type="text" id="m_sellerName" placeholder="С.А. Богданович" value="С.А. Богданович"></div>
+
+        <div class="modal-actions">
+            <button class="btn-cancel-modal" onclick="closePdfModal()">ОТМЕНА</button>
+            <button class="btn-download-pdf" onclick="generatePDF()">⬇ СКАЧАТЬ PDF</button>
+        </div>
+    </div>
+</div>
+
 <div class="toast" id="toast"></div>
+
+<!-- jsPDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
 <script>
 const API_URL = "https://script.google.com/macros/s/AKfycbwi53HhkSBfPwvENZDvqCmIVGQkHTLaI2nMF3dTR44mae_QL4u1SAfaIzmHWRm0iES-/exec";
@@ -1555,10 +1606,201 @@ function hideLoading() {
 
 document.getElementById("refreshBtn").addEventListener("click", loadDataFromAPI);
 
-document.getElementById("copyAllBtn").addEventListener("click", () => {
-    console.log(JSON.stringify(currentDoors.map(({ id, ...rest }) => rest), null, 2));
-    showToast("JSON в консоли (F12)");
+// --- PDF MODAL ---
+document.getElementById("downloadSpecBtn").addEventListener("click", () => {
+    if (currentDoors.length === 0) return alert("В заказе нет ни одной двери!");
+    document.getElementById("m_clientInfo").value = selectedClient || "";
+    document.getElementById("pdfModal").classList.remove("hidden");
 });
+
+window.closePdfModal = function() {
+    document.getElementById("pdfModal").classList.add("hidden");
+};
+
+document.getElementById("pdfModal").addEventListener("click", function(e) {
+    if (e.target === this) closePdfModal();
+});
+
+window.generatePDF = function() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+    const dogovorNum   = document.getElementById("m_dogovorNum").value.trim() || "___";
+    const dogovorDate  = document.getElementById("m_dogovorDate").value.trim() || "___";
+    const schetNum     = document.getElementById("m_schetNum").value.trim() || "___";
+    const schetDate    = document.getElementById("m_schetDate").value.trim() || "___";
+    const clientInfo   = document.getElementById("m_clientInfo").value.trim() || selectedClient || "___";
+    const deliveryDate = document.getElementById("m_deliveryDate").value.trim() || "___";
+    const objectAddr   = document.getElementById("m_objectAddress").value.trim() || "___";
+    const prepayment   = document.getElementById("m_prepayment").value.trim() || "___";
+    const delivery     = document.getElementById("m_delivery").value.trim() || "___";
+    const sellerName   = document.getElementById("m_sellerName").value.trim() || "___";
+
+    doc.setFont("helvetica");
+    const pageW = doc.internal.pageSize.getWidth();
+    const margin = 12;
+    let y = 14;
+
+    // ===== ШАПКА =====
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "bold");
+    doc.text("СЭТГОУ", pageW / 2, y, { align: "center" });
+    y += 5;
+
+    doc.setFontSize(7);
+    doc.setFont("helvetica", "normal");
+    const products = [
+        "Двери противопожарные","Металлические двери","Противопожарные люки",
+        "Металлические ворота","Комбинированные двери","Маятниковые двери",
+        "Двери из нержавеющей стали","Облегченные двери ZK"
+    ];
+    doc.text(products.map(p => `* ${p} *`).join("   "), pageW / 2, y, { align: "center" });
+    y += 4;
+
+    doc.setFontSize(6.5);
+    doc.text("Юр. адрес: 220099, Минская обл., г. Минск, Казинца, дом № 11А – 94 (пом. 405а)", pageW / 2, y, { align: "center" });
+    y += 3.5;
+    doc.text("Почт. адрес: 220024, Минская обл., г. Минск, Стебенева, дом № 20 литера Е 1/к", pageW / 2, y, { align: "center" });
+    y += 3.5;
+    doc.text("Реквизиты: р/с BY87BELB30121708300090226000, Минское отд. №3 ОАО "Банк БелВЭБ", код BELBBY2X, г. Минск, пр-т Мира 1", pageW / 2, y, { align: "center" });
+    y += 3.5;
+    doc.text("УНП 100072163", pageW / 2, y, { align: "center" });
+    y += 5;
+
+    doc.setDrawColor(180, 180, 180);
+    doc.line(margin, y, pageW - margin, y);
+    y += 5;
+
+    // ===== РЕКВИЗИТЫ ДОКУМЕНТА =====
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "bold");
+    doc.text("Приложение №1", margin, y);
+    y += 4.5;
+    doc.text("К договору поставки № " + dogovorNum + " от " + dogovorDate + "г.", margin, y);
+    y += 4.5;
+    doc.text("Спецификация по счету № " + schetNum + " от " + schetDate + "г.", margin, y);
+    y += 5;
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7.5);
+
+    const col1x = margin;
+    const col2x = pageW / 2 + 5;
+
+    doc.setFont("helvetica", "bold"); doc.text("Номер клиента:", col1x, y);
+    doc.setFont("helvetica", "normal"); doc.text(clientInfo, col1x + 33, y);
+    doc.setFont("helvetica", "bold"); doc.text("Менеджер:", col2x, y);
+    doc.setFont("helvetica", "normal"); doc.text("Алексей +375 (29) 627-83-72", col2x + 23, y);
+    y += 4.5;
+
+    doc.setFont("helvetica", "bold"); doc.text("Срок поставки:", col1x, y);
+    doc.setFont("helvetica", "normal"); doc.text(deliveryDate, col1x + 33, y);
+    doc.setFont("helvetica", "bold"); doc.text("Доставка:", col2x, y);
+    doc.setFont("helvetica", "normal"); doc.text(delivery, col2x + 23, y);
+    y += 4.5;
+
+    doc.setFont("helvetica", "bold"); doc.text("Адрес объекта:", col1x, y);
+    doc.setFont("helvetica", "normal"); doc.text(objectAddr, col1x + 33, y);
+    doc.setFont("helvetica", "bold"); doc.text("Предоплата:", col2x, y);
+    doc.setFont("helvetica", "normal"); doc.text(prepayment, col2x + 23, y);
+    y += 7;
+
+    // ===== ТАБЛИЦА ДВЕРЕЙ =====
+    const baseColumns = ["requestNumber", "doorKey", "Высота", "Ширина", ...CORE_FIELDS, "Толщина стены, мм", "Кол-во"];
+    const extraColumns = Array.from(usedExtraFields).sort();
+    const allColumns = [...baseColumns, ...extraColumns];
+
+    const colHeaders = allColumns.map(col => {
+        if (col === "requestNumber") return "N";
+        if (col === "doorKey") return "Тип";
+        return col;
+    });
+
+    const tableData = currentDoors.map(d => allColumns.map(col => {
+        let v = d[col] !== undefined ? d[col] : "—";
+        return String(v);
+    }));
+
+    doc.autoTable({
+        startY: y,
+        head: [colHeaders],
+        body: tableData,
+        margin: { left: margin, right: margin },
+        styles: {
+            fontSize: 7,
+            cellPadding: 2,
+            overflow: 'linebreak',
+            font: 'helvetica',
+            halign: 'center',
+            valign: 'middle',
+            lineColor: [180, 180, 180],
+            lineWidth: 0.2,
+        },
+        headStyles: {
+            fillColor: [30, 41, 59],
+            textColor: [203, 213, 225],
+            fontStyle: 'bold',
+            fontSize: 7,
+        },
+        alternateRowStyles: { fillColor: [245, 247, 250] },
+        columnStyles: {
+            0: { cellWidth: 8 },
+            1: { cellWidth: 22, halign: 'left' },
+        },
+        didDrawPage: function() {
+            doc.setFontSize(7);
+            doc.setFont("helvetica", "normal");
+            doc.text("Стр. " + doc.internal.getCurrentPageInfo().pageNumber, pageW - margin, doc.internal.pageSize.getHeight() - 5, { align: 'right' });
+        }
+    });
+
+    y = doc.lastAutoTable.finalY + 8;
+
+    // ===== БЛОК РЕКВИЗИТОВ =====
+    if (y + 50 > doc.internal.pageSize.getHeight() - 10) {
+        doc.addPage();
+        y = 15;
+    }
+
+    doc.setDrawColor(180, 180, 180);
+    doc.line(margin, y, pageW - margin, y);
+    y += 5;
+
+    doc.setFontSize(7.5);
+    doc.setFont("helvetica", "normal");
+    doc.text("Выписка и получение товара производится на складе, г. Минск, ул. Стебенева, 20В/1.", margin, y);
+    y += 4;
+    doc.text("Отгрузка производится в рабочие дни с 8:00-12:00; 12:30-16:00", margin, y);
+    y += 4;
+    doc.text("Поставщик имеет право изменить адрес отгрузки. Схемы проезда на сайте WWW.SETGOU.BY", margin, y);
+    y += 9;
+
+    const halfW = (pageW - margin * 2) / 2;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8);
+    doc.text("ПРОДАВЕЦ", margin, y);
+    doc.text("ПОКУПАТЕЛЬ", margin + halfW, y);
+    y += 5;
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7.5);
+    doc.text("УП "СЭТГОУ"", margin, y);
+    doc.text(clientInfo, margin + halfW, y);
+    y += 6;
+
+    doc.line(margin, y, margin + halfW - 10, y);
+    doc.line(margin + halfW, y, pageW - margin, y);
+    y += 4;
+
+    doc.setFontSize(7);
+    doc.text("/ " + sellerName, margin + 35, y);
+    doc.text("/ ________________________", margin + halfW + 35, y);
+
+    const filename = "Спецификация_" + (schetNum !== "___" ? schetNum : dogovorNum) + "_" + clientInfo.split(" ")[0] + ".pdf";
+    doc.save(filename);
+    closePdfModal();
+    showToast("PDF успешно скачан!");
+};
 </script>
 </body>
 </html>
