@@ -7,8 +7,7 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background: #1a1e24; font-family: 'Play', sans-serif; color: #eef2ff; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
-        
-        /* Экран входа */
+
         #loginScreen {
             display: flex;
             justify-content: center;
@@ -49,41 +48,104 @@
             text-transform: uppercase;
             cursor: pointer;
             transition: 0.2s;
+            font-family: 'Play', sans-serif;
         }
         .btn-login:hover { background: #1e293b; border-color: #5b6e8c; }
 
-        /* Основное приложение (скрыто до входа) */
         #mainApp { display: none; flex-direction: column; height: 100vh; }
 
         .start-screen { padding: 40px; display: flex; flex-direction: column; align-items: center; overflow-y: auto; flex: 1; }
-        .panel-box { background: #1e2430; padding: 30px; border: 1px solid #2d3748; width: 100%; max-width: 800px; margin-bottom: 20px; }
+        .panel-box { background: #1e2430; padding: 30px; border: 1px solid #2d3748; width: 100%; max-width: 900px; margin-bottom: 20px; }
         .panel-box h2 { margin-bottom: 20px; font-size: 1.4rem; color: #cbd5e6; text-align: center; }
         .client-input { width: 100%; padding: 12px; background: #0f1117; border: 1px solid #334155; color: #e2e8f0; font-size: 1.1rem; font-family: 'Play', sans-serif; margin-bottom: 20px; }
-        .btn-main { background: #0f172a; color: #e2e8f0; border: 1px solid #334155; padding: 14px 28px; font-size: 1.1rem; font-weight: 700; cursor: pointer; text-transform: uppercase; width: 100%; transition: 0.2s; }
+        .btn-main {
+            background: #0f172a;
+            color: #e2e8f0;
+            border: 1px solid #334155;
+            padding: 14px 28px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-transform: uppercase;
+            width: 100%;
+            transition: 0.2s;
+            font-family: 'Play', sans-serif;
+        }
         .btn-main:hover { background: #1e293b; border-color: #5b6e8c; }
-        
+
         .orders-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         .orders-table th { background: #11161f; padding: 12px; text-align: left; border-bottom: 1px solid #2d3748; }
         .orders-table td { padding: 12px; border-bottom: 1px solid #2a3342; background: #181e28; }
-        .btn-small { background: #232a36; border: 1px solid #4b5563; color: #cbd5e6; padding: 6px 12px; cursor: pointer; font-weight: 700; font-size: 0.8rem; margin-right: 5px; }
+        .btn-small {
+            background: #232a36;
+            border: 1px solid #4b5563;
+            color: #cbd5e6;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 0.8rem;
+            margin-right: 5px;
+            font-family: 'Play', sans-serif;
+        }
         .btn-small:hover { background: #374151; color: white; }
 
-        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0f1117; z-index: 10000; display: flex; flex-direction: column; }
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0f1117;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+        }
         .overlay.hidden { display: none; }
-        .overlay-header { background: #090c10; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2d3748; }
+        .overlay-header {
+            background: #090c10;
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #2d3748;
+        }
         .overlay-header h2 { font-size: 1.4rem; font-weight: 700; color: #cbd5e6; }
-        .close-btn { background: none; border: 1px solid #4b5563; color: #9ca3af; padding: 6px 16px; cursor: pointer; font-weight: 700; }
+        .close-btn {
+            background: none;
+            border: 1px solid #4b5563;
+            color: #9ca3af;
+            padding: 6px 16px;
+            cursor: pointer;
+            font-weight: 700;
+            font-family: 'Play', sans-serif;
+        }
         .close-btn:hover { background: #2d3748; color: white; }
-        
+
         .main-layout { flex: 1; display: flex; gap: 20px; padding: 24px; overflow: hidden; }
         .config-panel { flex: 3; background: #1e2430; padding: 20px; overflow-y: auto; border: 1px solid #2d3748; }
         .list-panel { flex: 7; background: #1e2430; display: flex; flex-direction: column; overflow: hidden; border: 1px solid #2d3748; }
-        
-        .list-header { padding: 16px 20px; border-bottom: 1px solid #2d3748; display: flex; justify-content: space-between; align-items: center; background: #181e28; }
+
+        .list-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #2d3748;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #181e28;
+        }
         .list-header h3 { font-weight: 700; font-size: 1.1rem; }
         .header-actions { display: flex; gap: 10px; }
-        
-        .btn-save { background: #059669; color: white; border: 1px solid #047857; padding: 8px 16px; font-weight: bold; cursor: pointer; font-family: 'Play'; text-transform: uppercase; }
+
+        .btn-save {
+            background: #059669;
+            color: white;
+            border: 1px solid #047857;
+            padding: 8px 16px;
+            font-weight: bold;
+            cursor: pointer;
+            font-family: 'Play', sans-serif;
+            text-transform: uppercase;
+        }
         .btn-save:hover { background: #047857; }
 
         .table-wrapper { overflow: auto; flex: 1; }
@@ -92,31 +154,95 @@
         .doors-table td { padding: 10px 6px; border-bottom: 1px solid #2a3342; text-align: center; color: #e2e8f0; }
         .editable-cell { cursor: pointer; background-color: #232a36; }
         .editable-cell:hover { background-color: #2f3a48; }
-        .door-actions button { background: none; border: none; font-size: 18px; cursor: pointer; margin: 0 4px; opacity: 0.7; }
-        
+        .door-actions button { background: none; border: none; font-size: 18px; cursor: pointer; margin: 0 4px; opacity: 0.7; color: #fff; }
+
         .form-group { margin-bottom: 18px; }
         .form-group label { font-weight: 700; display: block; margin-bottom: 6px; font-size: 0.85rem; color: #b9c7db; }
-        select, input[type="number"], input[type="text"] { width: 100%; padding: 8px 10px; background: #0f1117; border: 1px solid #334155; color: #e2e8f0; font-size: 0.85rem; font-family: 'Play', monospace; }
-        
-        .toast { position: fixed; bottom: 24px; right: 24px; background: #0f172a; border: 1px solid #334155; color: #cbd5e6; padding: 12px 24px; font-size: 14px; font-weight: bold; z-index: 10001; display: none; }
+        select, input[type="number"], input[type="text"], input[type="password"], input[type="email"] {
+            width: 100%;
+            padding: 8px 10px;
+            background: #0f1117;
+            border: 1px solid #334155;
+            color: #e2e8f0;
+            font-size: 0.85rem;
+            font-family: 'Play', monospace;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            color: #cbd5e6;
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: bold;
+            z-index: 10001;
+            display: none;
+        }
         .hidden-field { display: none; }
         .details-summary { margin-top: 20px; cursor: pointer; background: #0f172a; padding: 8px; border: 1px solid #334155; text-align: center; }
         .details-summary summary { font-weight: 700; outline: none; }
-        
-        #loadingOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15,17,23,0.9); z-index: 20000; display: flex; justify-content: center; align-items: center; flex-direction: column; font-size: 1.5rem; font-weight: bold; }
-        .loader { border: 4px solid #334155; border-top: 4px solid #cbd5e6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px; }
+
+        #loadingOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15,17,23,0.9);
+            z-index: 20000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        .loader {
+            border: 4px solid #334155;
+            border-top: 4px solid #cbd5e6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .client-row {
+            display: flex;
+            gap: 10px;
+            align-items: stretch;
+            margin-bottom: 20px;
+        }
+        .client-row .client-input {
+            margin-bottom: 0;
+            flex: 1;
+        }
+        .plus-btn {
+            width: 56px;
+            min-width: 56px;
+            padding: 0;
+            font-size: 28px;
+            line-height: 1;
+        }
+
+        .client-form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 16px;
+        }
     </style>
 </head>
 <body>
 
-<!-- Индикатор загрузки -->
 <div id="loadingOverlay" style="display: none;">
     <div class="loader"></div>
     <div id="loadingText"></div>
 </div>
 
-<!-- ЭКРАН ВХОДА -->
 <div id="loginScreen">
     <div class="login-box">
         <h2>ВХОД В СИСТЕМУ</h2>
@@ -129,14 +255,17 @@
     </div>
 </div>
 
-<!-- ОСНОВНОЙ ИНТЕРФЕЙС (скрыт до входа) -->
 <div id="mainApp">
-    <!-- Стартовый экран (Выбор клиента и история) -->
     <div id="startScreen" class="start-screen">
         <div class="panel-box">
             <h2>СИСТЕМА УПРАВЛЕНИЯ ЗАКАЗАМИ</h2>
-            <input type="text" id="clientSearch" class="client-input" list="clientDatalist" placeholder="Начните вводить имя клиента..." autocomplete="off">
+
+            <div class="client-row">
+                <input type="text" id="clientSearch" class="client-input" list="clientDatalist" placeholder="Начните вводить имя клиента..." autocomplete="off">
+                <button id="addClientOpenBtn" class="btn-save plus-btn">+</button>
+            </div>
             <datalist id="clientDatalist"></datalist>
+
             <button id="refreshBtn" class="btn-main" style="margin-bottom: 20px;">ОБНОВИТЬ ДАННЫЕ</button>
             <button id="startNewOrderBtn" class="btn-save" style="width: 100%; padding: 14px; display: none;">+ СОЗДАТЬ НОВЫЙ ЗАКАЗ</button>
         </div>
@@ -151,13 +280,11 @@
                         <th>ДЕЙСТВИЯ</th>
                     </tr>
                 </thead>
-                <tbody id="ordersTbody">
-                </tbody>
+                <tbody id="ordersTbody"></tbody>
             </table>
         </div>
     </div>
 
-    <!-- Главный конфигуратор -->
     <div id="configOverlay" class="overlay hidden">
         <div class="overlay-header">
             <h2 id="configHeaderTitle">ТЕХНИЧЕСКИЙ КОНФИГУРАТОР</h2>
@@ -184,10 +311,67 @@
                 <div class="table-wrapper">
                     <table class="doors-table">
                         <thead id="tableHeader"></thead>
-                        <tbody id="doorsTbody"><tr><td colspan="20">НЕТ ДОБАВЛЕННЫХ ДВЕРЕЙ</td></tr></tbody>
+                        <tbody id="doorsTbody">
+                            <tr><td colspan="20">НЕТ ДОБАВЛЕННЫХ ДВЕРЕЙ</td></tr>
+                        </tbody>
                     </table>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<div id="addClientModal" class="overlay hidden">
+    <div class="overlay-header">
+        <h2>ДОБАВЛЕНИЕ КЛИЕНТА</h2>
+        <button id="closeClientModalBtn" class="close-btn">ЗАКРЫТЬ</button>
+    </div>
+    <div style="padding: 24px; overflow-y:auto; flex:1; background:#0f1117;">
+        <div class="panel-box" style="max-width:900px; margin:0 auto;">
+            <h2 style="margin-bottom:20px;">РЕКВИЗИТЫ КЛИЕНТА</h2>
+            <div class="client-form-grid">
+                <div class="form-group">
+                    <label>НАИМЕНОВАНИЕ *</label>
+                    <input type="text" id="newClient_name">
+                </div>
+                <div class="form-group">
+                    <label>ЮРИДИЧЕСКИЙ АДРЕС</label>
+                    <input type="text" id="newClient_legalAddress">
+                </div>
+                <div class="form-group">
+                    <label>ПОЧТОВЫЙ АДРЕС</label>
+                    <input type="text" id="newClient_postalAddress">
+                </div>
+                <div class="form-group">
+                    <label>P/C</label>
+                    <input type="text" id="newClient_rs">
+                </div>
+                <div class="form-group">
+                    <label>БАНК</label>
+                    <input type="text" id="newClient_bank">
+                </div>
+                <div class="form-group">
+                    <label>КОД БАНКА</label>
+                    <input type="text" id="newClient_bankCode">
+                </div>
+                <div class="form-group">
+                    <label>УНП</label>
+                    <input type="text" id="newClient_unp">
+                </div>
+                <div class="form-group">
+                    <label>ПОЧТА</label>
+                    <input type="email" id="newClient_email">
+                </div>
+                <div class="form-group">
+                    <label>ТЕЛЕФОН</label>
+                    <input type="text" id="newClient_phone">
+                </div>
+                <div class="form-group">
+                    <label>ЛОГИН ПОЛЬЗОВАТЕЛЯ</label>
+                    <input type="text" id="newClient_ownerLogin" disabled>
+                </div>
+            </div>
+            <button id="saveClientBtn" class="btn-save" style="width:100%; padding:14px; margin-top:20px;">СОХРАНИТЬ КЛИЕНТА</button>
         </div>
     </div>
 </div>
@@ -196,17 +380,18 @@
 
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbwi53HhkSBfPwvENZDvqCmIVGQkHTLaI2nMF3dTR44mae_QL4u1SAfaIzmHWRm0iES-/exec";
-    
+
     const CORE_FIELDS = ["Коробка", "Открывание", "Металл", "Порог", "Цилиндр", "Доводчик", "Цвет", "Остекление"];
     const ALL_POSSIBLE_FIELDS = [
-        "Базовая цена", "Столбец 7", "Толщина металла полотна", "Упаковка", "Производство", 
-        "Наличник", "Наличник портала", "Фрамуга", "Заполнение", "Пакет в основную створку", 
-        "Тип пакета", "Отбойник", "Замок", "Ручка", "Антипаника", "СКУД", "Петли", 
+        "Базовая цена", "Столбец 7", "Толщина металла полотна", "Упаковка", "Производство",
+        "Наличник", "Наличник портала", "Фрамуга", "Заполнение", "Пакет в основную створку",
+        "Тип пакета", "Отбойник", "Замок", "Ручка", "Антипаника", "СКУД", "Петли",
         "Вент решетка", "Вент решетка 2 точка привязки", "Тип отгрузки"
     ];
-    
+
     let doorTypes = [];
     let allClients = [];
+    let allClientsFull = [];
     let allOrders = [];
     let groupedClientOrders = [];
     let selectedClient = "";
@@ -215,8 +400,9 @@
     let currentTypeKey = "";
     let nextRequestNumber = 1;
     let usedExtraFields = new Set();
+    let currentUserLogin = "";
+    let currentUserRole = "";
 
-    // --- АУТЕНТИФИКАЦИЯ ---
     const loginScreen = document.getElementById('loginScreen');
     const mainApp = document.getElementById('mainApp');
     const loginError = document.getElementById('loginError');
@@ -224,25 +410,31 @@
     document.getElementById('loginBtn').addEventListener('click', async () => {
         const login = document.getElementById('loginInput').value.trim();
         const password = document.getElementById('passwordInput').value.trim();
+
         if (!login || !password) {
             loginError.textContent = 'Введите логин и пароль';
             return;
         }
+
         loginError.textContent = '';
         showLoading('Проверка учётных данных...');
+
         try {
             const response = await fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                 body: JSON.stringify({ action: 'login', login, password })
             });
+
             const data = await response.json();
             if (data.error) throw new Error(data.error);
+
             if (data.success) {
-                // Успешный вход
+                currentUserLogin = data.login || login;
+                currentUserRole = data.role || "user";
                 loginScreen.style.display = 'none';
                 mainApp.style.display = 'flex';
-                await loadDataFromAPI(); // загружаем данные после входа
+                await loadDataFromAPI();
             } else {
                 loginError.textContent = data.message || 'Неверный логин или пароль';
             }
@@ -253,82 +445,78 @@
         }
     });
 
-    // Разрешаем вход по Enter
     document.getElementById('passwordInput').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') document.getElementById('loginBtn').click();
     });
+
     document.getElementById('loginInput').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') document.getElementById('passwordInput').focus();
     });
 
-    // --- ДАННЫЕ (без изменений) ---
     async function loadDataFromAPI() {
         showLoading("Загрузка базы данных...");
         try {
             const response = await fetch(API_URL + "?action=init");
             const data = await response.json();
             if (data.error) throw new Error(data.error);
-            
+
             parseDoorTypes(data.doors);
             allClients = data.clients || [];
+            allClientsFull = data.clientsFull || [];
             allOrders = data.orders || [];
-            
+
             const datalist = document.getElementById("clientDatalist");
             datalist.innerHTML = allClients.map(c => `<option value="${escapeHtml(c)}">`).join('');
-            
+
             if (doorTypes.length) currentTypeKey = doorTypes[0].key;
             if (selectedClient) renderClientOrders();
-            hideLoading();
         } catch (err) {
-            hideLoading();
             alert("Ошибка загрузки: " + err.message);
+        } finally {
+            hideLoading();
         }
     }
-    
+
     function parseDoorTypes(rows) {
         doorTypes = [];
         if (!rows || rows.length === 0) return;
-        
+
         for (const row of rows) {
-            // Ищем колонку "Ключ" независимо от пробелов и регистра букв
             const actualKeyName = Object.keys(row).find(k => k.trim().toLowerCase() === 'ключ');
             const key = actualKeyName ? row[actualKeyName] : null;
-            
             if (!key) continue;
-            
-            // Вспомогательная функция для безопасного поиска остальных колонок
+
             const findVal = (rowObj, name) => {
                 const foundKey = Object.keys(rowObj).find(k => k.trim().toLowerCase() === name.toLowerCase());
                 return foundKey ? rowObj[foundKey] : "";
             };
 
             const name = findVal(row, "Имя") || key;
-            let widthMin=600, widthMax=1200, heightMin=1900, heightMax=2500;
+
+            let widthMin = 600, widthMax = 1200, heightMin = 1900, heightMax = 2500;
             const wMatch = (findVal(row, "Ширина") || "").match(/(\d+)\s*-\s*(\d+)/);
             if (wMatch) { widthMin = +wMatch[1]; widthMax = +wMatch[2]; }
             const hMatch = (findVal(row, "Высота") || "").match(/(\d+)\s*-\s*(\d+)/);
             if (hMatch) { heightMin = +hMatch[1]; heightMax = +hMatch[2]; }
-            
+
             let options = {};
             for (let f of CORE_FIELDS) {
                 options[f] = (findVal(row, f) || "").split(" -|- ").map(s => s.trim()).filter(s => s && s !== "-");
             }
-            
+
             let extraOptions = {};
             for (let f of ALL_POSSIBLE_FIELDS) {
                 extraOptions[f] = (findVal(row, f) || "").split(" -|- ").map(s => s.trim()).filter(s => s && s !== "-");
             }
-            
+
             doorTypes.push({ key, name, widthMin, widthMax, heightMin, heightMax, options, extraOptions });
         }
     }
-    
 
-
-    // --- Стартовый экран ---
     document.getElementById("clientSearch").addEventListener("input", (e) => {
         selectedClient = e.target.value.trim();
         const startNewBtn = document.getElementById("startNewOrderBtn");
+
         if (selectedClient && allClients.includes(selectedClient)) {
             startNewBtn.style.display = "block";
             renderClientOrders();
@@ -342,22 +530,23 @@
         const panel = document.getElementById("ordersPanel");
         const tbody = document.getElementById("ordersTbody");
         panel.style.display = "block";
-        
+
         const clientDoors = allOrders.filter(o => o["Имя клиента"] === selectedClient);
         const groups = {};
+
         clientDoors.forEach(d => {
             const id = d["Order ID"];
             if (!groups[id]) groups[id] = { id: id, date: d["Дата"], doors: [] };
             groups[id].doors.push(d);
         });
-        
+
         groupedClientOrders = Object.values(groups).sort((a, b) => new Date(b.date) - new Date(a.date));
-        
+
         if (groupedClientOrders.length === 0) {
             tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;">У этого клиента еще нет заказов</td></tr>`;
             return;
         }
-        
+
         tbody.innerHTML = groupedClientOrders.map(group => `
             <tr>
                 <td>${escapeHtml(group.date)}</td>
@@ -423,6 +612,7 @@
     document.getElementById("saveOrderBtn").addEventListener("click", async () => {
         if (!selectedClient) return alert("Ошибка: клиент не выбран!");
         if (currentDoors.length === 0) return alert("В заказе нет ни одной двери!");
+
         showLoading("Сохранение заказа...");
         const payload = {
             action: "saveOrder",
@@ -430,28 +620,30 @@
             orderId: currentOrderId,
             doors: currentDoors
         };
+
         try {
             const response = await fetch(API_URL, {
                 method: "POST",
                 headers: { "Content-Type": "text/plain;charset=utf-8" },
                 body: JSON.stringify(payload)
             });
+
             const result = await response.json();
             if (result.error) throw new Error(result.error);
+
             showToast("Заказ успешно сохранен!");
             document.getElementById("configOverlay").classList.add("hidden");
             await loadDataFromAPI();
         } catch (err) {
-            hideLoading();
             alert("Ошибка сохранения: " + err.message);
+        } finally {
+            hideLoading();
         }
     });
 
-    // --- Конфигуратор ---
     function renderConfigForm() {
         const formContainer = document.getElementById("configForm");
-        
-        // Защита от пустого листа doors: если типов дверей нет, выводим понятную ошибку
+
         if (!doorTypes || doorTypes.length === 0) {
             formContainer.innerHTML = `<div style="color: #f87171; padding: 10px; border: 1px dashed #f87171;">
                 ❌ Ошибка: Не найдены данные дверей.<br>
@@ -460,7 +652,6 @@
             return;
         }
 
-        // Если текущий ключ не установлен или не найден, берем первый доступный из базы
         let type = doorTypes.find(t => t.key === currentTypeKey);
         if (!type) {
             currentTypeKey = doorTypes[0].key;
@@ -468,11 +659,14 @@
         }
 
         let html = `<div class="form-group"><label>ТИП ДВЕРИ (КЛЮЧ)</label><select id="doorTypeSelect">`;
-        doorTypes.forEach(t => { html += `<option value="${t.key}" ${t.key===currentTypeKey ? 'selected' : ''}>${escapeHtml(t.key)} — ${escapeHtml(t.name)}</option>`; });
+        doorTypes.forEach(t => {
+            html += `<option value="${t.key}" ${t.key === currentTypeKey ? 'selected' : ''}>${escapeHtml(t.key)} — ${escapeHtml(t.name)}</option>`;
+        });
         html += `</select></div>`;
+
         html += `<div class="form-group"><label>ВЫСОТА (${type.heightMin}–${type.heightMax})</label><input type="number" id="heightVal" value="${type.heightMin}"></div>`;
         html += `<div class="form-group"><label>ШИРИНА (${type.widthMin}–${type.widthMax})</label><input type="number" id="widthVal" value="${type.widthMin}"></div>`;
-        
+
         for (let f of CORE_FIELDS) {
             let opts = type.options[f];
             if (opts && opts.length) {
@@ -483,11 +677,12 @@
                 html += `<div class="form-group hidden-field"><label>${f.toUpperCase()}</label><select id="cfg_${f}" disabled><option>—</option></select></div>`;
             }
         }
+
         html += `<div class="form-group"><label>ТОЛЩИНА СТЕНЫ, ММ</label><input type="number" id="wallThick" value="100"></div>`;
         html += `<div class="form-group"><label>КОЛИЧЕСТВО</label><input type="number" id="quantity" value="1" min="1"></div>`;
-        
+
         formContainer.innerHTML = html;
-        
+
         document.getElementById("doorTypeSelect").addEventListener("change", (e) => {
             currentTypeKey = e.target.value;
             renderConfigForm();
@@ -495,12 +690,13 @@
         });
     }
 
-    
     function renderExtraParams() {
         const type = doorTypes.find(t => t.key === currentTypeKey);
         if (!type) return;
+
         const container = document.getElementById("extraParamsContainer");
         let html = "";
+
         for (let f of ALL_POSSIBLE_FIELDS) {
             let opts = type.extraOptions[f];
             if (opts && opts.length) {
@@ -511,12 +707,14 @@
                 html += `<div class="form-group hidden-field"><label>${f.toUpperCase()}</label><select id="extra_${f}" disabled><option>—</option></select></div>`;
             }
         }
+
         container.innerHTML = html;
     }
-    
+
     document.getElementById("addDoorBtn").addEventListener("click", () => {
         const type = doorTypes.find(t => t.key === currentTypeKey);
         if (!type) return;
+
         let cfg = {
             requestNumber: nextRequestNumber++,
             doorKey: currentTypeKey,
@@ -526,7 +724,11 @@
             "Толщина стены, мм": parseInt(document.getElementById("wallThick").value) || 100,
             "Кол-во": parseInt(document.getElementById("quantity").value) || 1,
         };
-        for (let f of CORE_FIELDS) cfg[f] = document.getElementById(`cfg_${f}`) ? document.getElementById(`cfg_${f}`).value : "—";
+
+        for (let f of CORE_FIELDS) {
+            cfg[f] = document.getElementById(`cfg_${f}`) ? document.getElementById(`cfg_${f}`).value : "—";
+        }
+
         for (let f of ALL_POSSIBLE_FIELDS) {
             const el = document.getElementById(`extra_${f}`);
             if (el && el.value && el.value !== "— НЕ ВЫБРАНО —") {
@@ -534,17 +736,18 @@
                 usedExtraFields.add(f);
             }
         }
+
         currentDoors.push({ id: Date.now() + Math.random(), ...cfg });
         renderRightTable();
         showToast("Дверь добавлена");
     });
-    
+
     function renderRightTable() {
         const tbody = document.getElementById("doorsTbody");
         const baseColumns = ["requestNumber", "doorKey", "Высота", "Ширина", ...CORE_FIELDS, "Толщина стены, мм", "Кол-во"];
         const extraColumns = Array.from(usedExtraFields).sort();
         const allColumns = [...baseColumns, ...extraColumns];
-        
+
         let headerHtml = `<tr><th>ДЕЙСТВИЯ</th>`;
         for (let col of allColumns) {
             let name = col === "requestNumber" ? "N" : col === "doorKey" ? "ТИП" : col.toUpperCase();
@@ -552,14 +755,14 @@
         }
         headerHtml += `</tr>`;
         document.getElementById("tableHeader").innerHTML = headerHtml;
-        
+
         if (currentDoors.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="${allColumns.length+1}">НЕТ ДВЕРЕЙ В ЗАКАЗЕ</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="${allColumns.length + 1}">НЕТ ДВЕРЕЙ В ЗАКАЗЕ</td></tr>`;
             return;
         }
-        
+
         let bodyHtml = "";
-        for (let i=0; i<currentDoors.length; i++) {
+        for (let i = 0; i < currentDoors.length; i++) {
             const d = currentDoors[i];
             bodyHtml += `<tr>`;
             bodyHtml += `<td class="door-actions"><button onclick="copyRow(${i})">📋</button><button onclick="delRow(${i})">❌</button></td>`;
@@ -571,42 +774,124 @@
         }
         tbody.innerHTML = bodyHtml;
     }
-    
+
     window.copyRow = function(idx) {
         let copy = JSON.parse(JSON.stringify(currentDoors[idx]));
         copy.id = Date.now() + Math.random();
         copy.requestNumber = nextRequestNumber++;
-        currentDoors.splice(idx+1, 0, copy);
-        renderRightTable();
-    };
-    window.delRow = function(idx) {
-        currentDoors.splice(idx,1);
+        currentDoors.splice(idx + 1, 0, copy);
         renderRightTable();
     };
 
-    // Утилиты
-    function escapeHtml(str) { return String(str).replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
+    window.delRow = function(idx) {
+        currentDoors.splice(idx, 1);
+        renderRightTable();
+    };
+
+    function openAddClientModal() {
+        document.getElementById("addClientModal").classList.remove("hidden");
+        document.getElementById("newClient_ownerLogin").value = currentUserLogin || "";
+        document.getElementById("newClient_name").focus();
+    }
+
+    function closeAddClientModal() {
+        document.getElementById("addClientModal").classList.add("hidden");
+    }
+
+    function clearAddClientForm() {
+        document.getElementById("newClient_name").value = "";
+        document.getElementById("newClient_legalAddress").value = "";
+        document.getElementById("newClient_postalAddress").value = "";
+        document.getElementById("newClient_rs").value = "";
+        document.getElementById("newClient_bank").value = "";
+        document.getElementById("newClient_bankCode").value = "";
+        document.getElementById("newClient_unp").value = "";
+        document.getElementById("newClient_email").value = "";
+        document.getElementById("newClient_phone").value = "";
+        document.getElementById("newClient_ownerLogin").value = currentUserLogin || "";
+    }
+
+    document.getElementById("addClientOpenBtn").addEventListener("click", () => {
+        clearAddClientForm();
+        openAddClientModal();
+    });
+
+    document.getElementById("closeClientModalBtn").addEventListener("click", closeAddClientModal);
+
+    document.getElementById("saveClientBtn").addEventListener("click", async () => {
+        const payload = {
+            action: "addClient",
+            name: document.getElementById("newClient_name").value.trim(),
+            legalAddress: document.getElementById("newClient_legalAddress").value.trim(),
+            postalAddress: document.getElementById("newClient_postalAddress").value.trim(),
+            rs: document.getElementById("newClient_rs").value.trim(),
+            bank: document.getElementById("newClient_bank").value.trim(),
+            bankCode: document.getElementById("newClient_bankCode").value.trim(),
+            unp: document.getElementById("newClient_unp").value.trim(),
+            email: document.getElementById("newClient_email").value.trim(),
+            phone: document.getElementById("newClient_phone").value.trim(),
+            ownerLogin: currentUserLogin
+        };
+
+        if (!payload.name) {
+            alert("Введите наименование клиента");
+            return;
+        }
+
+        showLoading("Сохранение клиента...");
+        try {
+            const response = await fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await response.json();
+            if (result.error) throw new Error(result.error);
+
+            selectedClient = payload.name;
+            document.getElementById("clientSearch").value = payload.name;
+
+            closeAddClientModal();
+            clearAddClientForm();
+            await loadDataFromAPI();
+
+            document.getElementById("startNewOrderBtn").style.display = "block";
+            renderClientOrders();
+            showToast("Клиент успешно добавлен");
+        } catch (err) {
+            alert("Ошибка добавления клиента: " + err.message);
+        } finally {
+            hideLoading();
+        }
+    });
+
+    function escapeHtml(str) {
+        return String(str).replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
+    }
+
     function showToast(msg) {
         const t = document.getElementById("toast");
-        t.textContent = msg; t.style.display = "block";
+        t.textContent = msg;
+        t.style.display = "block";
         setTimeout(() => t.style.display = "none", 3000);
     }
+
     function showLoading(text) {
         document.getElementById("loadingText").innerText = text;
         document.getElementById("loadingOverlay").style.display = "flex";
     }
+
     function hideLoading() {
         document.getElementById("loadingOverlay").style.display = "none";
     }
 
     document.getElementById("refreshBtn").addEventListener("click", loadDataFromAPI);
+
     document.getElementById("copyAllBtn").addEventListener("click", () => {
-        console.log(JSON.stringify(currentDoors.map(({id, ...rest}) => rest), null, 2));
+        console.log(JSON.stringify(currentDoors.map(({ id, ...rest }) => rest), null, 2));
         showToast("JSON в консоли (F12)");
     });
-
-    // По умолчанию скрываем основной интерфейс, показываем логин
-    // (уже задано в стилях)
 </script>
 </body>
 </html>
