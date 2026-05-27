@@ -600,6 +600,27 @@
         .btn-pdf { background: #1d4ed8; color: white; border: 1px solid #1e40af; padding: 8px 16px; font-weight: bold; cursor: pointer; font-family: 'Play'; text-transform: uppercase; }
         .btn-pdf:hover { background: #1e40af; }
         .modal-section-title { font-size: 0.72rem; color: #4b5563; text-transform: uppercase; letter-spacing: 0.1em; margin: 14px 0 8px; border-top: 1px solid #2d3748; padding-top: 12px; }
+
+        .filter-date {
+            width: 100%;
+            margin-bottom: 3px;
+            padding: 4px 6px;
+            font-size: 11px;
+            background: #0f1117;
+            border: 1px solid #334155;
+            color: #e2e8f0;
+            font-family: 'Play', sans-serif;
+        }
+        .filter-date::-webkit-calendar-picker-indicator {
+            filter: invert(0.7);
+            cursor: pointer;
+        }
+        #globalOrdersPanel {
+            max-width: 1200px;
+        }
+        #globalOrdersPanel h2 {
+            margin-bottom: 14px;
+        }
     </style>
 </head>
 <body>
@@ -650,7 +671,10 @@
                         <th>ДЕЙСТВИЯ</th>
                     </tr>
                     <tr class="filters-row">
-                        <th><input class="filter-input" data-col="date" placeholder="Фильтр"></th>
+                        <th>
+                            <input class="filter-input filter-date" type="date" data-col="date-from" title="Дата от">
+                            <input class="filter-input filter-date" type="date" data-col="date-to" title="Дата до">
+                        </th>
                         <th><input class="filter-input" data-col="doors" placeholder="Фильтр"></th>
                         <th>
                             <select class="filter-select" data-col="status">
@@ -670,6 +694,48 @@
                     </tr>
                 </thead>
                 <tbody id="ordersTbody"></tbody>
+            </table>
+        </div>
+
+        <div id="globalOrdersPanel" class="panel-box">
+            <h2>ВСЕ ЗАКАЗЫ</h2>
+            <table class="orders-table" id="globalOrdersTable">
+                <thead>
+                    <tr>
+                        <th>КЛИЕНТ</th>
+                        <th>ДАТА</th>
+                        <th>ДВЕРЕЙ</th>
+                        <th>СТАТУС</th>
+                        <th>ИТОГО</th>
+                        <th>ОПЛАЧЕНО</th>
+                        <th>ДОЛГ</th>
+                        <th>ДЕЙСТВИЯ</th>
+                    </tr>
+                    <tr class="filters-row">
+                        <th><input class="filter-input" data-gcol="client" placeholder="Клиент"></th>
+                        <th>
+                            <input class="filter-input filter-date" type="date" data-gcol="date-from" title="Дата от">
+                            <input class="filter-input filter-date" type="date" data-gcol="date-to" title="Дата до">
+                        </th>
+                        <th><input class="filter-input" data-gcol="doors" placeholder="Фильтр"></th>
+                        <th>
+                            <select class="filter-select" data-gcol="status">
+                                <option value="">Все</option>
+                                <option value="В РАБОТЕ">В РАБОТЕ</option>
+                                <option value="СЧЕТ ВЫСТАВЛЕН">СЧЕТ ВЫСТАВЛЕН</option>
+                                <option value="ОПЛАЧЕН">ОПЛАЧЕН</option>
+                                <option value="ПРОИЗВОДСТВО">ПРОИЗВОДСТВО</option>
+                                <option value="ГОТОВ">ГОТОВ</option>
+                                <option value="ОТГРУЖЕН">ОТГРУЖЕН</option>
+                            </select>
+                        </th>
+                        <th><input class="filter-input" data-gcol="total" placeholder="Фильтр"></th>
+                        <th><input class="filter-input" data-gcol="paid" placeholder="Фильтр"></th>
+                        <th><input class="filter-input" data-gcol="debt" placeholder="Фильтр"></th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="globalOrdersTbody"></tbody>
             </table>
         </div>
     </div>
@@ -911,6 +977,7 @@ async function loadDataFromAPI() {
 
         if (doorTypes.length) currentTypeKey = doorTypes[0].key;
         if (selectedClient) renderClientOrders();
+        renderAllOrders();
     } catch (err) {
         alert("Ошибка загрузки: " + err.message);
     } finally {
@@ -1012,6 +1079,7 @@ function renderClientOrders() {
 
     tbody.innerHTML = groupedClientOrders.map(group => `
         <tr
+            data-dateiso="${escapeAttr(parseDateToISO(group.date))}"
             data-date="${escapeAttr(formatDisplayDate(group.date).toLowerCase())}"
             data-doors="${escapeAttr(String(group.doors.length).toLowerCase())}"
             data-status="${escapeAttr(String(group.status || '').toLowerCase())}"
@@ -1035,33 +1103,140 @@ function renderClientOrders() {
     applyOrderFilters();
 }
 
-document.querySelectorAll('.filter-input, .filter-select').forEach(input => {
+document.querySelectorAll('#ordersPanel .filter-input, #ordersPanel .filter-select, #ordersPanel .filter-date').forEach(input => {
     input.addEventListener('input', applyOrderFilters);
     input.addEventListener('change', applyOrderFilters);
 });
 
+document.querySelectorAll('#globalOrdersPanel .filter-input, #globalOrdersPanel .filter-select, #globalOrdersPanel .filter-date').forEach(input => {
+    input.addEventListener('input', applyGlobalFilters);
+    input.addEventListener('change', applyGlobalFilters);
+});
+
 function applyOrderFilters() {
+    const dateFrom = document.querySelector('[data-col="date-from"]').value;
+    const dateTo   = document.querySelector('[data-col="date-to"]').value;
     const filters = {
-        date: document.querySelector('[data-col="date"]').value.trim().toLowerCase(),
-        doors: document.querySelector('[data-col="doors"]').value.trim().toLowerCase(),
+        doors:  document.querySelector('[data-col="doors"]').value.trim().toLowerCase(),
         status: document.querySelector('[data-col="status"]').value.trim().toLowerCase(),
-        total: document.querySelector('[data-col="total"]').value.trim().toLowerCase(),
-        paid: document.querySelector('[data-col="paid"]').value.trim().toLowerCase(),
-        debt: document.querySelector('[data-col="debt"]').value.trim().toLowerCase()
+        total:  document.querySelector('[data-col="total"]').value.trim().toLowerCase(),
+        paid:   document.querySelector('[data-col="paid"]').value.trim().toLowerCase(),
+        debt:   document.querySelector('[data-col="debt"]').value.trim().toLowerCase()
     };
 
     document.querySelectorAll('#ordersTbody tr').forEach(row => {
-        const ok =
-            row.dataset.date.includes(filters.date) &&
+        const rowDate = row.dataset.dateiso || "";
+        const dateOk = (!dateFrom || rowDate >= dateFrom) && (!dateTo || rowDate <= dateTo);
+        const ok = dateOk &&
             row.dataset.doors.includes(filters.doors) &&
             row.dataset.status.includes(filters.status) &&
             row.dataset.total.includes(filters.total) &&
             row.dataset.paid.includes(filters.paid) &&
             row.dataset.debt.includes(filters.debt);
-
         row.style.display = ok ? '' : 'none';
     });
 }
+
+// ===== ГЛОБАЛЬНЫЙ СПИСОК ВСЕХ ЗАКАЗОВ =====
+
+function parseDateToISO(dateStr) {
+    if (!dateStr) return "";
+    // Handles "DD.MM.YYYY HH:MM:SS" or "DD.MM.YYYY" -> "YYYY-MM-DD"
+    const m = String(dateStr).match(/(\d{2})\.(\d{2})\.(\d{4})/);
+    if (m) return `${m[3]}-${m[2]}-${m[1]}`;
+    return "";
+}
+
+function renderAllOrders() {
+    const tbody = document.getElementById("globalOrdersTbody");
+    if (!tbody) return;
+
+    const groups = {};
+    allOrders.forEach(d => {
+        const id = d["Order ID"];
+        if (!id) return;
+        if (!groups[id]) {
+            groups[id] = {
+                id,
+                client: d["Имя клиента"] || "",
+                date: d["Дата"],
+                doors: [],
+                status: d["Статус заказа"] || "В РАБОТЕ",
+                orderTotal: parseFloat(d["Итого заказа"]) || 0,
+                paidTotal: parseFloat(d["Итого оплат"]) || 0,
+                debt: parseFloat(d["Долг"]) || 0,
+                paymentsJson: d["Оплаты JSON"] || "[]"
+            };
+        }
+        groups[id].doors.push(d);
+    });
+
+    const sorted = Object.values(groups).sort((a, b) => parseDateTime(b.date) - parseDateTime(a.date));
+
+    if (sorted.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#64748b;">Нет заказов</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = sorted.map(group => `
+        <tr
+            data-gclient="${escapeAttr(group.client.toLowerCase())}"
+            data-gdateiso="${escapeAttr(parseDateToISO(group.date))}"
+            data-gdoors="${escapeAttr(String(group.doors.length))}"
+            data-gstatus="${escapeAttr(String(group.status || '').toLowerCase())}"
+            data-gtotal="${escapeAttr(formatMoney(group.orderTotal).toLowerCase())}"
+            data-gpaid="${escapeAttr(formatMoney(group.paidTotal).toLowerCase())}"
+            data-gdebt="${escapeAttr(formatMoney(group.debt).toLowerCase())}"
+        >
+            <td style="text-align:left; font-weight:700; color:#93c5fd;">${escapeHtml(group.client)}</td>
+            <td>${escapeHtml(formatDisplayDate(group.date))}</td>
+            <td>${group.doors.length} шт.</td>
+            <td><span class="status-badge ${getStatusClass(group.status)}">${escapeHtml(group.status || "В РАБОТЕ")}</span></td>
+            <td>${formatMoney(group.orderTotal)}</td>
+            <td>${formatMoney(group.paidTotal)}</td>
+            <td>${formatMoney(group.debt)}</td>
+            <td>
+                <button class="btn-small" onclick="openGlobalOrder('${escapeAttr(group.client)}','${escapeAttr(group.id)}')">ОТКРЫТЬ</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function applyGlobalFilters() {
+    const dateFrom = document.querySelector('[data-gcol="date-from"]').value;
+    const dateTo   = document.querySelector('[data-gcol="date-to"]').value;
+    const filters = {
+        client: document.querySelector('[data-gcol="client"]').value.trim().toLowerCase(),
+        doors:  document.querySelector('[data-gcol="doors"]').value.trim().toLowerCase(),
+        status: document.querySelector('[data-gcol="status"]').value.trim().toLowerCase(),
+        total:  document.querySelector('[data-gcol="total"]').value.trim().toLowerCase(),
+        paid:   document.querySelector('[data-gcol="paid"]').value.trim().toLowerCase(),
+        debt:   document.querySelector('[data-gcol="debt"]').value.trim().toLowerCase()
+    };
+
+    document.querySelectorAll('#globalOrdersTbody tr').forEach(row => {
+        const rowDate = row.dataset.gdateiso || "";
+        const dateOk = (!dateFrom || rowDate >= dateFrom) && (!dateTo || rowDate <= dateTo);
+        const ok = dateOk &&
+            (row.dataset.gclient || "").includes(filters.client) &&
+            (row.dataset.gdoors || "").includes(filters.doors) &&
+            (row.dataset.gstatus || "").includes(filters.status) &&
+            (row.dataset.gtotal || "").includes(filters.total) &&
+            (row.dataset.gpaid || "").includes(filters.paid) &&
+            (row.dataset.gdebt || "").includes(filters.debt);
+        row.style.display = ok ? '' : 'none';
+    });
+}
+
+window.openGlobalOrder = function(clientName, orderId) {
+    selectedClient = clientName;
+    document.getElementById("clientSearch").value = clientName;
+    document.getElementById("startNewOrderBtn").style.display = "block";
+    renderClientOrders();
+    editOrder(orderId);
+};
+
+// ===== END ГЛОБАЛЬНЫЙ СПИСОК =====
 
 document.getElementById("startNewOrderBtn").addEventListener("click", () => {
     currentOrderId = null;
