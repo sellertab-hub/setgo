@@ -6,78 +6,582 @@
     <link href="https://fonts.googleapis.com/css2?family=Play:wght@400;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: #1a1e24; font-family: 'Play', sans-serif; color: #eef2ff; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
-        
-        #loginScreen { display: flex; justify-content: center; align-items: center; height: 100vh; }
-        .login-box { background: #1e2430; padding: 40px; border: 1px solid #2d3748; width: 350px; }
-        .login-box h2 { margin-bottom: 25px; text-align: center; color: #cbd5e6; }
-        .login-box label { display: block; margin-bottom: 5px; font-size: 0.9rem; color: #b9c7db; }
-        .login-box input { width: 100%; padding: 10px; background: #0f1117; border: 1px solid #334155; color: #e2e8f0; font-size: 1rem; font-family: 'Play'; margin-bottom: 20px; }
-        .login-box .error-msg { color: #f87171; font-size: 0.85rem; margin-bottom: 15px; text-align: center; }
-        .btn-login { background: #0f172a; color: #e2e8f0; border: 1px solid #334155; padding: 12px; width: 100%; font-weight: 700; text-transform: uppercase; cursor: pointer; transition: 0.2s; }
-        .btn-login:hover { background: #1e293b; border-color: #5b6e8c; }
+        body {
+            background: #1a1e24;
+            font-family: 'Play', sans-serif;
+            color: #eef2ff;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
 
-        #mainApp { display: none; flex-direction: column; height: 100vh; }
+        #loginScreen {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
 
-        .start-screen { padding: 40px; display: flex; flex-direction: column; align-items: center; overflow-y: auto; flex: 1; }
-        .panel-box { background: #1e2430; padding: 30px; border: 1px solid #2d3748; width: 100%; max-width: 800px; margin-bottom: 20px; }
-        .panel-box h2 { margin-bottom: 20px; font-size: 1.4rem; color: #cbd5e6; text-align: center; }
-        .client-input { width: 100%; padding: 12px; background: #0f1117; border: 1px solid #334155; color: #e2e8f0; font-size: 1.1rem; font-family: 'Play', sans-serif; margin-bottom: 20px; }
-        .btn-main { background: #0f172a; color: #e2e8f0; border: 1px solid #334155; padding: 14px 28px; font-size: 1.1rem; font-weight: 700; cursor: pointer; text-transform: uppercase; width: 100%; transition: 0.2s; }
-        .btn-main:hover { background: #1e293b; border-color: #5b6e8c; }
+        .login-box {
+            background: #1e2430;
+            padding: 40px;
+            border: 1px solid #2d3748;
+            width: 350px;
+        }
 
-        /* Строка: тип документа + номер */
-        .doc-number-row { display: flex; gap: 12px; margin-bottom: 20px; align-items: stretch; }
-        .doc-number-row select { padding: 12px 10px; background: #0f1117; border: 1px solid #334155; color: #e2e8f0; font-size: 1rem; font-family: 'Play', sans-serif; width: 200px; flex-shrink: 0; }
-        .doc-number-row input { flex: 1; padding: 12px; background: #0f1117; border: 1px solid #334155; color: #e2e8f0; font-size: 1.1rem; font-family: 'Play', sans-serif; }
-        .doc-number-row input::placeholder { color: #4b5563; }
+        .login-box h2 {
+            margin-bottom: 25px;
+            text-align: center;
+            color: #cbd5e6;
+        }
 
-        /* Бейдж с номером документа в заголовке */
-        .doc-badge { font-size: 0.8rem; font-weight: 400; color: #64748b; background: #0f1117; border: 1px solid #2d3748; padding: 4px 12px; margin-left: 16px; letter-spacing: 0.05em; vertical-align: middle; white-space: nowrap; }
-        .doc-badge span { color: #7dd3fc; font-weight: 700; }
+        .login-box label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            color: #b9c7db;
+        }
 
-        .orders-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        .orders-table th { background: #11161f; padding: 12px; text-align: left; border-bottom: 1px solid #2d3748; }
-        .orders-table td { padding: 12px; border-bottom: 1px solid #2a3342; background: #181e28; }
-        .btn-small { background: #232a36; border: 1px solid #4b5563; color: #cbd5e6; padding: 6px 12px; cursor: pointer; font-weight: 700; font-size: 0.8rem; margin-right: 5px; }
-        .btn-small:hover { background: #374151; color: white; }
+        .login-box input {
+            width: 100%;
+            padding: 10px;
+            background: #0f1117;
+            border: 1px solid #334155;
+            color: #e2e8f0;
+            font-size: 1rem;
+            font-family: 'Play';
+            margin-bottom: 20px;
+        }
 
-        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0f1117; z-index: 10000; display: flex; flex-direction: column; }
-        .overlay.hidden { display: none; }
-        .overlay-header { background: #090c10; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2d3748; flex-wrap: wrap; gap: 8px; }
-        .overlay-header h2 { font-size: 1.4rem; font-weight: 700; color: #cbd5e6; }
-        .close-btn { background: none; border: 1px solid #4b5563; color: #9ca3af; padding: 6px 16px; cursor: pointer; font-weight: 700; }
-        .close-btn:hover { background: #2d3748; color: white; }
+        .login-box .error-msg {
+            color: #f87171;
+            font-size: 0.85rem;
+            margin-bottom: 15px;
+            text-align: center;
+        }
 
-        .main-layout { flex: 1; display: flex; gap: 20px; padding: 24px; overflow: hidden; }
-        .config-panel { flex: 3; background: #1e2430; padding: 20px; overflow-y: auto; border: 1px solid #2d3748; }
-        .list-panel { flex: 7; background: #1e2430; display: flex; flex-direction: column; overflow: hidden; border: 1px solid #2d3748; }
+        .btn-login,
+        .btn-main,
+        .btn-save,
+        .btn-small,
+        .close-btn {
+            font-family: 'Play', sans-serif;
+        }
 
-        .list-header { padding: 16px 20px; border-bottom: 1px solid #2d3748; display: flex; justify-content: space-between; align-items: center; background: #181e28; }
-        .list-header h3 { font-weight: 700; font-size: 1.1rem; }
-        .header-actions { display: flex; gap: 10px; }
+        .btn-login {
+            background: #0f172a;
+            color: #e2e8f0;
+            border: 1px solid #334155;
+            padding: 12px;
+            width: 100%;
+            font-weight: 700;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: 0.2s;
+        }
 
-        .btn-save { background: #059669; color: white; border: 1px solid #047857; padding: 8px 16px; font-weight: bold; cursor: pointer; font-family: 'Play'; text-transform: uppercase; }
-        .btn-save:hover { background: #047857; }
+        .btn-login:hover {
+            background: #1e293b;
+            border-color: #5b6e8c;
+        }
 
-        .table-wrapper { overflow: auto; flex: 1; }
-        .doors-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 800px; }
-        .doors-table th { background: #11161f; padding: 12px 8px; position: sticky; top: 0; font-weight: 700; color: #b9c7db; border-bottom: 1px solid #2d3748; }
-        .doors-table td { padding: 10px 6px; border-bottom: 1px solid #2a3342; text-align: center; color: #e2e8f0; }
-        .door-actions button { background: none; border: none; font-size: 18px; cursor: pointer; margin: 0 4px; opacity: 0.7; }
+        #mainApp {
+            display: none;
+            flex-direction: column;
+            height: 100vh;
+        }
 
-        .form-group { margin-bottom: 18px; }
-        .form-group label { font-weight: 700; display: block; margin-bottom: 6px; font-size: 0.85rem; color: #b9c7db; }
-        select, input[type="number"], input[type="text"] { width: 100%; padding: 8px 10px; background: #0f1117; border: 1px solid #334155; color: #e2e8f0; font-size: 0.85rem; font-family: 'Play', monospace; }
+        .start-screen {
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-y: auto;
+            flex: 1;
+        }
 
-        .toast { position: fixed; bottom: 24px; right: 24px; background: #0f172a; border: 1px solid #334155; color: #cbd5e6; padding: 12px 24px; font-size: 14px; font-weight: bold; z-index: 10001; display: none; }
-        .hidden-field { display: none; }
-        .details-summary { margin-top: 20px; cursor: pointer; background: #0f172a; padding: 8px; border: 1px solid #334155; text-align: center; }
-        .details-summary summary { font-weight: 700; outline: none; }
+        .panel-box {
+            background: #1e2430;
+            padding: 30px;
+            border: 1px solid #2d3748;
+            width: 100%;
+            max-width: 1200px;
+            margin-bottom: 20px;
+        }
 
-        #loadingOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15,17,23,0.9); z-index: 20000; display: flex; justify-content: center; align-items: center; flex-direction: column; font-size: 1.5rem; font-weight: bold; }
-        .loader { border: 4px solid #334155; border-top: 4px solid #cbd5e6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .panel-box h2 {
+            margin-bottom: 20px;
+            font-size: 1.4rem;
+            color: #cbd5e6;
+            text-align: center;
+        }
+
+        .client-input {
+            width: 100%;
+            padding: 12px;
+            background: #0f1117;
+            border: 1px solid #334155;
+            color: #e2e8f0;
+            font-size: 1.1rem;
+            font-family: 'Play', sans-serif;
+            margin-bottom: 20px;
+        }
+
+        .btn-main {
+            background: #0f172a;
+            color: #e2e8f0;
+            border: 1px solid #334155;
+            padding: 14px 28px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-transform: uppercase;
+            width: 100%;
+            transition: 0.2s;
+        }
+
+        .btn-main:hover {
+            background: #1e293b;
+            border-color: #5b6e8c;
+        }
+
+        .orders-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .orders-table th {
+            background: #11161f;
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #2d3748;
+        }
+
+        .orders-table td {
+            padding: 12px;
+            border-bottom: 1px solid #2a3342;
+            background: #181e28;
+        }
+
+        .filters-row th {
+            background: #141922;
+            padding: 8px;
+        }
+
+        .filter-input,
+        .filter-select {
+            width: 100%;
+            padding: 6px 8px;
+            font-size: 12px;
+            background: #0f1117;
+            border: 1px solid #334155;
+            color: #e2e8f0;
+            font-family: 'Play', sans-serif;
+        }
+
+        .btn-small {
+            background: #232a36;
+            border: 1px solid #4b5563;
+            color: #cbd5e6;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 0.8rem;
+            margin-right: 5px;
+        }
+
+        .btn-small:hover {
+            background: #374151;
+            color: white;
+        }
+
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: #0f1117;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .overlay.hidden {
+            display: none;
+        }
+
+        .overlay-header {
+            background: #090c10;
+            padding: 12px 20px;
+            display: grid;
+            grid-template-columns: minmax(240px, 1fr) auto auto auto auto auto;
+            gap: 12px;
+            align-items: center;
+            border-bottom: 1px solid #2d3748;
+        }
+
+        .overlay-header h2 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #cbd5e6;
+            min-width: 0;
+        }
+
+        .header-status-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 220px;
+        }
+
+        .header-status-wrap select {
+            min-width: 220px;
+            height: 38px;
+            background: #0f1117;
+            border: 1px solid #334155;
+            color: #e2e8f0;
+            padding: 0 10px;
+            font-family: 'Play', sans-serif;
+        }
+
+        .header-meta-chip {
+            background: #111827;
+            border: 1px solid #334155;
+            color: #e2e8f0;
+            padding: 8px 12px;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+
+        .header-meta-chip strong {
+            color: #dbeafe;
+            margin-left: 6px;
+        }
+
+        .close-btn {
+            background: none;
+            border: 1px solid #4b5563;
+            color: #9ca3af;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        .close-btn:hover {
+            background: #2d3748;
+            color: white;
+        }
+
+        .main-layout {
+            flex: 1;
+            display: flex;
+            gap: 20px;
+            padding: 24px;
+            overflow: hidden;
+        }
+
+        .config-panel {
+            flex: 2;
+            background: #1e2430;
+            padding: 20px;
+            overflow-y: auto;
+            border: 1px solid #2d3748;
+            min-width: 320px;
+        }
+
+        .list-panel {
+            flex: 8;
+            background: #1e2430;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid #2d3748;
+            min-width: 0;
+        }
+
+        .list-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #2d3748;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #181e28;
+        }
+
+        .list-header h3 {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-save {
+            background: #059669;
+            color: white;
+            border: 1px solid #047857;
+            padding: 8px 16px;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+
+        .btn-save:hover {
+            background: #047857;
+        }
+
+        .table-wrapper {
+            overflow: auto;
+            flex: 1;
+        }
+
+        .doors-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            min-width: 1100px;
+        }
+
+        .doors-table th {
+            background: #11161f;
+            padding: 12px 8px;
+            position: sticky;
+            top: 0;
+            font-weight: 700;
+            color: #b9c7db;
+            border-bottom: 1px solid #2d3748;
+        }
+
+        .doors-table td {
+            padding: 10px 6px;
+            border-bottom: 1px solid #2a3342;
+            text-align: center;
+            color: #e2e8f0;
+        }
+
+        .door-actions button {
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            margin: 0 4px;
+            opacity: 0.7;
+            color: #fff;
+        }
+
+        .door-actions button:hover {
+            opacity: 1;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            font-weight: 700;
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+            color: #b9c7db;
+        }
+
+        select,
+        input[type="number"],
+        input[type="text"],
+        input[type="password"],
+        input[type="email"],
+        input[type="date"] {
+            width: 100%;
+            padding: 8px 10px;
+            background: #0f1117;
+            border: 1px solid #334155;
+            color: #e2e8f0;
+            font-size: 0.85rem;
+            font-family: 'Play', monospace;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            color: #cbd5e6;
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: bold;
+            z-index: 10001;
+            display: none;
+        }
+
+        .hidden-field {
+            display: none;
+        }
+
+        .details-summary {
+            margin-top: 20px;
+            cursor: pointer;
+            background: #0f172a;
+            padding: 8px;
+            border: 1px solid #334155;
+            text-align: center;
+        }
+
+        .details-summary summary {
+            font-weight: 700;
+            outline: none;
+        }
+
+        #loadingOverlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15,17,23,0.9);
+            z-index: 20000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .loader {
+            border: 4px solid #334155;
+            border-top: 4px solid #cbd5e6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .client-row {
+            display: flex;
+            gap: 10px;
+            align-items: stretch;
+            margin-bottom: 20px;
+        }
+
+        .client-row .client-input {
+            margin-bottom: 0;
+            flex: 1;
+        }
+
+        .plus-btn {
+            width: 56px;
+            min-width: 56px;
+            padding: 0;
+            font-size: 28px;
+            line-height: 1;
+        }
+
+        .client-form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 16px;
+        }
+
+        .payments-row {
+            display: grid;
+            grid-template-columns: 160px 1fr 140px 60px;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        .payments-total-box {
+            margin-top: 20px;
+            border-top: 1px solid #334155;
+            padding-top: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            font-size: 1rem;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+            border: 1px solid transparent;
+        }
+
+        .status-in-work {
+            background: rgba(59, 130, 246, 0.18);
+            color: #93c5fd;
+            border-color: rgba(59, 130, 246, 0.40);
+        }
+
+        .status-invoice {
+            background: rgba(245, 158, 11, 0.18);
+            color: #fcd34d;
+            border-color: rgba(245, 158, 11, 0.40);
+        }
+
+        .status-paid {
+            background: rgba(168, 85, 247, 0.18);
+            color: #d8b4fe;
+            border-color: rgba(168, 85, 247, 0.40);
+        }
+
+        .status-production {
+            background: rgba(249, 115, 22, 0.18);
+            color: #fdba74;
+            border-color: rgba(249, 115, 22, 0.40);
+        }
+
+        .status-ready {
+            background: rgba(234, 179, 8, 0.18);
+            color: #fde68a;
+            border-color: rgba(234, 179, 8, 0.40);
+        }
+
+        .status-shipped {
+            background: rgba(34, 197, 94, 0.18);
+            color: #86efac;
+            border-color: rgba(34, 197, 94, 0.40);
+        }
+
+        @media (max-width: 1200px) {
+            .overlay-header {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 1000px) {
+            .main-layout {
+                flex-direction: column;
+            }
+
+            .overlay-header {
+                grid-template-columns: 1fr;
+            }
+
+            .header-status-wrap {
+                width: 100%;
+            }
+
+            .header-status-wrap select {
+                width: 100%;
+                min-width: 0;
+            }
+
+            .payments-row {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
@@ -87,7 +591,6 @@
     <div id="loadingText"></div>
 </div>
 
-<!-- ЭКРАН ВХОДА -->
 <div id="loginScreen">
     <div class="login-box">
         <h2>ВХОД В СИСТЕМУ</h2>
@@ -100,24 +603,16 @@
     </div>
 </div>
 
-<!-- ОСНОВНОЙ ИНТЕРФЕЙС -->
 <div id="mainApp">
     <div id="startScreen" class="start-screen">
         <div class="panel-box">
             <h2>СИСТЕМА УПРАВЛЕНИЯ ЗАКАЗАМИ</h2>
-            <input type="text" id="clientSearch" class="client-input" list="clientDatalist" placeholder="Начните вводить имя клиента..." autocomplete="off">
-            <datalist id="clientDatalist"></datalist>
 
-            <!-- Тип документа + номер -->
-            <div class="doc-number-row">
-                <select id="docTypeSelect">
-                    <option value="Договор №">Договор №</option>
-                    <option value="Счёт №">Счёт №</option>
-                    <option value="КП №">КП №</option>
-                    <option value="Заявка №">Заявка №</option>
-                </select>
-                <input type="text" id="docNumberInput" placeholder="Номер документа (необязательно)">
+            <div class="client-row">
+                <input type="text" id="clientSearch" class="client-input" list="clientDatalist" placeholder="Начните вводить имя клиента..." autocomplete="off">
+                <button id="addClientOpenBtn" class="btn-save plus-btn">+</button>
             </div>
+            <datalist id="clientDatalist"></datalist>
 
             <button id="refreshBtn" class="btn-main" style="margin-bottom: 20px;">ОБНОВИТЬ ДАННЫЕ</button>
             <button id="startNewOrderBtn" class="btn-save" style="width: 100%; padding: 14px; display: none;">+ СОЗДАТЬ НОВЫЙ ЗАКАЗ</button>
@@ -129,9 +624,31 @@
                 <thead>
                     <tr>
                         <th>ДАТА</th>
-                        <th>ДОКУМЕНТ</th>
                         <th>ДВЕРЕЙ</th>
+                        <th>СТАТУС</th>
+                        <th>ИТОГО</th>
+                        <th>ОПЛАЧЕНО</th>
+                        <th>ДОЛГ</th>
                         <th>ДЕЙСТВИЯ</th>
+                    </tr>
+                    <tr class="filters-row">
+                        <th><input class="filter-input" data-col="date" placeholder="Фильтр"></th>
+                        <th><input class="filter-input" data-col="doors" placeholder="Фильтр"></th>
+                        <th>
+                            <select class="filter-select" data-col="status">
+                                <option value="">Все</option>
+                                <option value="В РАБОТЕ">В РАБОТЕ</option>
+                                <option value="СЧЕТ ВЫСТАВЛЕН">СЧЕТ ВЫСТАВЛЕН</option>
+                                <option value="ОПЛАЧЕН">ОПЛАЧЕН</option>
+                                <option value="ПРОИЗВОДСТВО">ПРОИЗВОДСТВО</option>
+                                <option value="ГОТОВ">ГОТОВ</option>
+                                <option value="ОТГРУЖЕН">ОТГРУЖЕН</option>
+                            </select>
+                        </th>
+                        <th><input class="filter-input" data-col="total" placeholder="Фильтр"></th>
+                        <th><input class="filter-input" data-col="paid" placeholder="Фильтр"></th>
+                        <th><input class="filter-input" data-col="debt" placeholder="Фильтр"></th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody id="ordersTbody"></tbody>
@@ -139,12 +656,28 @@
         </div>
     </div>
 
-    <!-- Конфигуратор -->
     <div id="configOverlay" class="overlay hidden">
         <div class="overlay-header">
             <h2 id="configHeaderTitle">ТЕХНИЧЕСКИЙ КОНФИГУРАТОР</h2>
+
+            <div class="header-status-wrap">
+                <span id="headerStatusBadge" class="status-badge status-in-work">В РАБОТЕ</span>
+                <select id="orderStatusSelect">
+                    <option>В РАБОТЕ</option>
+                    <option>СЧЕТ ВЫСТАВЛЕН</option>
+                    <option>ОПЛАЧЕН</option>
+                    <option>ПРОИЗВОДСТВО</option>
+                    <option>ГОТОВ</option>
+                    <option>ОТГРУЖЕН</option>
+                </select>
+            </div>
+
+            <div class="header-meta-chip">Оплачено: <strong id="headerPaidView">0.00</strong></div>
+            <div class="header-meta-chip">Долг: <strong id="headerDebtView">0.00</strong></div>
+            <button id="openFinanceBtn" class="btn-small" style="height:38px;">ФИНАНСЫ</button>
             <button id="closeOverlayBtn" class="close-btn">НАЗАД К КЛИЕНТАМ</button>
         </div>
+
         <div class="main-layout">
             <div class="config-panel">
                 <h3 style="margin-bottom:20px;">ПАРАМЕТРЫ ДВЕРИ</h3>
@@ -155,9 +688,10 @@
                 </details>
                 <button id="addDoorBtn" class="btn-main" style="margin-top: 20px;">ДОБАВИТЬ В СПИСОК</button>
             </div>
+
             <div class="list-panel">
                 <div class="list-header">
-                    <h3 id="listPanelTitle">ТЕКУЩИЙ ЗАКАЗ</h3>
+                    <h3>ТЕКУЩИЙ ЗАКАЗ</h3>
                     <div class="header-actions">
                         <button id="copyAllBtn" class="btn-small">КОПИРОВАТЬ JSON</button>
                         <button id="saveOrderBtn" class="btn-save">💾 СОХРАНИТЬ ЗАКАЗ</button>
@@ -166,7 +700,9 @@
                 <div class="table-wrapper">
                     <table class="doors-table">
                         <thead id="tableHeader"></thead>
-                        <tbody id="doorsTbody"><tr><td colspan="20">НЕТ ДОБАВЛЕННЫХ ДВЕРЕЙ</td></tr></tbody>
+                        <tbody id="doorsTbody">
+                            <tr><td colspan="20">НЕТ ДОБАВЛЕННЫХ ДВЕРЕЙ</td></tr>
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -174,407 +710,855 @@
     </div>
 </div>
 
+<div id="addClientModal" class="overlay hidden">
+    <div class="overlay-header" style="grid-template-columns: 1fr auto;">
+        <h2>ДОБАВЛЕНИЕ КЛИЕНТА</h2>
+        <button id="closeClientModalBtn" class="close-btn">ЗАКРЫТЬ</button>
+    </div>
+    <div style="padding: 24px; overflow-y:auto; flex:1; background:#0f1117;">
+        <div class="panel-box" style="max-width:900px; margin:0 auto;">
+            <h2 style="margin-bottom:20px;">РЕКВИЗИТЫ КЛИЕНТА</h2>
+            <div class="client-form-grid">
+                <div class="form-group"><label>НАИМЕНОВАНИЕ *</label><input type="text" id="newClient_name"></div>
+                <div class="form-group"><label>ЮРИДИЧЕСКИЙ АДРЕС</label><input type="text" id="newClient_legalAddress"></div>
+                <div class="form-group"><label>ПОЧТОВЫЙ АДРЕС</label><input type="text" id="newClient_postalAddress"></div>
+                <div class="form-group"><label>P/C</label><input type="text" id="newClient_rs"></div>
+                <div class="form-group"><label>БАНК</label><input type="text" id="newClient_bank"></div>
+                <div class="form-group"><label>КОД БАНКА</label><input type="text" id="newClient_bankCode"></div>
+                <div class="form-group"><label>УНП</label><input type="text" id="newClient_unp"></div>
+                <div class="form-group"><label>ПОЧТА</label><input type="email" id="newClient_email"></div>
+                <div class="form-group"><label>ТЕЛЕФОН</label><input type="text" id="newClient_phone"></div>
+                <div class="form-group"><label>ЛОГИН ПОЛЬЗОВАТЕЛЯ</label><input type="text" id="newClient_ownerLogin" disabled></div>
+            </div>
+            <button id="saveClientBtn" class="btn-save" style="width:100%; padding:14px; margin-top:20px;">СОХРАНИТЬ КЛИЕНТА</button>
+        </div>
+    </div>
+</div>
+
+<div id="financeModal" class="overlay hidden">
+    <div class="overlay-header" style="grid-template-columns: 1fr auto;">
+        <h2>ФИНАНСЫ ЗАКАЗА</h2>
+        <button id="closeFinanceModalBtn" class="close-btn">ЗАКРЫТЬ</button>
+    </div>
+    <div style="padding: 24px; overflow-y:auto; flex:1; background:#0f1117;">
+        <div class="panel-box" style="max-width:1000px; margin:0 auto;">
+            <h2 style="margin-bottom:20px;">ИТОГО И ОПЛАТЫ</h2>
+
+            <div class="form-group">
+                <label>ИТОГО ЗАКАЗА</label>
+                <input type="number" step="0.01" id="financeOrderTotalInput" placeholder="Введите общую сумму заказа">
+            </div>
+
+            <div id="paymentsRows"></div>
+
+            <button id="addPaymentRowBtn" class="btn-small" style="margin-top:10px;">+ ДОБАВИТЬ ОПЛАТУ</button>
+
+            <div class="payments-total-box">
+                <div>Итого заказа: <span id="paymentsOrderTotal">0</span></div>
+                <div>Итого оплат: <span id="paymentsPaidTotal">0</span></div>
+                <div>Долг: <span id="paymentsDebtTotal">0</span></div>
+            </div>
+
+            <button id="saveFinanceBtn" class="btn-save" style="width:100%; padding:14px; margin-top:20px;">СОХРАНИТЬ ФИНАНСЫ</button>
+        </div>
+    </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbwi53HhkSBfPwvENZDvqCmIVGQkHTLaI2nMF3dTR44mae_QL4u1SAfaIzmHWRm0iES-/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbwi53HhkSBfPwvENZDvqCmIVGQkHTLaI2nMF3dTR44mae_QL4u1SAfaIzmHWRm0iES-/exec";
 
-    const CORE_FIELDS = ["Коробка", "Открывание", "Металл", "Порог", "Цилиндр", "Доводчик", "Цвет", "Остекление"];
-    const ALL_POSSIBLE_FIELDS = [
-        "Базовая цена", "Столбец 7", "Толщина металла полотна", "Упаковка", "Производство",
-        "Наличник", "Наличник портала", "Фрамуга", "Заполнение", "Пакет в основную створку",
-        "Тип пакета", "Отбойник", "Замок", "Ручка", "Антипаника", "СКУД", "Петли",
-        "Вент решетка", "Вент решетка 2 точка привязки", "Тип отгрузки"
-    ];
+const CORE_FIELDS = ["Коробка", "Открывание", "Металл", "Порог", "Цилиндр", "Доводчик", "Цвет", "Остекление"];
+const ALL_POSSIBLE_FIELDS = [
+    "Базовая цена", "Столбец 7", "Толщина металла полотна", "Упаковка", "Производство",
+    "Наличник", "Наличник портала", "Фрамуга", "Заполнение", "Пакет в основную створку",
+    "Тип пакета", "Отбойник", "Замок", "Ручка", "Антипаника", "СКУД", "Петли",
+    "Вент решетка", "Вент решетка 2 точка привязки", "Тип отгрузки"
+];
 
-    let doorTypes = [];
-    let allClients = [];
-    let allOrders = [];
-    let groupedClientOrders = [];
-    let selectedClient = "";
-    let currentOrderId = null;
-    let currentDoors = [];
-    let currentTypeKey = "";
-    let nextRequestNumber = 1;
-    let usedExtraFields = new Set();
-    let currentDocLabel = "";
+let doorTypes = [];
+let allClients = [];
+let allClientsFull = [];
+let allOrders = [];
+let groupedClientOrders = [];
+let selectedClient = "";
+let currentOrderId = null;
+let currentDoors = [];
+let currentTypeKey = "";
+let nextRequestNumber = 1;
+let usedExtraFields = new Set();
+let currentUserLogin = "";
+let currentUserRole = "";
+let currentOrderStatus = "В РАБОТЕ";
+let currentPayments = [];
+let currentOrderTotal = 0;
 
-    // Собираем лейбл документа из полей на стартовом экране
-    function getDocLabel() {
-        const type = document.getElementById("docTypeSelect").value;
-        const num  = document.getElementById("docNumberInput").value.trim();
-        if (!num) return "";
-        return type + " " + num;
+const loginScreen = document.getElementById('loginScreen');
+const mainApp = document.getElementById('mainApp');
+const loginError = document.getElementById('loginError');
+
+document.getElementById('loginBtn').addEventListener('click', async () => {
+    const login = document.getElementById('loginInput').value.trim();
+    const password = document.getElementById('passwordInput').value.trim();
+
+    if (!login || !password) {
+        loginError.textContent = 'Введите логин и пароль';
+        return;
     }
 
-    // Обновляем заголовок конфигуратора
-    function updateConfigHeader(prefix, client) {
-        const titleEl = document.getElementById("configHeaderTitle");
-        const listEl  = document.getElementById("listPanelTitle");
-        titleEl.innerHTML = escapeHtml(prefix + ": " + client)
-            + (currentDocLabel ? ` <span class="doc-badge"><span>${escapeHtml(currentDocLabel)}</span></span>` : "");
-        listEl.textContent = currentDocLabel ? "ЗАКАЗ — " + currentDocLabel : "ТЕКУЩИЙ ЗАКАЗ";
-    }
+    loginError.textContent = '';
+    showLoading('Проверка учётных данных...');
 
-    // Заполняем поля типа/номера документа из сохранённой строки
-    function prefillDocField(label) {
-        if (!label) return;
-        const types = ["Договор №", "Счёт №", "КП №", "Заявка №"];
-        const docTypeEl = document.getElementById("docTypeSelect");
-        const docNumEl  = document.getElementById("docNumberInput");
-        for (const t of types) {
-            if (label.startsWith(t)) {
-                docTypeEl.value = t;
-                docNumEl.value = label.slice(t.length).trim();
-                return;
-            }
-        }
-        docNumEl.value = label;
-    }
+    try {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'login', login, password })
+        });
 
-    // --- АУТЕНТИФИКАЦИЯ ---
-    const loginScreen = document.getElementById('loginScreen');
-    const mainApp = document.getElementById('mainApp');
-    const loginError = document.getElementById('loginError');
+        const data = await response.json();
+        if (data.error) throw new Error(data.error);
 
-    document.getElementById('loginBtn').addEventListener('click', async () => {
-        const login    = document.getElementById('loginInput').value.trim();
-        const password = document.getElementById('passwordInput').value.trim();
-        if (!login || !password) { loginError.textContent = 'Введите логин и пароль'; return; }
-        loginError.textContent = '';
-        showLoading('Проверка учётных данных...');
-        try {
-            const response = await fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({ action: 'login', login, password })
-            });
-            const data = await response.json();
-            if (data.error) throw new Error(data.error);
-            if (data.success) {
-                loginScreen.style.display = 'none';
-                mainApp.style.display = 'flex';
-                await loadDataFromAPI();
-            } else {
-                loginError.textContent = data.message || 'Неверный логин или пароль';
-            }
-        } catch (err) {
-            loginError.textContent = 'Ошибка соединения: ' + err.message;
-        } finally {
-            hideLoading();
-        }
-    });
-
-    document.getElementById('passwordInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') document.getElementById('loginBtn').click(); });
-    document.getElementById('loginInput').addEventListener('keypress',   (e) => { if (e.key === 'Enter') document.getElementById('passwordInput').focus(); });
-
-    // --- ЗАГРУЗКА ДАННЫХ ---
-    async function loadDataFromAPI() {
-        showLoading("Загрузка базы данных...");
-        try {
-            const response = await fetch(API_URL + "?action=init");
-            const data = await response.json();
-            if (data.error) throw new Error(data.error);
-            parseDoorTypes(data.doors);
-            allClients = data.clients || [];
-            allOrders  = data.orders  || [];
-            const datalist = document.getElementById("clientDatalist");
-            datalist.innerHTML = allClients.map(c => `<option value="${escapeHtml(c)}">`).join('');
-            if (doorTypes.length) currentTypeKey = doorTypes[0].key;
-            if (selectedClient) renderClientOrders();
-            hideLoading();
-        } catch (err) {
-            hideLoading();
-            alert("Ошибка загрузки: " + err.message);
-        }
-    }
-
-    function parseDoorTypes(rows) {
-        doorTypes = [];
-        if (!rows || rows.length === 0) return;
-        for (const row of rows) {
-            const actualKeyName = Object.keys(row).find(k => k.trim().toLowerCase() === 'ключ');
-            const key = actualKeyName ? row[actualKeyName] : null;
-            if (!key) continue;
-            const findVal = (rowObj, name) => {
-                const foundKey = Object.keys(rowObj).find(k => k.trim().toLowerCase() === name.toLowerCase());
-                return foundKey ? rowObj[foundKey] : "";
-            };
-            const name = findVal(row, "Имя") || key;
-            let widthMin=600, widthMax=1200, heightMin=1900, heightMax=2500;
-            const wMatch = (findVal(row, "Ширина") || "").match(/(\d+)\s*-\s*(\d+)/);
-            if (wMatch) { widthMin = +wMatch[1]; widthMax = +wMatch[2]; }
-            const hMatch = (findVal(row, "Высота") || "").match(/(\d+)\s*-\s*(\d+)/);
-            if (hMatch) { heightMin = +hMatch[1]; heightMax = +hMatch[2]; }
-            let options = {};
-            for (let f of CORE_FIELDS) {
-                options[f] = (findVal(row, f) || "").split(" -|- ").map(s => s.trim()).filter(s => s && s !== "-");
-            }
-            let extraOptions = {};
-            for (let f of ALL_POSSIBLE_FIELDS) {
-                extraOptions[f] = (findVal(row, f) || "").split(" -|- ").map(s => s.trim()).filter(s => s && s !== "-");
-            }
-            doorTypes.push({ key, name, widthMin, widthMax, heightMin, heightMax, options, extraOptions });
-        }
-    }
-
-    // --- СТАРТОВЫЙ ЭКРАН ---
-    document.getElementById("clientSearch").addEventListener("input", (e) => {
-        selectedClient = e.target.value.trim();
-        const startNewBtn = document.getElementById("startNewOrderBtn");
-        if (selectedClient && allClients.includes(selectedClient)) {
-            startNewBtn.style.display = "block";
-            renderClientOrders();
+        if (data.success) {
+            currentUserLogin = data.login || login;
+            currentUserRole = data.role || "user";
+            loginScreen.style.display = 'none';
+            mainApp.style.display = 'flex';
+            await loadDataFromAPI();
         } else {
-            startNewBtn.style.display = "none";
-            document.getElementById("ordersPanel").style.display = "none";
+            loginError.textContent = data.message || 'Неверный логин или пароль';
         }
+    } catch (err) {
+        loginError.textContent = 'Ошибка соединения: ' + err.message;
+    } finally {
+        hideLoading();
+    }
+});
+
+document.getElementById('passwordInput').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') document.getElementById('loginBtn').click();
+});
+document.getElementById('loginInput').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') document.getElementById('passwordInput').focus();
+});
+
+async function loadDataFromAPI() {
+    showLoading("Загрузка базы данных...");
+    try {
+        const response = await fetch(API_URL + "?action=init");
+        const data = await response.json();
+        if (data.error) throw new Error(data.error);
+
+        parseDoorTypes(data.doors);
+        allClients = data.clients || [];
+        allClientsFull = data.clientsFull || [];
+        allOrders = data.orders || [];
+
+        const datalist = document.getElementById("clientDatalist");
+        datalist.innerHTML = allClients.map(c => `<option value="${escapeHtml(c)}">`).join('');
+
+        if (doorTypes.length) currentTypeKey = doorTypes[0].key;
+        if (selectedClient) renderClientOrders();
+    } catch (err) {
+        alert("Ошибка загрузки: " + err.message);
+    } finally {
+        hideLoading();
+    }
+}
+
+function parseDoorTypes(rows) {
+    doorTypes = [];
+    if (!rows || rows.length === 0) return;
+
+    for (const row of rows) {
+        const actualKeyName = Object.keys(row).find(k => k.trim().toLowerCase() === 'ключ');
+        const key = actualKeyName ? row[actualKeyName] : null;
+        if (!key) continue;
+
+        const findVal = (rowObj, name) => {
+            const foundKey = Object.keys(rowObj).find(k => k.trim().toLowerCase() === name.toLowerCase());
+            return foundKey ? rowObj[foundKey] : "";
+        };
+
+        const name = findVal(row, "Имя") || key;
+
+        let widthMin = 600, widthMax = 1200, heightMin = 1900, heightMax = 2500;
+        const wMatch = (findVal(row, "Ширина") || "").match(/(\d+)\s*-\s*(\d+)/);
+        if (wMatch) { widthMin = +wMatch[1]; widthMax = +wMatch[2]; }
+        const hMatch = (findVal(row, "Высота") || "").match(/(\d+)\s*-\s*(\d+)/);
+        if (hMatch) { heightMin = +hMatch[1]; heightMax = +hMatch[2]; }
+
+        let options = {};
+        for (let f of CORE_FIELDS) {
+            options[f] = (findVal(row, f) || "").split(" -|- ").map(s => s.trim()).filter(s => s && s !== "-");
+        }
+
+        let extraOptions = {};
+        for (let f of ALL_POSSIBLE_FIELDS) {
+            extraOptions[f] = (findVal(row, f) || "").split(" -|- ").map(s => s.trim()).filter(s => s && s !== "-");
+        }
+
+        doorTypes.push({ key, name, widthMin, widthMax, heightMin, heightMax, options, extraOptions });
+    }
+}
+
+document.getElementById("clientSearch").addEventListener("input", (e) => {
+    selectedClient = e.target.value.trim();
+    const startNewBtn = document.getElementById("startNewOrderBtn");
+
+    if (selectedClient && allClients.includes(selectedClient)) {
+        startNewBtn.style.display = "block";
+        renderClientOrders();
+    } else {
+        startNewBtn.style.display = "none";
+        document.getElementById("ordersPanel").style.display = "none";
+    }
+});
+
+function getStatusClass(status) {
+    const s = String(status || "").trim().toUpperCase();
+    if (s === "В РАБОТЕ") return "status-in-work";
+    if (s === "СЧЕТ ВЫСТАВЛЕН") return "status-invoice";
+    if (s === "ОПЛАЧЕН") return "status-paid";
+    if (s === "ПРОИЗВОДСТВО") return "status-production";
+    if (s === "ГОТОВ") return "status-ready";
+    if (s === "ОТГРУЖЕН") return "status-shipped";
+    return "status-in-work";
+}
+
+function renderClientOrders() {
+    const panel = document.getElementById("ordersPanel");
+    const tbody = document.getElementById("ordersTbody");
+    panel.style.display = "block";
+
+    const clientDoors = allOrders.filter(o => o["Имя клиента"] === selectedClient);
+    const groups = {};
+
+    clientDoors.forEach(d => {
+        const id = d["Order ID"];
+        if (!groups[id]) {
+            groups[id] = {
+                id,
+                date: d["Дата"],
+                doors: [],
+                status: d["Статус заказа"] || "В РАБОТЕ",
+                orderTotal: parseFloat(d["Итого заказа"]) || 0,
+                paidTotal: parseFloat(d["Итого оплат"]) || 0,
+                debt: parseFloat(d["Долг"]) || 0,
+                paymentsJson: d["Оплаты JSON"] || "[]"
+            };
+        }
+        groups[id].doors.push(d);
     });
 
-    function renderClientOrders() {
-        const panel = document.getElementById("ordersPanel");
-        const tbody = document.getElementById("ordersTbody");
-        panel.style.display = "block";
-        const clientDoors = allOrders.filter(o => o["Имя клиента"] === selectedClient);
-        const groups = {};
-        clientDoors.forEach(d => {
-            const id = d["Order ID"];
-            if (!groups[id]) groups[id] = { id, date: d["Дата"], docLabel: d["Документ"] || "", doors: [] };
-            groups[id].doors.push(d);
-        });
-        groupedClientOrders = Object.values(groups).sort((a, b) => new Date(b.date) - new Date(a.date));
-        if (groupedClientOrders.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">У этого клиента еще нет заказов</td></tr>`;
-            return;
-        }
-        tbody.innerHTML = groupedClientOrders.map(group => `
-            <tr>
-                <td>${escapeHtml(group.date)}</td>
-                <td style="color:#7dd3fc;">${escapeHtml(group.docLabel || "—")}</td>
-                <td>${group.doors.length} шт.</td>
-                <td>
-                    <button class="btn-small" onclick="editOrder('${group.id}')">РЕДАКТИРОВАТЬ</button>
-                    <button class="btn-small" onclick="duplicateOrder('${group.id}')">КОПИРОВАТЬ</button>
-                </td>
-            </tr>
-        `).join('');
+    groupedClientOrders = Object.values(groups).sort((a, b) => parseDateTime(b.date) - parseDateTime(a.date));
+
+    if (groupedClientOrders.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">У этого клиента еще нет заказов</td></tr>`;
+        return;
     }
 
-    document.getElementById("startNewOrderBtn").addEventListener("click", () => {
-        currentOrderId = null;
-        currentDoors   = [];
-        usedExtraFields.clear();
-        nextRequestNumber = 1;
-        currentDocLabel = getDocLabel();
-        updateConfigHeader("НОВЫЙ ЗАКАЗ", selectedClient);
-        openConfigurator();
+    tbody.innerHTML = groupedClientOrders.map(group => `
+        <tr
+            data-date="${escapeAttr(formatDisplayDate(group.date).toLowerCase())}"
+            data-doors="${escapeAttr(String(group.doors.length).toLowerCase())}"
+            data-status="${escapeAttr(String(group.status || '').toLowerCase())}"
+            data-total="${escapeAttr(formatMoney(group.orderTotal).toLowerCase())}"
+            data-paid="${escapeAttr(formatMoney(group.paidTotal).toLowerCase())}"
+            data-debt="${escapeAttr(formatMoney(group.debt).toLowerCase())}"
+        >
+            <td>${escapeHtml(formatDisplayDate(group.date))}</td>
+            <td>${group.doors.length} шт.</td>
+            <td><span class="status-badge ${getStatusClass(group.status)}">${escapeHtml(group.status || "В РАБОТЕ")}</span></td>
+            <td>${formatMoney(group.orderTotal)}</td>
+            <td>${formatMoney(group.paidTotal)}</td>
+            <td>${formatMoney(group.debt)}</td>
+            <td>
+                <button class="btn-small" onclick="editOrder('${group.id}')">РЕДАКТИРОВАТЬ</button>
+                <button class="btn-small" onclick="duplicateOrder('${group.id}')">КОПИРОВАТЬ</button>
+            </td>
+        </tr>
+    `).join('');
+
+    applyOrderFilters();
+}
+
+document.querySelectorAll('.filter-input, .filter-select').forEach(input => {
+    input.addEventListener('input', applyOrderFilters);
+    input.addEventListener('change', applyOrderFilters);
+});
+
+function applyOrderFilters() {
+    const filters = {
+        date: document.querySelector('[data-col="date"]').value.trim().toLowerCase(),
+        doors: document.querySelector('[data-col="doors"]').value.trim().toLowerCase(),
+        status: document.querySelector('[data-col="status"]').value.trim().toLowerCase(),
+        total: document.querySelector('[data-col="total"]').value.trim().toLowerCase(),
+        paid: document.querySelector('[data-col="paid"]').value.trim().toLowerCase(),
+        debt: document.querySelector('[data-col="debt"]').value.trim().toLowerCase()
+    };
+
+    document.querySelectorAll('#ordersTbody tr').forEach(row => {
+        const ok =
+            row.dataset.date.includes(filters.date) &&
+            row.dataset.doors.includes(filters.doors) &&
+            row.dataset.status.includes(filters.status) &&
+            row.dataset.total.includes(filters.total) &&
+            row.dataset.paid.includes(filters.paid) &&
+            row.dataset.debt.includes(filters.debt);
+
+        row.style.display = ok ? '' : 'none';
+    });
+}
+
+document.getElementById("startNewOrderBtn").addEventListener("click", () => {
+    currentOrderId = null;
+    currentDoors = [];
+    currentPayments = [];
+    currentOrderStatus = "В РАБОТЕ";
+    currentOrderTotal = 0;
+    usedExtraFields.clear();
+    nextRequestNumber = 1;
+    document.getElementById("configHeaderTitle").innerText = `НОВЫЙ ЗАКАЗ: ${selectedClient}`;
+    openConfigurator();
+});
+
+window.editOrder = function(orderId) {
+    const group = groupedClientOrders.find(g => g.id === orderId);
+    if (!group) return;
+
+    currentOrderId = orderId;
+    currentOrderStatus = group.status || "В РАБОТЕ";
+    currentOrderTotal = parseFloat(group.orderTotal) || 0;
+
+    try {
+        currentPayments = group.paymentsJson ? JSON.parse(group.paymentsJson) : [];
+    } catch (e) {
+        currentPayments = [];
+    }
+
+    loadDoorsIntoConfig(group.doors);
+    document.getElementById("configHeaderTitle").innerText = `РЕДАКТИРОВАНИЕ ЗАКАЗА: ${selectedClient}`;
+    openConfigurator();
+};
+
+window.duplicateOrder = function(orderId) {
+    const group = groupedClientOrders.find(g => g.id === orderId);
+    if (!group) return;
+
+    currentOrderId = null;
+    currentOrderStatus = "В РАБОТЕ";
+    currentOrderTotal = 0;
+    currentPayments = [];
+    loadDoorsIntoConfig(group.doors);
+    document.getElementById("configHeaderTitle").innerText = `КОПИЯ ЗАКАЗА: ${selectedClient}`;
+    openConfigurator();
+};
+
+function loadDoorsIntoConfig(doorsArr) {
+    usedExtraFields.clear();
+
+    currentDoors = doorsArr.map((d, index) => {
+        const newDoor = { ...d };
+        delete newDoor["Дата"];
+        delete newDoor["Имя клиента"];
+        delete newDoor["Order ID"];
+        delete newDoor["Статус заказа"];
+        delete newDoor["Оплаты JSON"];
+        delete newDoor["Итого заказа"];
+        delete newDoor["Итого оплат"];
+        delete newDoor["Долг"];
+
+        const row = { ...newDoor, id: Date.now() + Math.random(), requestNumber: index + 1 };
+
+        ALL_POSSIBLE_FIELDS.forEach(f => {
+            if (row[f] && row[f] !== "—") usedExtraFields.add(f);
+        });
+
+        return row;
     });
 
-    window.editOrder = function(orderId) {
-        const group = groupedClientOrders.find(g => g.id === orderId);
-        if (!group) return;
-        currentOrderId  = orderId;
-        currentDocLabel = group.docLabel || getDocLabel();
-        prefillDocField(currentDocLabel);
-        loadDoorsIntoConfig(group.doors);
-        updateConfigHeader("РЕДАКТИРОВАНИЕ ЗАКАЗА", selectedClient);
-        openConfigurator();
+    nextRequestNumber = currentDoors.length + 1;
+}
+
+function openConfigurator() {
+    document.getElementById("configOverlay").classList.remove("hidden");
+    document.getElementById("orderStatusSelect").value = currentOrderStatus || "В РАБОТЕ";
+    renderConfigForm();
+    renderExtraParams();
+    renderRightTable();
+    refreshOrderMetaUI();
+}
+
+document.getElementById("closeOverlayBtn").addEventListener("click", () => {
+    document.getElementById("configOverlay").classList.add("hidden");
+});
+
+document.getElementById("orderStatusSelect").addEventListener("change", () => {
+    currentOrderStatus = document.getElementById("orderStatusSelect").value;
+    refreshOrderMetaUI();
+});
+
+document.getElementById("openFinanceBtn").addEventListener("click", () => {
+    openFinanceModal();
+});
+
+document.getElementById("saveOrderBtn").addEventListener("click", async () => {
+    if (!selectedClient) return alert("Ошибка: клиент не выбран!");
+    if (currentDoors.length === 0) return alert("В заказе нет ни одной двери!");
+
+    showLoading("Сохранение заказа...");
+
+    const payload = {
+        action: "saveOrder",
+        client: selectedClient,
+        orderId: currentOrderId,
+        status: currentOrderStatus,
+        payments: currentPayments,
+        orderTotal: currentOrderTotal,
+        doors: currentDoors
     };
 
-    window.duplicateOrder = function(orderId) {
-        const group = groupedClientOrders.find(g => g.id === orderId);
-        if (!group) return;
-        currentOrderId  = null;
-        currentDocLabel = getDocLabel() || group.docLabel || "";
-        loadDoorsIntoConfig(group.doors);
-        updateConfigHeader("КОПИЯ ЗАКАЗА", selectedClient);
-        openConfigurator();
-    };
-
-    function loadDoorsIntoConfig(doorsArr) {
-        usedExtraFields.clear();
-        currentDoors = doorsArr.map((d, index) => {
-            const newDoor = { ...d, id: Date.now() + Math.random(), requestNumber: index + 1 };
-            ALL_POSSIBLE_FIELDS.forEach(f => { if (newDoor[f] && newDoor[f] !== "—") usedExtraFields.add(f); });
-            return newDoor;
+    try {
+        const response = await fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify(payload)
         });
-        nextRequestNumber = currentDoors.length + 1;
+
+        const result = await response.json();
+        if (result.error) throw new Error(result.error);
+
+        currentOrderId = result.orderId || currentOrderId;
+        currentOrderTotal = parseFloat(result.orderTotal) || currentOrderTotal;
+
+        showToast("Заказ успешно сохранен!");
+        document.getElementById("configOverlay").classList.add("hidden");
+        await loadDataFromAPI();
+    } catch (err) {
+        alert("Ошибка сохранения: " + err.message);
+    } finally {
+        hideLoading();
+    }
+});
+
+function renderConfigForm() {
+    const formContainer = document.getElementById("configForm");
+
+    if (!doorTypes || doorTypes.length === 0) {
+        formContainer.innerHTML = `<div style="color: #f87171; padding: 10px; border: 1px dashed #f87171;">
+            ❌ Ошибка: Не найдены данные дверей.<br>
+            Проверьте, что лист в таблице называется <b>doors</b>, а первая колонка на нем — <b>Ключ</b>.
+        </div>`;
+        return;
     }
 
-    function openConfigurator() {
-        document.getElementById("configOverlay").classList.remove("hidden");
+    let type = doorTypes.find(t => t.key === currentTypeKey);
+    if (!type) {
+        currentTypeKey = doorTypes[0].key;
+        type = doorTypes[0];
+    }
+
+    let html = `<div class="form-group"><label>ТИП ДВЕРИ (КЛЮЧ)</label><select id="doorTypeSelect">`;
+    doorTypes.forEach(t => {
+        html += `<option value="${t.key}" ${t.key === currentTypeKey ? 'selected' : ''}>${escapeHtml(t.key)} — ${escapeHtml(t.name)}</option>`;
+    });
+    html += `</select></div>`;
+
+    html += `<div class="form-group"><label>ВЫСОТА (${type.heightMin}–${type.heightMax})</label><input type="number" id="heightVal" value="${type.heightMin}"></div>`;
+    html += `<div class="form-group"><label>ШИРИНА (${type.widthMin}–${type.widthMax})</label><input type="number" id="widthVal" value="${type.widthMin}"></div>`;
+
+    for (let f of CORE_FIELDS) {
+        let opts = type.options[f];
+        if (opts && opts.length) {
+            html += `<div class="form-group"><label>${f.toUpperCase()}</label><select id="cfg_${f}">`;
+            opts.forEach(opt => html += `<option>${escapeHtml(opt)}</option>`);
+            html += `</select></div>`;
+        } else {
+            html += `<div class="form-group hidden-field"><label>${f.toUpperCase()}</label><select id="cfg_${f}" disabled><option>—</option></select></div>`;
+        }
+    }
+
+    html += `<div class="form-group"><label>ТОЛЩИНА СТЕНЫ, ММ</label><input type="number" id="wallThick" value="100"></div>`;
+    html += `<div class="form-group"><label>КОЛИЧЕСТВО</label><input type="number" id="quantity" value="1" min="1"></div>`;
+
+    formContainer.innerHTML = html;
+
+    document.getElementById("doorTypeSelect").addEventListener("change", (e) => {
+        currentTypeKey = e.target.value;
         renderConfigForm();
         renderExtraParams();
-        renderRightTable();
+    });
+}
+
+function renderExtraParams() {
+    const type = doorTypes.find(t => t.key === currentTypeKey);
+    if (!type) return;
+
+    const container = document.getElementById("extraParamsContainer");
+    let html = "";
+
+    for (let f of ALL_POSSIBLE_FIELDS) {
+        let opts = type.extraOptions[f];
+        if (opts && opts.length) {
+            html += `<div class="form-group"><label>${f.toUpperCase()}</label><select id="extra_${f}"><option value="">— НЕ ВЫБРАНО —</option>`;
+            opts.forEach(opt => html += `<option>${escapeHtml(opt)}</option>`);
+            html += `</select></div>`;
+        } else {
+            html += `<div class="form-group hidden-field"><label>${f.toUpperCase()}</label><select id="extra_${f}" disabled><option>—</option></select></div>`;
+        }
     }
 
-    document.getElementById("closeOverlayBtn").addEventListener("click", () => {
-        document.getElementById("configOverlay").classList.add("hidden");
-    });
+    container.innerHTML = html;
+}
 
-    document.getElementById("saveOrderBtn").addEventListener("click", async () => {
-        if (!selectedClient)        return alert("Ошибка: клиент не выбран!");
-        if (currentDoors.length === 0) return alert("В заказе нет ни одной двери!");
-        showLoading("Сохранение заказа...");
-        const payload = {
-            action:   "saveOrder",
-            client:   selectedClient,
-            orderId:  currentOrderId,
-            docLabel: currentDocLabel,
-            doors:    currentDoors
-        };
-        try {
-            const response = await fetch(API_URL, {
-                method: "POST",
-                headers: { "Content-Type": "text/plain;charset=utf-8" },
-                body: JSON.stringify(payload)
-            });
-            const result = await response.json();
-            if (result.error) throw new Error(result.error);
-            showToast("Заказ успешно сохранен!");
-            document.getElementById("configOverlay").classList.add("hidden");
-            await loadDataFromAPI();
-        } catch (err) {
-            hideLoading();
-            alert("Ошибка сохранения: " + err.message);
-        }
-    });
+document.getElementById("addDoorBtn").addEventListener("click", () => {
+    const type = doorTypes.find(t => t.key === currentTypeKey);
+    if (!type) return;
 
-    // --- КОНФИГУРАТОР ---
-    function renderConfigForm() {
-        const formContainer = document.getElementById("configForm");
-        if (!doorTypes || doorTypes.length === 0) {
-            formContainer.innerHTML = `<div style="color:#f87171;padding:10px;border:1px dashed #f87171;">
-                ❌ Ошибка: Не найдены данные дверей.<br>
-                Проверьте, что лист называется <b>doors</b>, а первая колонка — <b>Ключ</b>.
-            </div>`;
-            return;
-        }
-        let type = doorTypes.find(t => t.key === currentTypeKey);
-        if (!type) { currentTypeKey = doorTypes[0].key; type = doorTypes[0]; }
+    let cfg = {
+        requestNumber: nextRequestNumber++,
+        doorKey: currentTypeKey,
+        doorName: type.name,
+        Высота: parseInt(document.getElementById("heightVal").value) || type.heightMin,
+        Ширина: parseInt(document.getElementById("widthVal").value) || type.widthMin,
+        "Толщина стены, мм": parseInt(document.getElementById("wallThick").value) || 100,
+        "Кол-во": parseInt(document.getElementById("quantity").value) || 1,
+    };
 
-        let html = `<div class="form-group"><label>ТИП ДВЕРИ (КЛЮЧ)</label><select id="doorTypeSelect2">`;
-        doorTypes.forEach(t => { html += `<option value="${t.key}" ${t.key===currentTypeKey?'selected':''}>${escapeHtml(t.key)} — ${escapeHtml(t.name)}</option>`; });
-        html += `</select></div>`;
-        html += `<div class="form-group"><label>ВЫСОТА (${type.heightMin}–${type.heightMax})</label><input type="number" id="heightVal" value="${type.heightMin}"></div>`;
-        html += `<div class="form-group"><label>ШИРИНА (${type.widthMin}–${type.widthMax})</label><input type="number" id="widthVal" value="${type.widthMin}"></div>`;
-        for (let f of CORE_FIELDS) {
-            let opts = type.options[f];
-            if (opts && opts.length) {
-                html += `<div class="form-group"><label>${f.toUpperCase()}</label><select id="cfg_${f}">`;
-                opts.forEach(opt => html += `<option>${escapeHtml(opt)}</option>`);
-                html += `</select></div>`;
-            } else {
-                html += `<div class="form-group hidden-field"><label>${f.toUpperCase()}</label><select id="cfg_${f}" disabled><option>—</option></select></div>`;
-            }
-        }
-        html += `<div class="form-group"><label>ТОЛЩИНА СТЕНЫ, ММ</label><input type="number" id="wallThick" value="100"></div>`;
-        html += `<div class="form-group"><label>КОЛИЧЕСТВО</label><input type="number" id="quantity" value="1" min="1"></div>`;
-        formContainer.innerHTML = html;
-        document.getElementById("doorTypeSelect2").addEventListener("change", (e) => {
-            currentTypeKey = e.target.value;
-            renderConfigForm();
-            renderExtraParams();
-        });
+    for (let f of CORE_FIELDS) {
+        cfg[f] = document.getElementById(`cfg_${f}`) ? document.getElementById(`cfg_${f}`).value : "—";
     }
 
-    function renderExtraParams() {
-        const type = doorTypes.find(t => t.key === currentTypeKey);
-        if (!type) return;
-        const container = document.getElementById("extraParamsContainer");
-        let html = "";
-        for (let f of ALL_POSSIBLE_FIELDS) {
-            let opts = type.extraOptions[f];
-            if (opts && opts.length) {
-                html += `<div class="form-group"><label>${f.toUpperCase()}</label><select id="extra_${f}"><option value="">— НЕ ВЫБРАНО —</option>`;
-                opts.forEach(opt => html += `<option>${escapeHtml(opt)}</option>`);
-                html += `</select></div>`;
-            } else {
-                html += `<div class="form-group hidden-field"><label>${f.toUpperCase()}</label><select id="extra_${f}" disabled><option>—</option></select></div>`;
-            }
+    for (let f of ALL_POSSIBLE_FIELDS) {
+        const el = document.getElementById(`extra_${f}`);
+        if (el && el.value && el.value !== "— НЕ ВЫБРАНО —") {
+            cfg[f] = el.value;
+            usedExtraFields.add(f);
         }
-        container.innerHTML = html;
     }
 
-    document.getElementById("addDoorBtn").addEventListener("click", () => {
-        const type = doorTypes.find(t => t.key === currentTypeKey);
-        if (!type) return;
-        let cfg = {
-            requestNumber: nextRequestNumber++,
-            doorKey:  currentTypeKey,
-            doorName: type.name,
-            Высота:   parseInt(document.getElementById("heightVal").value) || type.heightMin,
-            Ширина:   parseInt(document.getElementById("widthVal").value)  || type.widthMin,
-            "Толщина стены, мм": parseInt(document.getElementById("wallThick").value) || 100,
-            "Кол-во":            parseInt(document.getElementById("quantity").value)  || 1,
-        };
-        for (let f of CORE_FIELDS) cfg[f] = document.getElementById(`cfg_${f}`) ? document.getElementById(`cfg_${f}`).value : "—";
-        for (let f of ALL_POSSIBLE_FIELDS) {
-            const el = document.getElementById(`extra_${f}`);
-            if (el && el.value && el.value !== "— НЕ ВЫБРАНО —") { cfg[f] = el.value; usedExtraFields.add(f); }
-        }
-        currentDoors.push({ id: Date.now() + Math.random(), ...cfg });
-        renderRightTable();
-        showToast("Дверь добавлена");
-    });
+    currentDoors.push({ id: Date.now() + Math.random(), ...cfg });
+    renderRightTable();
+    showToast("Дверь добавлена");
+});
 
-    function renderRightTable() {
-        const tbody = document.getElementById("doorsTbody");
-        const baseColumns  = ["requestNumber", "doorKey", "Высота", "Ширина", ...CORE_FIELDS, "Толщина стены, мм", "Кол-во"];
-        const extraColumns = Array.from(usedExtraFields).sort();
-        const allColumns   = [...baseColumns, ...extraColumns];
-        let headerHtml = `<tr><th>ДЕЙСТВИЯ</th>`;
+function renderRightTable() {
+    const tbody = document.getElementById("doorsTbody");
+    const baseColumns = ["requestNumber", "doorKey", "Высота", "Ширина", ...CORE_FIELDS, "Толщина стены, мм", "Кол-во"];
+    const extraColumns = Array.from(usedExtraFields).sort();
+    const allColumns = [...baseColumns, ...extraColumns];
+
+    let headerHtml = `<tr><th>ДЕЙСТВИЯ</th>`;
+    for (let col of allColumns) {
+        let name = col === "requestNumber" ? "N" : col === "doorKey" ? "ТИП" : col.toUpperCase();
+        headerHtml += `<th>${escapeHtml(name)}</th>`;
+    }
+    headerHtml += `</tr>`;
+    document.getElementById("tableHeader").innerHTML = headerHtml;
+
+    if (currentDoors.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="${allColumns.length + 1}">НЕТ ДВЕРЕЙ В ЗАКАЗЕ</td></tr>`;
+        return;
+    }
+
+    let bodyHtml = "";
+    for (let i = 0; i < currentDoors.length; i++) {
+        const d = currentDoors[i];
+        bodyHtml += `<tr>`;
+        bodyHtml += `<td class="door-actions"><button onclick="copyRow(${i})">📋</button><button onclick="delRow(${i})">❌</button></td>`;
         for (let col of allColumns) {
-            let name = col === "requestNumber" ? "N" : col === "doorKey" ? "ТИП" : col.toUpperCase();
-            headerHtml += `<th>${escapeHtml(name)}</th>`;
+            let value = d[col] !== undefined ? d[col] : "—";
+            bodyHtml += `<td>${escapeHtml(String(value))}</td>`;
         }
-        headerHtml += `</tr>`;
-        document.getElementById("tableHeader").innerHTML = headerHtml;
-        if (currentDoors.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="${allColumns.length+1}">НЕТ ДВЕРЕЙ В ЗАКАЗЕ</td></tr>`;
-            return;
-        }
-        let bodyHtml = "";
-        for (let i = 0; i < currentDoors.length; i++) {
-            const d = currentDoors[i];
-            bodyHtml += `<tr><td class="door-actions"><button onclick="copyRow(${i})">📋</button><button onclick="delRow(${i})">❌</button></td>`;
-            for (let col of allColumns) {
-                bodyHtml += `<td>${escapeHtml(String(d[col] !== undefined ? d[col] : "—"))}</td>`;
-            }
-            bodyHtml += `</tr>`;
-        }
-        tbody.innerHTML = bodyHtml;
+        bodyHtml += `</tr>`;
     }
+    tbody.innerHTML = bodyHtml;
+}
 
-    window.copyRow = function(idx) {
-        let copy = JSON.parse(JSON.stringify(currentDoors[idx]));
-        copy.id = Date.now() + Math.random();
-        copy.requestNumber = nextRequestNumber++;
-        currentDoors.splice(idx + 1, 0, copy);
-        renderRightTable();
+window.copyRow = function(idx) {
+    let copy = JSON.parse(JSON.stringify(currentDoors[idx]));
+    copy.id = Date.now() + Math.random();
+    copy.requestNumber = nextRequestNumber++;
+    currentDoors.splice(idx + 1, 0, copy);
+    renderRightTable();
+};
+
+window.delRow = function(idx) {
+    currentDoors.splice(idx, 1);
+    renderRightTable();
+};
+
+function openAddClientModal() {
+    document.getElementById("addClientModal").classList.remove("hidden");
+    document.getElementById("newClient_ownerLogin").value = currentUserLogin || "";
+    document.getElementById("newClient_name").focus();
+}
+
+function closeAddClientModal() {
+    document.getElementById("addClientModal").classList.add("hidden");
+}
+
+function clearAddClientForm() {
+    document.getElementById("newClient_name").value = "";
+    document.getElementById("newClient_legalAddress").value = "";
+    document.getElementById("newClient_postalAddress").value = "";
+    document.getElementById("newClient_rs").value = "";
+    document.getElementById("newClient_bank").value = "";
+    document.getElementById("newClient_bankCode").value = "";
+    document.getElementById("newClient_unp").value = "";
+    document.getElementById("newClient_email").value = "";
+    document.getElementById("newClient_phone").value = "";
+    document.getElementById("newClient_ownerLogin").value = currentUserLogin || "";
+}
+
+document.getElementById("addClientOpenBtn").addEventListener("click", () => {
+    clearAddClientForm();
+    openAddClientModal();
+});
+
+document.getElementById("closeClientModalBtn").addEventListener("click", closeAddClientModal);
+
+document.getElementById("saveClientBtn").addEventListener("click", async () => {
+    const payload = {
+        action: "addClient",
+        name: document.getElementById("newClient_name").value.trim(),
+        legalAddress: document.getElementById("newClient_legalAddress").value.trim(),
+        postalAddress: document.getElementById("newClient_postalAddress").value.trim(),
+        rs: document.getElementById("newClient_rs").value.trim(),
+        bank: document.getElementById("newClient_bank").value.trim(),
+        bankCode: document.getElementById("newClient_bankCode").value.trim(),
+        unp: document.getElementById("newClient_unp").value.trim(),
+        email: document.getElementById("newClient_email").value.trim(),
+        phone: document.getElementById("newClient_phone").value.trim(),
+        ownerLogin: currentUserLogin
     };
-    window.delRow = function(idx) {
-        currentDoors.splice(idx, 1);
-        renderRightTable();
-    };
 
-    function escapeHtml(str) { return String(str).replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
-    function showToast(msg) {
-        const t = document.getElementById("toast");
-        t.textContent = msg; t.style.display = "block";
-        setTimeout(() => t.style.display = "none", 3000);
+    if (!payload.name) {
+        alert("Введите наименование клиента");
+        return;
     }
-    function showLoading(text) {
-        document.getElementById("loadingText").innerText = text;
-        document.getElementById("loadingOverlay").style.display = "flex";
-    }
-    function hideLoading() { document.getElementById("loadingOverlay").style.display = "none"; }
 
-    document.getElementById("refreshBtn").addEventListener("click", loadDataFromAPI);
-    document.getElementById("copyAllBtn").addEventListener("click", () => {
-        console.log(JSON.stringify(currentDoors.map(({id, ...rest}) => rest), null, 2));
-        showToast("JSON в консоли (F12)");
+    showLoading("Сохранение клиента...");
+    try {
+        const response = await fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+        if (result.error) throw new Error(result.error);
+
+        selectedClient = payload.name;
+        document.getElementById("clientSearch").value = payload.name;
+
+        closeAddClientModal();
+        clearAddClientForm();
+        await loadDataFromAPI();
+
+        document.getElementById("startNewOrderBtn").style.display = "block";
+        renderClientOrders();
+        showToast("Клиент успешно добавлен");
+    } catch (err) {
+        alert("Ошибка добавления клиента: " + err.message);
+    } finally {
+        hideLoading();
+    }
+});
+
+function openFinanceModal() {
+    document.getElementById("financeModal").classList.remove("hidden");
+    document.getElementById("financeOrderTotalInput").value = currentOrderTotal || 0;
+    renderPaymentsRows();
+    refreshFinanceTotals();
+}
+
+function closeFinanceModal() {
+    document.getElementById("financeModal").classList.add("hidden");
+}
+
+document.getElementById("closeFinanceModalBtn").addEventListener("click", closeFinanceModal);
+
+document.getElementById("financeOrderTotalInput").addEventListener("input", () => {
+    currentOrderTotal = parseFloat(document.getElementById("financeOrderTotalInput").value) || 0;
+    refreshFinanceTotals();
+    refreshOrderMetaUI();
+});
+
+document.getElementById("addPaymentRowBtn").addEventListener("click", () => {
+    currentPayments.push({
+        date: getTodayInputDate(),
+        note: "",
+        amount: 0
     });
+    renderPaymentsRows();
+    refreshFinanceTotals();
+    refreshOrderMetaUI();
+});
+
+document.getElementById("saveFinanceBtn").addEventListener("click", async () => {
+    currentOrderTotal = parseFloat(document.getElementById("financeOrderTotalInput").value) || 0;
+
+    if (!currentOrderId) {
+        closeFinanceModal();
+        refreshOrderMetaUI();
+        showToast("Финансы сохранятся после первого сохранения заказа");
+        return;
+    }
+
+    showLoading("Сохранение финансов...");
+    try {
+        const response = await fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({
+                action: "updateOrderMeta",
+                orderId: currentOrderId,
+                status: currentOrderStatus,
+                payments: currentPayments,
+                orderTotal: currentOrderTotal
+            })
+        });
+
+        const result = await response.json();
+        if (result.error) throw new Error(result.error);
+
+        currentOrderTotal = parseFloat(result.orderTotal) || currentOrderTotal;
+        closeFinanceModal();
+        refreshOrderMetaUI();
+        await loadDataFromAPI();
+        showToast("Финансы сохранены");
+    } catch (err) {
+        alert("Ошибка сохранения финансов: " + err.message);
+    } finally {
+        hideLoading();
+    }
+});
+
+function renderPaymentsRows() {
+    const box = document.getElementById("paymentsRows");
+    if (!currentPayments.length) {
+        currentPayments = [{ date: getTodayInputDate(), note: "", amount: 0 }];
+    }
+
+    box.innerHTML = currentPayments.map((p, i) => `
+        <div class="payments-row">
+            <input type="date" value="${escapeAttr(p.date || '')}" onchange="updatePaymentField(${i}, 'date', this.value)">
+            <input type="text" placeholder="Комментарий / основание" value="${escapeAttr(p.note || '')}" onchange="updatePaymentField(${i}, 'note', this.value)">
+            <input type="number" step="0.01" placeholder="Сумма" value="${escapeAttr(p.amount || 0)}" onchange="updatePaymentField(${i}, 'amount', this.value)">
+            <button class="btn-small" onclick="removePaymentRow(${i})">✕</button>
+        </div>
+    `).join('');
+}
+
+window.updatePaymentField = function(idx, field, value) {
+    if (!currentPayments[idx]) return;
+    currentPayments[idx][field] = field === 'amount' ? (parseFloat(value) || 0) : value;
+    refreshFinanceTotals();
+    refreshOrderMetaUI();
+};
+
+window.removePaymentRow = function(idx) {
+    currentPayments.splice(idx, 1);
+    if (!currentPayments.length) currentPayments.push({ date: getTodayInputDate(), note: "", amount: 0 });
+    renderPaymentsRows();
+    refreshFinanceTotals();
+    refreshOrderMetaUI();
+};
+
+function refreshFinanceTotals() {
+    const total = parseFloat(document.getElementById("financeOrderTotalInput").value) || 0;
+    document.getElementById("paymentsOrderTotal").textContent = formatMoney(total);
+    document.getElementById("paymentsPaidTotal").textContent = formatMoney(getPaidTotal());
+    document.getElementById("paymentsDebtTotal").textContent = formatMoney(Math.max(0, total - getPaidTotal()));
+}
+
+function refreshOrderMetaUI() {
+    const statusBadge = document.getElementById("headerStatusBadge");
+    const paid = getPaidTotal();
+    const debt = getDebtTotal();
+
+    statusBadge.textContent = currentOrderStatus || "В РАБОТЕ";
+    statusBadge.className = `status-badge ${getStatusClass(currentOrderStatus)}`;
+
+    document.getElementById("headerPaidView").textContent = formatMoney(paid);
+    document.getElementById("headerDebtView").textContent = formatMoney(debt);
+}
+
+function getPaidTotal() {
+    return currentPayments.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+}
+
+function getDebtTotal() {
+    return Math.max(0, currentOrderTotal - getPaidTotal());
+}
+
+function formatMoney(n) {
+    return new Intl.NumberFormat('ru-RU', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }).format(Number(n || 0));
+}
+
+function formatDisplayDate(str) {
+    if (!str) return "";
+    const s = String(str).trim();
+    const m = s.match(/^(\d{2}\.\d{2}\.\d{4})\s+(\d{2}:\d{2})/);
+    if (m) return `${m[1]} ${m[2]}`;
+    return s.length >= 16 ? s.slice(0, 16) : s;
+}
+
+function parseDateTime(str) {
+    const s = String(str || "").trim();
+    const m = s.match(/^(\d{2})\.(\d{2})\.(\d{4})\s+(\d{2}):(\d{2})/);
+    if (m) return new Date(+m[3], +m[2] - 1, +m[1], +m[4], +m[5]).getTime();
+    return new Date(s).getTime() || 0;
+}
+
+function getTodayInputDate() {
+    const d = new Date();
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+}
+
+function escapeHtml(str) {
+    return String(str).replace(/[&<>"]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[m]));
+}
+
+function escapeAttr(str) {
+    return String(str ?? "")
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
+function showToast(msg) {
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.style.display = "block";
+    setTimeout(() => t.style.display = "none", 3000);
+}
+
+function showLoading(text) {
+    document.getElementById("loadingText").innerText = text;
+    document.getElementById("loadingOverlay").style.display = "flex";
+}
+
+function hideLoading() {
+    document.getElementById("loadingOverlay").style.display = "none";
+}
+
+document.getElementById("refreshBtn").addEventListener("click", loadDataFromAPI);
+
+document.getElementById("copyAllBtn").addEventListener("click", () => {
+    console.log(JSON.stringify(currentDoors.map(({ id, ...rest }) => rest), null, 2));
+    showToast("JSON в консоли (F12)");
+});
 </script>
 </body>
 </html>
