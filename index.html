@@ -1662,7 +1662,7 @@ window.generatePDF = function() {
     y += 3.5;
     doc.text("Почт. адрес: 220024, Минская обл., г. Минск, Стебенева, дом № 20 литера Е 1/к", pageW / 2, y, { align: "center" });
     y += 3.5;
-    doc.text("Реквизиты: р/с BY87BELB30121708300090226000, Минское отд. №3 ОАО "Банк БелВЭБ", код BELBBY2X, г. Минск, пр-т Мира 1", pageW / 2, y, { align: "center" });
+    doc.text("Реквизиты: р/с BY87BELB30121708300090226000, Минское отд. №3 ОАО 'Банк БелВЭБ', код BELBBY2X, г. Минск, пр-т Мира 1", pageW / 2, y, { align: "center" });
     y += 3.5;
     doc.text("УНП 100072163", pageW / 2, y, { align: "center" });
     y += 5;
@@ -1784,7 +1784,7 @@ window.generatePDF = function() {
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(7.5);
-    doc.text("УП "СЭТГОУ"", margin, y);
+    doc.text("УП 'СЭТГОУ'", margin, y);
     doc.text(clientInfo, margin + halfW, y);
     y += 6;
 
