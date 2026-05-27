@@ -621,6 +621,14 @@
         #globalOrdersPanel h2 {
             margin-bottom: 14px;
         }
+
+        .editable-cell:hover {
+            background: #1e3a5f !important;
+            outline: 1px solid #3b82f6;
+        }
+        .editable-cell {
+            transition: background 0.15s;
+        }
     </style>
 </head>
 <body>
@@ -1403,6 +1411,7 @@ function renderConfigForm() {
         let opts = type.options[f];
         if (opts && opts.length) {
             html += `<div class="form-group"><label>${f.toUpperCase()}</label><select id="cfg_${f}">`;
+            html += `<option value="—">—</option>`;
             opts.forEach(opt => html += `<option>${escapeHtml(opt)}</option>`);
             html += `</select></div>`;
         } else {
@@ -1474,6 +1483,60 @@ document.getElementById("addDoorBtn").addEventListener("click", () => {
     showToast("Дверь добавлена");
 });
 
+// Inline-edit helpers
+const NUMBER_COLS = new Set(["Высота", "Ширина", "Толщина стены, мм", "Кол-во"]);
+
+function getColOptions(doorKey, colName) {
+    const type = doorTypes.find(t => t.key === doorKey);
+    if (!type) return null;
+    if (CORE_FIELDS.includes(colName)) return type.options[colName] || null;
+    if (ALL_POSSIBLE_FIELDS.includes(colName)) return type.extraOptions[colName] || null;
+    if (colName === "doorKey") return doorTypes.map(t => t.key);
+    return null;
+}
+
+function makeCellEditable(td, doorIdx, colName) {
+    if (td.querySelector("select,input")) return; // already editing
+    const door = currentDoors[doorIdx];
+    const currentVal = door[colName] !== undefined ? String(door[colName]) : "—";
+
+    if (NUMBER_COLS.has(colName)) {
+        // Double-click number input
+        const input = document.createElement("input");
+        input.type = "number";
+        input.value = parseFloat(currentVal) || 0;
+        input.style.cssText = "width:70px;background:#0f1117;border:1px solid #3b82f6;color:#e2e8f0;font-family:Play;font-size:12px;padding:2px 4px;";
+        td.innerHTML = "";
+        td.appendChild(input);
+        input.focus();
+        input.select();
+        const save = () => {
+            const v = parseFloat(input.value) || 0;
+            currentDoors[doorIdx][colName] = v;
+            renderRightTable();
+        };
+        input.addEventListener("blur", save);
+        input.addEventListener("keydown", e => { if (e.key === "Enter") save(); if (e.key === "Escape") renderRightTable(); });
+    } else {
+        // Click -> dropdown
+        const opts = getColOptions(door["doorKey"] || door["Ключ"], colName);
+        if (!opts || opts.length === 0) return;
+        const sel = document.createElement("select");
+        sel.style.cssText = "background:#0f1117;border:1px solid #3b82f6;color:#e2e8f0;font-family:Play;font-size:12px;padding:2px 4px;max-width:160px;";
+        sel.innerHTML = `<option value="—">—</option>` + opts.map(o => `<option value="${escapeHtml(o)}" ${o === currentVal ? "selected" : ""}>${escapeHtml(o)}</option>`).join("");
+        td.innerHTML = "";
+        td.appendChild(sel);
+        sel.focus();
+        const save = () => {
+            currentDoors[doorIdx][colName] = sel.value;
+            renderRightTable();
+        };
+        sel.addEventListener("change", save);
+        sel.addEventListener("blur", save);
+        sel.addEventListener("keydown", e => { if (e.key === "Escape") renderRightTable(); });
+    }
+}
+
 function renderRightTable() {
     const tbody = document.getElementById("doorsTbody");
     const baseColumns = ["requestNumber", "doorKey", "Высота", "Ширина", ...CORE_FIELDS, "Толщина стены, мм", "Кол-во"];
@@ -1500,7 +1563,15 @@ function renderRightTable() {
         bodyHtml += `<td class="door-actions"><button onclick="copyRow(${i})">📋</button><button onclick="delRow(${i})">❌</button></td>`;
         for (let col of allColumns) {
             let value = d[col] !== undefined ? d[col] : "—";
-            bodyHtml += `<td>${escapeHtml(String(value))}</td>`;
+            const isNum = NUMBER_COLS.has(col);
+            const isEditable = col !== "requestNumber";
+            if (isEditable) {
+                const title = isNum ? "Двойной клик для редактирования" : "Клик для редактирования";
+                const event = isNum ? `ondblclick="makeCellEditable(this,${i},'${col}')"` : `onclick="makeCellEditable(this,${i},'${col}')"`;
+                bodyHtml += `<td ${event} title="${title}" style="cursor:pointer;" class="editable-cell">${escapeHtml(String(value))}</td>`;
+            } else {
+                bodyHtml += `<td>${escapeHtml(String(value))}</td>`;
+            }
         }
         bodyHtml += `</tr>`;
     }
