@@ -7,232 +7,162 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background: #1a1e24; font-family: 'Play', sans-serif; color: #eef2ff; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
-
-        #loginScreen {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-        .login-box {
-            background: #1e2430;
-            padding: 40px;
-            border: 1px solid #2d3748;
-            width: 350px;
-        }
+        #loginScreen { display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .login-box { background: #1e2430; padding: 40px; border: 1px solid #2d3748; width: 350px; }
         .login-box h2 { margin-bottom: 25px; text-align: center; color: #cbd5e6; }
         .login-box label { display: block; margin-bottom: 5px; font-size: 0.9rem; color: #b9c7db; }
         .login-box input {
-            width: 100%;
-            padding: 10px;
-            background: #0f1117;
-            border: 1px solid #334155;
-            color: #e2e8f0;
-            font-size: 1rem;
-            font-family: 'Play';
-            margin-bottom: 20px;
+            width: 100%; padding: 10px; background: #0f1117; border: 1px solid #334155;
+            color: #e2e8f0; font-size: 1rem; font-family: 'Play'; margin-bottom: 20px;
         }
-        .login-box .error-msg {
-            color: #f87171;
-            font-size: 0.85rem;
-            margin-bottom: 15px;
-            text-align: center;
+        .login-box .error-msg { color: #f87171; font-size: 0.85rem; margin-bottom: 15px; text-align: center; }
+        .btn-login, .btn-main, .btn-save, .btn-small, .close-btn {
+            font-family: 'Play', sans-serif;
         }
         .btn-login {
-            background: #0f172a;
-            color: #e2e8f0;
-            border: 1px solid #334155;
-            padding: 12px;
-            width: 100%;
-            font-weight: 700;
-            text-transform: uppercase;
-            cursor: pointer;
-            transition: 0.2s;
-            font-family: 'Play', sans-serif;
+            background: #0f172a; color: #e2e8f0; border: 1px solid #334155;
+            padding: 12px; width: 100%; font-weight: 700; text-transform: uppercase; cursor: pointer; transition: 0.2s;
         }
         .btn-login:hover { background: #1e293b; border-color: #5b6e8c; }
-
         #mainApp { display: none; flex-direction: column; height: 100vh; }
-
         .start-screen { padding: 40px; display: flex; flex-direction: column; align-items: center; overflow-y: auto; flex: 1; }
-        .panel-box { background: #1e2430; padding: 30px; border: 1px solid #2d3748; width: 100%; max-width: 900px; margin-bottom: 20px; }
+        .panel-box { background: #1e2430; padding: 30px; border: 1px solid #2d3748; width: 100%; max-width: 1100px; margin-bottom: 20px; }
         .panel-box h2 { margin-bottom: 20px; font-size: 1.4rem; color: #cbd5e6; text-align: center; }
-        .client-input { width: 100%; padding: 12px; background: #0f1117; border: 1px solid #334155; color: #e2e8f0; font-size: 1.1rem; font-family: 'Play', sans-serif; margin-bottom: 20px; }
+        .client-input {
+            width: 100%; padding: 12px; background: #0f1117; border: 1px solid #334155;
+            color: #e2e8f0; font-size: 1.1rem; font-family: 'Play', sans-serif; margin-bottom: 20px;
+        }
         .btn-main {
-            background: #0f172a;
-            color: #e2e8f0;
-            border: 1px solid #334155;
-            padding: 14px 28px;
-            font-size: 1.1rem;
-            font-weight: 700;
-            cursor: pointer;
-            text-transform: uppercase;
-            width: 100%;
-            transition: 0.2s;
-            font-family: 'Play', sans-serif;
+            background: #0f172a; color: #e2e8f0; border: 1px solid #334155; padding: 14px 28px;
+            font-size: 1.1rem; font-weight: 700; cursor: pointer; text-transform: uppercase; width: 100%; transition: 0.2s;
         }
         .btn-main:hover { background: #1e293b; border-color: #5b6e8c; }
-
         .orders-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         .orders-table th { background: #11161f; padding: 12px; text-align: left; border-bottom: 1px solid #2d3748; }
         .orders-table td { padding: 12px; border-bottom: 1px solid #2a3342; background: #181e28; }
         .btn-small {
-            background: #232a36;
-            border: 1px solid #4b5563;
-            color: #cbd5e6;
-            padding: 6px 12px;
-            cursor: pointer;
-            font-weight: 700;
-            font-size: 0.8rem;
-            margin-right: 5px;
-            font-family: 'Play', sans-serif;
+            background: #232a36; border: 1px solid #4b5563; color: #cbd5e6; padding: 6px 12px;
+            cursor: pointer; font-weight: 700; font-size: 0.8rem; margin-right: 5px;
         }
         .btn-small:hover { background: #374151; color: white; }
-
         .overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #0f1117;
-            z-index: 10000;
-            display: flex;
-            flex-direction: column;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0f1117;
+            z-index: 10000; display: flex; flex-direction: column;
         }
         .overlay.hidden { display: none; }
         .overlay-header {
-            background: #090c10;
-            padding: 12px 24px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #2d3748;
+            background: #090c10; padding: 12px 24px; display: flex; justify-content: space-between;
+            align-items: center; border-bottom: 1px solid #2d3748;
         }
         .overlay-header h2 { font-size: 1.4rem; font-weight: 700; color: #cbd5e6; }
         .close-btn {
-            background: none;
-            border: 1px solid #4b5563;
-            color: #9ca3af;
-            padding: 6px 16px;
-            cursor: pointer;
-            font-weight: 700;
-            font-family: 'Play', sans-serif;
+            background: none; border: 1px solid #4b5563; color: #9ca3af;
+            padding: 6px 16px; cursor: pointer; font-weight: 700;
         }
         .close-btn:hover { background: #2d3748; color: white; }
-
         .main-layout { flex: 1; display: flex; gap: 20px; padding: 24px; overflow: hidden; }
         .config-panel { flex: 3; background: #1e2430; padding: 20px; overflow-y: auto; border: 1px solid #2d3748; }
         .list-panel { flex: 7; background: #1e2430; display: flex; flex-direction: column; overflow: hidden; border: 1px solid #2d3748; }
-
         .list-header {
-            padding: 16px 20px;
-            border-bottom: 1px solid #2d3748;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #181e28;
+            padding: 16px 20px; border-bottom: 1px solid #2d3748; display: flex;
+            justify-content: space-between; align-items: center; background: #181e28;
         }
         .list-header h3 { font-weight: 700; font-size: 1.1rem; }
         .header-actions { display: flex; gap: 10px; }
-
         .btn-save {
-            background: #059669;
-            color: white;
-            border: 1px solid #047857;
-            padding: 8px 16px;
-            font-weight: bold;
-            cursor: pointer;
-            font-family: 'Play', sans-serif;
-            text-transform: uppercase;
+            background: #059669; color: white; border: 1px solid #047857; padding: 8px 16px;
+            font-weight: bold; cursor: pointer; text-transform: uppercase;
         }
         .btn-save:hover { background: #047857; }
-
         .table-wrapper { overflow: auto; flex: 1; }
-        .doors-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 800px; }
+        .doors-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 1000px; }
         .doors-table th { background: #11161f; padding: 12px 8px; position: sticky; top: 0; font-weight: 700; color: #b9c7db; border-bottom: 1px solid #2d3748; }
         .doors-table td { padding: 10px 6px; border-bottom: 1px solid #2a3342; text-align: center; color: #e2e8f0; }
-        .editable-cell { cursor: pointer; background-color: #232a36; }
-        .editable-cell:hover { background-color: #2f3a48; }
         .door-actions button { background: none; border: none; font-size: 18px; cursor: pointer; margin: 0 4px; opacity: 0.7; color: #fff; }
-
         .form-group { margin-bottom: 18px; }
         .form-group label { font-weight: 700; display: block; margin-bottom: 6px; font-size: 0.85rem; color: #b9c7db; }
-        select, input[type="number"], input[type="text"], input[type="password"], input[type="email"] {
-            width: 100%;
-            padding: 8px 10px;
-            background: #0f1117;
-            border: 1px solid #334155;
-            color: #e2e8f0;
-            font-size: 0.85rem;
-            font-family: 'Play', monospace;
+        select, input[type="number"], input[type="text"], input[type="password"], input[type="email"], input[type="date"] {
+            width: 100%; padding: 8px 10px; background: #0f1117; border: 1px solid #334155;
+            color: #e2e8f0; font-size: 0.85rem; font-family: 'Play', monospace;
         }
-
         .toast {
-            position: fixed;
-            bottom: 24px;
-            right: 24px;
-            background: #0f172a;
-            border: 1px solid #334155;
-            color: #cbd5e6;
-            padding: 12px 24px;
-            font-size: 14px;
-            font-weight: bold;
-            z-index: 10001;
-            display: none;
+            position: fixed; bottom: 24px; right: 24px; background: #0f172a; border: 1px solid #334155;
+            color: #cbd5e6; padding: 12px 24px; font-size: 14px; font-weight: bold; z-index: 10001; display: none;
         }
         .hidden-field { display: none; }
         .details-summary { margin-top: 20px; cursor: pointer; background: #0f172a; padding: 8px; border: 1px solid #334155; text-align: center; }
         .details-summary summary { font-weight: 700; outline: none; }
-
         #loadingOverlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(15,17,23,0.9);
-            z-index: 20000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            font-size: 1.5rem;
-            font-weight: bold;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15,17,23,0.9); z-index: 20000; display: flex;
+            justify-content: center; align-items: center; flex-direction: column;
+            font-size: 1.5rem; font-weight: bold;
         }
         .loader {
-            border: 4px solid #334155;
-            border-top: 4px solid #cbd5e6;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin-bottom: 15px;
+            border: 4px solid #334155; border-top: 4px solid #cbd5e6; border-radius: 50%;
+            width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        .client-row {
+        .client-row { display: flex; gap: 10px; align-items: stretch; margin-bottom: 20px; }
+        .client-row .client-input { margin-bottom: 0; flex: 1; }
+        .plus-btn { width: 56px; min-width: 56px; padding: 0; font-size: 28px; line-height: 1; }
+        .client-form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+
+        .order-meta-box {
+            background: #141922;
+            border: 1px solid #2d3748;
+            padding: 16px;
+            margin-bottom: 18px;
+        }
+        .order-meta-grid {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr 1fr 1fr;
+            gap: 12px;
+            align-items: end;
+        }
+        .order-summary-mini {
             display: flex;
+            gap: 20px;
+            margin-top: 14px;
+            flex-wrap: wrap;
+            color: #dbe4f0;
+        }
+        .mini-chip {
+            background: #0f172a;
+            border: 1px solid #334155;
+            padding: 8px 12px;
+        }
+        .payments-row {
+            display: grid;
+            grid-template-columns: 160px 1fr 140px 60px;
             gap: 10px;
-            align-items: stretch;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
+            align-items: center;
         }
-        .client-row .client-input {
-            margin-bottom: 0;
-            flex: 1;
+        .payments-total-box {
+            margin-top: 20px;
+            border-top: 1px solid #334155;
+            padding-top: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            font-size: 1rem;
         }
-        .plus-btn {
-            width: 56px;
-            min-width: 56px;
-            padding: 0;
-            font-size: 28px;
-            line-height: 1;
+        .status-badge {
+            display: inline-block;
+            padding: 6px 10px;
+            border: 1px solid #334155;
+            background: #0f172a;
+            color: #dbe4f0;
+            font-size: 12px;
+            white-space: nowrap;
         }
 
-        .client-form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 16px;
+        @media (max-width: 1000px) {
+            .main-layout { flex-direction: column; }
+            .order-meta-grid { grid-template-columns: 1fr; }
+            .payments-row { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -277,6 +207,9 @@
                     <tr>
                         <th>ДАТА</th>
                         <th>ДВЕРЕЙ</th>
+                        <th>СТАТУС</th>
+                        <th>ОПЛАЧЕНО</th>
+                        <th>ДОЛГ</th>
                         <th>ДЕЙСТВИЯ</th>
                     </tr>
                 </thead>
@@ -292,6 +225,40 @@
         </div>
         <div class="main-layout">
             <div class="config-panel">
+                <div class="order-meta-box">
+                    <div class="order-meta-grid">
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label>СТАТУС ЗАКАЗА</label>
+                            <select id="orderStatusSelect">
+                                <option>В РАБОТЕ</option>
+                                <option>СЧЕТ ВЫСТАВЛЕН</option>
+                                <option>ОПЛАЧЕН</option>
+                                <option>ПРОИЗВОДСТВО</option>
+                                <option>ГОТОВ</option>
+                                <option>ОТГРУЖЕН</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label>СУММА ЗАКАЗА</label>
+                            <input type="text" id="orderTotalView" readonly>
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label>ОПЛАЧЕНО</label>
+                            <input type="text" id="orderPaidView" readonly>
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label>ДОЛГ</label>
+                            <input type="text" id="orderDebtView" readonly>
+                        </div>
+                    </div>
+
+                    <div class="order-summary-mini">
+                        <button id="openPaymentsBtn" class="btn-small" style="display:none;">ВНЕСТИ ОПЛАТЫ</button>
+                        <div class="mini-chip">ID заказа: <span id="orderIdView">новый</span></div>
+                        <div class="mini-chip">Клиент: <span id="orderClientView">—</span></div>
+                    </div>
+                </div>
+
                 <h3 style="margin-bottom:20px;">ПАРАМЕТРЫ ДВЕРИ</h3>
                 <div id="configForm">ЗАГРУЗКА ПАРАМЕТРОВ...</div>
                 <details class="details-summary">
@@ -300,6 +267,7 @@
                 </details>
                 <button id="addDoorBtn" class="btn-main" style="margin-top: 20px;">ДОБАВИТЬ В СПИСОК</button>
             </div>
+
             <div class="list-panel">
                 <div class="list-header">
                     <h3>ТЕКУЩИЙ ЗАКАЗ</h3>
@@ -330,48 +298,42 @@
         <div class="panel-box" style="max-width:900px; margin:0 auto;">
             <h2 style="margin-bottom:20px;">РЕКВИЗИТЫ КЛИЕНТА</h2>
             <div class="client-form-grid">
-                <div class="form-group">
-                    <label>НАИМЕНОВАНИЕ *</label>
-                    <input type="text" id="newClient_name">
-                </div>
-                <div class="form-group">
-                    <label>ЮРИДИЧЕСКИЙ АДРЕС</label>
-                    <input type="text" id="newClient_legalAddress">
-                </div>
-                <div class="form-group">
-                    <label>ПОЧТОВЫЙ АДРЕС</label>
-                    <input type="text" id="newClient_postalAddress">
-                </div>
-                <div class="form-group">
-                    <label>P/C</label>
-                    <input type="text" id="newClient_rs">
-                </div>
-                <div class="form-group">
-                    <label>БАНК</label>
-                    <input type="text" id="newClient_bank">
-                </div>
-                <div class="form-group">
-                    <label>КОД БАНКА</label>
-                    <input type="text" id="newClient_bankCode">
-                </div>
-                <div class="form-group">
-                    <label>УНП</label>
-                    <input type="text" id="newClient_unp">
-                </div>
-                <div class="form-group">
-                    <label>ПОЧТА</label>
-                    <input type="email" id="newClient_email">
-                </div>
-                <div class="form-group">
-                    <label>ТЕЛЕФОН</label>
-                    <input type="text" id="newClient_phone">
-                </div>
-                <div class="form-group">
-                    <label>ЛОГИН ПОЛЬЗОВАТЕЛЯ</label>
-                    <input type="text" id="newClient_ownerLogin" disabled>
-                </div>
+                <div class="form-group"><label>НАИМЕНОВАНИЕ *</label><input type="text" id="newClient_name"></div>
+                <div class="form-group"><label>ЮРИДИЧЕСКИЙ АДРЕС</label><input type="text" id="newClient_legalAddress"></div>
+                <div class="form-group"><label>ПОЧТОВЫЙ АДРЕС</label><input type="text" id="newClient_postalAddress"></div>
+                <div class="form-group"><label>P/C</label><input type="text" id="newClient_rs"></div>
+                <div class="form-group"><label>БАНК</label><input type="text" id="newClient_bank"></div>
+                <div class="form-group"><label>КОД БАНКА</label><input type="text" id="newClient_bankCode"></div>
+                <div class="form-group"><label>УНП</label><input type="text" id="newClient_unp"></div>
+                <div class="form-group"><label>ПОЧТА</label><input type="email" id="newClient_email"></div>
+                <div class="form-group"><label>ТЕЛЕФОН</label><input type="text" id="newClient_phone"></div>
+                <div class="form-group"><label>ЛОГИН ПОЛЬЗОВАТЕЛЯ</label><input type="text" id="newClient_ownerLogin" disabled></div>
             </div>
             <button id="saveClientBtn" class="btn-save" style="width:100%; padding:14px; margin-top:20px;">СОХРАНИТЬ КЛИЕНТА</button>
+        </div>
+    </div>
+</div>
+
+<div id="paymentsModal" class="overlay hidden">
+    <div class="overlay-header">
+        <h2>ОПЛАТЫ ПО ЗАКАЗУ</h2>
+        <button id="closePaymentsModalBtn" class="close-btn">ЗАКРЫТЬ</button>
+    </div>
+    <div style="padding: 24px; overflow-y:auto; flex:1; background:#0f1117;">
+        <div class="panel-box" style="max-width:1000px; margin:0 auto;">
+            <h2 style="margin-bottom:20px;">ВНЕСЕНИЕ ОПЛАТ</h2>
+
+            <div id="paymentsRows"></div>
+
+            <button id="addPaymentRowBtn" class="btn-small" style="margin-top:10px;">+ ДОБАВИТЬ ОПЛАТУ</button>
+
+            <div class="payments-total-box">
+                <div>Сумма заказа: <span id="paymentsOrderTotal">0</span></div>
+                <div>Итого оплат: <span id="paymentsPaidTotal">0</span></div>
+                <div>Долг: <span id="paymentsDebtTotal">0</span></div>
+            </div>
+
+            <button id="savePaymentsBtn" class="btn-save" style="width:100%; padding:14px; margin-top:20px;">СОХРАНИТЬ ОПЛАТЫ</button>
         </div>
     </div>
 </div>
@@ -389,6 +351,8 @@
         "Вент решетка", "Вент решетка 2 точка привязки", "Тип отгрузки"
     ];
 
+    const ORDER_STATUSES = ["В РАБОТЕ", "СЧЕТ ВЫСТАВЛЕН", "ОПЛАЧЕН", "ПРОИЗВОДСТВО", "ГОТОВ", "ОТГРУЖЕН"];
+
     let doorTypes = [];
     let allClients = [];
     let allClientsFull = [];
@@ -402,6 +366,9 @@
     let usedExtraFields = new Set();
     let currentUserLogin = "";
     let currentUserRole = "";
+
+    let currentOrderStatus = "В РАБОТЕ";
+    let currentPayments = [];
 
     const loginScreen = document.getElementById('loginScreen');
     const mainApp = document.getElementById('mainApp');
@@ -536,21 +503,34 @@
 
         clientDoors.forEach(d => {
             const id = d["Order ID"];
-            if (!groups[id]) groups[id] = { id: id, date: d["Дата"], doors: [] };
+            if (!groups[id]) {
+                groups[id] = {
+                    id: id,
+                    date: d["Дата"],
+                    doors: [],
+                    status: d["Статус заказа"] || "В РАБОТЕ",
+                    paidTotal: parseFloat(d["Итого оплат"]) || 0,
+                    debt: parseFloat(d["Долг"]) || 0,
+                    paymentsJson: d["Оплаты JSON"] || "[]"
+                };
+            }
             groups[id].doors.push(d);
         });
 
-        groupedClientOrders = Object.values(groups).sort((a, b) => new Date(b.date) - new Date(a.date));
+        groupedClientOrders = Object.values(groups).sort((a, b) => parseDateTime(b.date) - parseDateTime(a.date));
 
         if (groupedClientOrders.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;">У этого клиента еще нет заказов</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">У этого клиента еще нет заказов</td></tr>`;
             return;
         }
 
         tbody.innerHTML = groupedClientOrders.map(group => `
             <tr>
-                <td>${escapeHtml(group.date)}</td>
+                <td>${escapeHtml(formatDisplayDate(group.date))}</td>
                 <td>${group.doors.length} шт.</td>
+                <td><span class="status-badge">${escapeHtml(group.status || "В РАБОТЕ")}</span></td>
+                <td>${formatMoney(group.paidTotal)}</td>
+                <td>${formatMoney(group.debt)}</td>
                 <td>
                     <button class="btn-small" onclick="editOrder('${group.id}')">РЕДАКТИРОВАТЬ</button>
                     <button class="btn-small" onclick="duplicateOrder('${group.id}')">КОПИРОВАТЬ</button>
@@ -562,6 +542,8 @@
     document.getElementById("startNewOrderBtn").addEventListener("click", () => {
         currentOrderId = null;
         currentDoors = [];
+        currentPayments = [];
+        currentOrderStatus = "В РАБОТЕ";
         usedExtraFields.clear();
         nextRequestNumber = 1;
         document.getElementById("configHeaderTitle").innerText = `НОВЫЙ ЗАКАЗ: ${selectedClient}`;
@@ -572,6 +554,12 @@
         const group = groupedClientOrders.find(g => g.id === orderId);
         if (!group) return;
         currentOrderId = orderId;
+        currentOrderStatus = group.status || "В РАБОТЕ";
+        try {
+            currentPayments = group.paymentsJson ? JSON.parse(group.paymentsJson) : [];
+        } catch (e) {
+            currentPayments = [];
+        }
         loadDoorsIntoConfig(group.doors);
         document.getElementById("configHeaderTitle").innerText = `РЕДАКТИРОВАНИЕ ЗАКАЗА: ${selectedClient}`;
         openConfigurator();
@@ -581,6 +569,8 @@
         const group = groupedClientOrders.find(g => g.id === orderId);
         if (!group) return;
         currentOrderId = null;
+        currentOrderStatus = "В РАБОТЕ";
+        currentPayments = [];
         loadDoorsIntoConfig(group.doors);
         document.getElementById("configHeaderTitle").innerText = `КОПИЯ ЗАКАЗА: ${selectedClient}`;
         openConfigurator();
@@ -589,24 +579,45 @@
     function loadDoorsIntoConfig(doorsArr) {
         usedExtraFields.clear();
         currentDoors = doorsArr.map((d, index) => {
-            const newDoor = { ...d, id: Date.now() + Math.random(), requestNumber: index + 1 };
+            const newDoor = { ...d };
+            delete newDoor["Дата"];
+            delete newDoor["Имя клиента"];
+            delete newDoor["Order ID"];
+            delete newDoor["Статус заказа"];
+            delete newDoor["Оплаты JSON"];
+            delete newDoor["Итого оплат"];
+            delete newDoor["Долг"];
+
+            const row = { ...newDoor, id: Date.now() + Math.random(), requestNumber: index + 1 };
+
             ALL_POSSIBLE_FIELDS.forEach(f => {
-                if (newDoor[f] && newDoor[f] !== "—") usedExtraFields.add(f);
+                if (row[f] && row[f] !== "—") usedExtraFields.add(f);
             });
-            return newDoor;
+            return row;
         });
         nextRequestNumber = currentDoors.length + 1;
     }
 
     function openConfigurator() {
         document.getElementById("configOverlay").classList.remove("hidden");
+        document.getElementById("orderStatusSelect").value = currentOrderStatus || "В РАБОТЕ";
         renderConfigForm();
         renderExtraParams();
         renderRightTable();
+        refreshOrderMetaUI();
     }
 
     document.getElementById("closeOverlayBtn").addEventListener("click", () => {
         document.getElementById("configOverlay").classList.add("hidden");
+    });
+
+    document.getElementById("orderStatusSelect").addEventListener("change", () => {
+        currentOrderStatus = document.getElementById("orderStatusSelect").value;
+        togglePaymentsButton();
+    });
+
+    document.getElementById("openPaymentsBtn").addEventListener("click", () => {
+        openPaymentsModal();
     });
 
     document.getElementById("saveOrderBtn").addEventListener("click", async () => {
@@ -618,6 +629,9 @@
             action: "saveOrder",
             client: selectedClient,
             orderId: currentOrderId,
+            status: currentOrderStatus,
+            payments: currentPayments,
+            orderTotal: getOrderTotal(),
             doors: currentDoors
         };
 
@@ -631,6 +645,7 @@
             const result = await response.json();
             if (result.error) throw new Error(result.error);
 
+            currentOrderId = result.orderId || currentOrderId;
             showToast("Заказ успешно сохранен!");
             document.getElementById("configOverlay").classList.add("hidden");
             await loadDataFromAPI();
@@ -739,6 +754,7 @@
 
         currentDoors.push({ id: Date.now() + Math.random(), ...cfg });
         renderRightTable();
+        refreshOrderMetaUI();
         showToast("Дверь добавлена");
     });
 
@@ -781,11 +797,13 @@
         copy.requestNumber = nextRequestNumber++;
         currentDoors.splice(idx + 1, 0, copy);
         renderRightTable();
+        refreshOrderMetaUI();
     };
 
     window.delRow = function(idx) {
         currentDoors.splice(idx, 1);
         renderRightTable();
+        refreshOrderMetaUI();
     };
 
     function openAddClientModal() {
@@ -866,8 +884,169 @@
         }
     });
 
+    function openPaymentsModal() {
+        document.getElementById("paymentsModal").classList.remove("hidden");
+        renderPaymentsRows();
+        refreshPaymentsTotals();
+    }
+
+    function closePaymentsModal() {
+        document.getElementById("paymentsModal").classList.add("hidden");
+    }
+
+    document.getElementById("closePaymentsModalBtn").addEventListener("click", closePaymentsModal);
+
+    document.getElementById("addPaymentRowBtn").addEventListener("click", () => {
+        currentPayments.push({
+            date: getTodayInputDate(),
+            note: "",
+            amount: 0
+        });
+        renderPaymentsRows();
+        refreshPaymentsTotals();
+    });
+
+    document.getElementById("savePaymentsBtn").addEventListener("click", async () => {
+        if (!currentOrderId) {
+            closePaymentsModal();
+            refreshOrderMetaUI();
+            showToast("Оплаты будут записаны после первого сохранения заказа");
+            return;
+        }
+
+        showLoading("Сохранение оплат...");
+        try {
+            const response = await fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify({
+                    action: "updateOrderMeta",
+                    orderId: currentOrderId,
+                    status: currentOrderStatus,
+                    payments: currentPayments,
+                    orderTotal: getOrderTotal()
+                })
+            });
+
+            const result = await response.json();
+            if (result.error) throw new Error(result.error);
+
+            closePaymentsModal();
+            refreshOrderMetaUI();
+            await loadDataFromAPI();
+            showToast("Оплаты сохранены");
+        } catch (err) {
+            alert("Ошибка сохранения оплат: " + err.message);
+        } finally {
+            hideLoading();
+        }
+    });
+
+    function renderPaymentsRows() {
+        const box = document.getElementById("paymentsRows");
+        if (!currentPayments.length) {
+            currentPayments = [{ date: getTodayInputDate(), note: "", amount: 0 }];
+        }
+
+        box.innerHTML = currentPayments.map((p, i) => `
+            <div class="payments-row">
+                <input type="date" value="${escapeAttr(p.date || '')}" onchange="updatePaymentField(${i}, 'date', this.value)">
+                <input type="text" placeholder="Комментарий / основание" value="${escapeAttr(p.note || '')}" onchange="updatePaymentField(${i}, 'note', this.value)">
+                <input type="number" step="0.01" placeholder="Сумма" value="${escapeAttr(p.amount || 0)}" onchange="updatePaymentField(${i}, 'amount', this.value)">
+                <button class="btn-small" onclick="removePaymentRow(${i})">✕</button>
+            </div>
+        `).join('');
+    }
+
+    window.updatePaymentField = function(idx, field, value) {
+        if (!currentPayments[idx]) return;
+        currentPayments[idx][field] = field === 'amount' ? (parseFloat(value) || 0) : value;
+        refreshPaymentsTotals();
+        refreshOrderMetaUI();
+    };
+
+    window.removePaymentRow = function(idx) {
+        currentPayments.splice(idx, 1);
+        if (!currentPayments.length) {
+            currentPayments.push({ date: getTodayInputDate(), note: "", amount: 0 });
+        }
+        renderPaymentsRows();
+        refreshPaymentsTotals();
+        refreshOrderMetaUI();
+    };
+
+    function refreshPaymentsTotals() {
+        document.getElementById("paymentsOrderTotal").textContent = formatMoney(getOrderTotal());
+        document.getElementById("paymentsPaidTotal").textContent = formatMoney(getPaidTotal());
+        document.getElementById("paymentsDebtTotal").textContent = formatMoney(getDebtTotal());
+    }
+
+    function refreshOrderMetaUI() {
+        document.getElementById("orderIdView").textContent = currentOrderId || "новый";
+        document.getElementById("orderClientView").textContent = selectedClient || "—";
+        document.getElementById("orderTotalView").value = formatMoney(getOrderTotal());
+        document.getElementById("orderPaidView").value = formatMoney(getPaidTotal());
+        document.getElementById("orderDebtView").value = formatMoney(getDebtTotal());
+        togglePaymentsButton();
+        if (document.getElementById("paymentsModal") && !document.getElementById("paymentsModal").classList.contains("hidden")) {
+            refreshPaymentsTotals();
+        }
+    }
+
+    function togglePaymentsButton() {
+        const btn = document.getElementById("openPaymentsBtn");
+        btn.style.display = currentOrderStatus === "ОПЛАЧЕН" ? "inline-block" : "none";
+    }
+
+    function getOrderTotal() {
+        return currentDoors.reduce((sum, d) => {
+            const price = parseFloat(String(d["Базовая цена"] || "").replace(",", ".")) || 0;
+            const qty = parseFloat(String(d["Кол-во"] || "").replace(",", ".")) || 0;
+            return sum + price * qty;
+        }, 0);
+    }
+
+    function getPaidTotal() {
+        return currentPayments.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+    }
+
+    function getDebtTotal() {
+        return Math.max(0, getOrderTotal() - getPaidTotal());
+    }
+
+    function formatMoney(n) {
+        return new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n || 0));
+    }
+
+    function formatDisplayDate(str) {
+        if (!str) return "";
+        const s = String(str).trim();
+        const m = s.match(/^(\d{2}\.\d{2}\.\d{4})\s+(\d{2}:\d{2})/);
+        if (m) return `${m[1]} ${m[2]}`;
+        return s.length >= 16 ? s.slice(0, 16) : s;
+    }
+
+    function parseDateTime(str) {
+        const s = String(str || "").trim();
+        const m = s.match(/^(\d{2})\.(\d{2})\.(\d{4})\s+(\d{2}):(\d{2})/);
+        if (m) return new Date(+m[3], +m[2] - 1, +m[1], +m[4], +m[5]).getTime();
+        return new Date(s).getTime() || 0;
+    }
+
+    function getTodayInputDate() {
+        const d = new Date();
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
+    }
+
     function escapeHtml(str) {
-        return String(str).replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
+        return String(str).replace(/[&<>"]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[m]));
+    }
+
+    function escapeAttr(str) {
+        return String(str ?? "").replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
 
     function showToast(msg) {
