@@ -1303,6 +1303,8 @@ document.getElementById('loginBtn').addEventListener('click', async () => {
             loginScreen.style.display = 'none';
             mainApp.style.display = 'flex';
             await loadDataFromAPI();
+            applyRoleAccess();
+            addLogoutButton();
         } else {
             localStorage.removeItem('st_login');
             localStorage.removeItem('st_pass');
@@ -1342,6 +1344,7 @@ async function tryAutoLogin() {
             loginScreen.style.display = 'none';
             mainApp.style.display = 'flex';
             await loadDataFromAPI();
+            applyRoleAccess();
             return true;
         } else {
             // Сессия устарела — чистим
@@ -1358,6 +1361,41 @@ async function tryAutoLogin() {
     }
 }
 
+// ── УПРАВЛЕНИЕ ДОСТУПОМ ПО РОЛЯМ ────────────────────────────────
+function applyRoleAccess() {
+    const role = currentUserRole;
+    const tabSales      = document.querySelector('.app-tab[data-tab="sales"]');
+    const tabProduction = document.querySelector('.app-tab[data-tab="production"]');
+    const salesView     = document.getElementById('salesView');
+    const productionView= document.getElementById('productionView');
+
+    if (role === 'manager') {
+        // Только продажи
+        if (tabProduction) tabProduction.style.display = 'none';
+        if (tabSales)      tabSales.style.display = '';
+        // Активируем продажи
+        if (tabSales) { tabSales.classList.add('active'); }
+        if (tabProduction) tabProduction.classList.remove('active');
+        if (salesView)      salesView.style.display = '';
+        if (productionView) productionView.style.display = 'none';
+    } else if (role === 'prod') {
+        // Только производство
+        if (tabSales)      tabSales.style.display = 'none';
+        if (tabProduction) tabProduction.style.display = '';
+        // Активируем производство
+        if (tabProduction) { tabProduction.classList.add('active'); }
+        if (tabSales) tabSales.classList.remove('active');
+        if (productionView) productionView.style.display = '';
+        if (salesView)      salesView.style.display = 'none';
+        // Загружаем данные производства
+        loadProductionData();
+    } else {
+        // admin — всё доступно
+        if (tabSales)      tabSales.style.display = '';
+        if (tabProduction) tabProduction.style.display = '';
+    }
+}
+
 // Добавляем кнопку выхода в шапку при необходимости
 function addLogoutButton() {
     const nav = document.getElementById('appNav');
@@ -1366,7 +1404,9 @@ function addLogoutButton() {
     btn.id = 'logoutBtn';
     btn.className = 'app-tab';
     btn.style.cssText = 'margin-left:auto; color:rgba(255,255,255,0.5); font-size:12px;';
-    btn.textContent = currentUserLogin + '  ⏻';
+    const roleLabels = { admin: 'Админ', manager: 'Менеджер', prod: 'Производство' };
+    const roleLabel = roleLabels[currentUserRole] || currentUserRole;
+    btn.textContent = currentUserLogin + '  (' + roleLabel + ')  ⏻';
     btn.title = 'Выйти';
     btn.addEventListener('click', () => {
         localStorage.removeItem('st_login');
@@ -1375,6 +1415,11 @@ function addLogoutButton() {
         sessionStorage.removeItem('st_pass');
         currentUserLogin = '';
         currentUserRole  = '';
+        // Сбрасываем скрытие вкладок перед выходом
+        const tSales = document.querySelector('.app-tab[data-tab="sales"]');
+        const tProd  = document.querySelector('.app-tab[data-tab="production"]');
+        if (tSales) tSales.style.display = '';
+        if (tProd)  tProd.style.display  = '';
         mainApp.style.display = 'none';
         loginScreen.style.display = 'flex';
         btn.remove();
@@ -1387,13 +1432,7 @@ tryAutoLogin().then(ok => {
     if (ok) addLogoutButton();
 });
 
-// Обновляем кнопку выхода после ручного логина
-const _origLoginClick = document.getElementById('loginBtn').onclick;
-document.getElementById('loginBtn').addEventListener('click', () => {
-    setTimeout(() => {
-        if (currentUserLogin) addLogoutButton();
-    }, 1000);
-});
+// addLogoutButton вызывается теперь напрямую в блоке успешного логина
 
 
 // ===== DATA LOAD =====
