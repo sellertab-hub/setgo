@@ -2632,7 +2632,10 @@ document.getElementById("saveClientBtn").addEventListener("click", async () => {
 function openFinanceModal() {
     document.getElementById("financeModal").classList.remove("hidden");
     document.getElementById("financeOrderTotalInput").value = currentOrderTotal || 0;
-    document.getElementById("financeInvoiceDateInput").value = currentInvoiceDate || '';
+    // Конвертируем DD.MM.YYYY → YYYY-MM-DD для input[type=date]
+    const _inv = currentInvoiceDate || '';
+    const _invM = _inv.match(/(\d{2})\.(\d{2})\.(\d{4})/);
+    document.getElementById("financeInvoiceDateInput").value = _invM ? _invM[3]+"-"+_invM[2]+"-"+_invM[1] : _inv;
     document.getElementById("financeInvoiceNumInput").value  = currentInvoiceNum  || '';
     renderPaymentsRows();
     refreshFinanceTotals();
@@ -2682,7 +2685,12 @@ document.getElementById("saveFinanceBtn").addEventListener("click", async () => 
                 status: currentOrderStatus,
                 payments: currentPayments,
                 orderTotal: currentOrderTotal,
-                invoiceDate: document.getElementById("financeInvoiceDateInput").value,
+                invoiceDate: (function(){
+                    const v = document.getElementById("financeInvoiceDateInput").value;
+                    if (!v) return "";
+                    const m = v.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+                    return m ? m[3]+"."+m[2]+"."+m[1] : v;
+                })(),
                 invoiceNum:  document.getElementById("financeInvoiceNumInput").value.trim()
             })
         });
