@@ -711,6 +711,47 @@
 
         /* ===== SVG PREVIEW ===== */
         #doorSvgPreview { margin: 16px 0; display: flex; justify-content: center; }
+        /* ===== PAGINATION ===== */
+        .pg-info {
+            font-size: 0.85rem;
+            color: #4a5568;
+            font-weight: 600;
+        }
+        .pg-controls {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .pg-btn {
+            background: #f0f4f8;
+            border: 1px solid #e2e8f0;
+            color: #1e3a5f;
+            padding: 5px 11px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 0.8rem;
+            border-radius: 4px;
+            font-family: inherit;
+            transition: background 0.15s;
+        }
+        .pg-btn:hover:not(:disabled) {
+            background: #e2e8f0;
+            color: #1e3a5f;
+        }
+        .pg-btn:disabled {
+            opacity: 0.4;
+            cursor: default;
+        }
+        .pg-btn.pg-active {
+            background: #1e3a5f;
+            color: #fff;
+            border-color: #1e3a5f;
+        }
+        .pg-btn.pg-active:hover {
+            background: #1e6db5;
+            border-color: #1e6db5;
+        }
     </style>
 </head>
 <body>
@@ -827,6 +868,7 @@
                 </thead>
                 <tbody id="globalOrdersTbody"></tbody>
             </table>
+            <div id="ordersPagination" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; padding:12px 4px; border-top:1px solid #e2e8f0; margin-top:4px; background:#fff;"></div>
         </div>
     </div>
 
@@ -1004,6 +1046,10 @@ let doorTypes = [];
 let allClients = [];
 let allClientsFull = [];
 let allOrders = [];
+let allOrderGroups = [];      // grouped orders, built after init
+let filteredOrderGroups = []; // after filters applied
+const PAGE_SIZE = 20;
+let currentOrderPage = 0;     // 0-indexed
 let groupedClientOrders = [];
 let selectedClient = "";
 let currentOrderId = null;
@@ -1080,6 +1126,32 @@ async function loadDataFromAPI() {
         allClients = data.clients || [];
         allClientsFull = data.clientsFull || [];
         allOrders = data.orders || [];
+
+        // Pre-group orders by OrderID for pagination
+        {
+            const _g = {};
+            allOrders.forEach(d => {
+                const _id = d["Order ID"];
+                if (!_id) return;
+                if (!_g[_id]) {
+                    _g[_id] = {
+                        id: _id,
+                        client: d["Имя клиента"] || "",
+                        date: d["Дата"],
+                        doorCount: 0,
+                        status: d["Статус заказа"] || "В РАБОТЕ",
+                        orderTotal: parseFloat(d["Итого заказа"]) || 0,
+                        paidTotal: parseFloat(d["Итого оплат"]) || 0,
+                        debt: parseFloat(d["Долг"]) || 0,
+                        paymentsJson: d["Оплаты JSON"] || "[]",
+                        doors: []
+                    };
+                }
+                _g[_id].doors.push(d);
+                _g[_id].doorCount++;
+            });
+            allOrderGroups = Object.values(_g).sort((a, b) => parseDateTime(b.date) - parseDateTime(a.date));
+        }
 
         const datalist = document.getElementById("clientDatalist");
         datalist.innerHTML = allClients.map(c => `<option value="${escapeHtml(c)}">`).join('');
@@ -1264,37 +1336,26 @@ function parseDateToISO(dateStr) {
 }
 
 function renderAllOrders() {
+    filteredOrderGroups = allOrderGroups.slice();
+    currentOrderPage = 0;
+    renderOrderPage();
+}
+
+function renderOrderPage() {
     const tbody = document.getElementById("globalOrdersTbody");
     if (!tbody) return;
 
-    const groups = {};
-    allOrders.forEach(d => {
-        const id = d["Order ID"];
-        if (!id) return;
-        if (!groups[id]) {
-            groups[id] = {
-                id,
-                client: d["Имя клиента"] || "",
-                date: d["Дата"],
-                doors: [],
-                status: d["Статус заказа"] || "В РАБОТЕ",
-                orderTotal: parseFloat(d["Итого заказа"]) || 0,
-                paidTotal: parseFloat(d["Итого оплат"]) || 0,
-                debt: parseFloat(d["Долг"]) || 0,
-                paymentsJson: d["Оплаты JSON"] || "[]"
-            };
-        }
-        groups[id].doors.push(d);
-    });
+    const start = currentOrderPage * PAGE_SIZE;
+    const end   = Math.min(start + PAGE_SIZE, filteredOrderGroups.length);
+    const page  = filteredOrderGroups.slice(start, end);
 
-    const sorted = Object.values(groups).sort((a, b) => parseDateTime(b.date) - parseDateTime(a.date));
-
-    if (sorted.length === 0) {
+    if (filteredOrderGroups.length === 0) {
         tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#64748b;">Нет заказов</td></tr>`;
+        renderPaginationControls();
         return;
     }
 
-    tbody.innerHTML = sorted.map(group => `
+    tbody.innerHTML = page.map(group => `
         <tr
             data-gclient="${escapeAttr(String(group.client || '').toLowerCase())}"
             data-gdateiso="${escapeAttr(parseDateToISO(group.date))}"
@@ -1316,7 +1377,55 @@ function renderAllOrders() {
             </td>
         </tr>
     `).join('');
+
+    renderPaginationControls();
 }
+
+function renderPaginationControls() {
+    const container = document.getElementById("ordersPagination");
+    if (!container) return;
+
+    const total = filteredOrderGroups.length;
+    const totalPages = Math.ceil(total / PAGE_SIZE);
+    const start = currentOrderPage * PAGE_SIZE + 1;
+    const end   = Math.min((currentOrderPage + 1) * PAGE_SIZE, total);
+
+    if (total === 0) {
+        container.innerHTML = "";
+        return;
+    }
+
+    // Page number buttons: up to 5 visible, centered on current page
+    let pageButtons = "";
+    if (totalPages > 1) {
+        let pageStart = Math.max(0, currentOrderPage - 2);
+        let pageEnd   = Math.min(totalPages, pageStart + 5);
+        if (pageEnd - pageStart < 5) pageStart = Math.max(0, pageEnd - 5);
+        for (let p = pageStart; p < pageEnd; p++) {
+            const active = p === currentOrderPage;
+            pageButtons += `<button class="pg-btn${active ? ' pg-active' : ''}" onclick="goToOrderPage(${p})">${p + 1}</button>`;
+        }
+    }
+
+    container.innerHTML = `
+        <span class="pg-info">Показано ${start}–${end} из ${total} заказов</span>
+        <div class="pg-controls">
+            <button class="pg-btn" onclick="goToOrderPage(${currentOrderPage - 1})" ${currentOrderPage === 0 ? 'disabled' : ""}>&#8249; Пред</button>
+            ${pageButtons}
+            <button class="pg-btn" onclick="goToOrderPage(${currentOrderPage + 1})" ${currentOrderPage >= totalPages - 1 ? 'disabled' : ""}>След &#8250;</button>
+        </div>
+    `;
+}
+
+window.goToOrderPage = function(page) {
+    const totalPages = Math.ceil(filteredOrderGroups.length / PAGE_SIZE);
+    if (page < 0 || page >= totalPages) return;
+    currentOrderPage = page;
+    renderOrderPage();
+    // Scroll to top of orders table
+    const panel = document.getElementById("globalOrdersPanel");
+    if (panel) panel.scrollTop = 0;
+};
 
 function applyGlobalFilters() {
     const dateFrom = document.querySelector('[data-gcol="date-from"]').value;
@@ -1330,18 +1439,26 @@ function applyGlobalFilters() {
         debt:   document.querySelector('[data-gcol="debt"]').value.trim().toLowerCase()
     };
 
-    document.querySelectorAll('#globalOrdersTbody tr').forEach(row => {
-        const rowDate = row.dataset.gdateiso || "";
-        const dateOk = (!dateFrom || rowDate >= dateFrom) && (!dateTo || rowDate <= dateTo);
-        const ok = dateOk &&
-            (row.dataset.gclient || "").includes(filters.client) &&
-            (row.dataset.gdoors || "").includes(filters.doors) &&
-            (row.dataset.gstatus || "").includes(filters.status) &&
-            (row.dataset.gtotal || "").includes(filters.total) &&
-            (row.dataset.gpaid || "").includes(filters.paid) &&
-            (row.dataset.gdebt || "").includes(filters.debt);
-        row.style.display = ok ? '' : 'none';
+    filteredOrderGroups = allOrderGroups.filter(group => {
+        const rowDate = parseDateToISO(group.date);
+        const dateOk  = (!dateFrom || rowDate >= dateFrom) && (!dateTo || rowDate <= dateTo);
+        const clientLow = String(group.client || '').toLowerCase();
+        const doorsStr  = String(group.doors.length);
+        const statusLow = String(group.status || '').toLowerCase();
+        const totalStr  = formatMoney(group.orderTotal).toLowerCase();
+        const paidStr   = formatMoney(group.paidTotal).toLowerCase();
+        const debtStr   = formatMoney(group.debt).toLowerCase();
+        return dateOk &&
+            clientLow.includes(filters.client) &&
+            doorsStr.includes(filters.doors) &&
+            statusLow.includes(filters.status) &&
+            totalStr.includes(filters.total) &&
+            paidStr.includes(filters.paid) &&
+            debtStr.includes(filters.debt);
     });
+
+    currentOrderPage = 0;
+    renderOrderPage();
 }
 
 window.openGlobalOrder = function(clientName, orderId) {
