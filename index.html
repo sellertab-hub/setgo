@@ -690,15 +690,15 @@
         .combo-wrap { position: relative; }
         .combo-input { width: 100%; padding: 8px 30px 8px 10px; background: #fff; border: 1px solid #cbd5e0; color: #1a202c; font-size: 0.85rem; font-family: 'Play', monospace; border-radius: 4px; cursor: text; }
         .combo-input:focus { border-color: #1e6db5; outline: none; box-shadow: 0 0 0 3px rgba(30,109,181,0.12); }
-        .combo-arrow { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); pointer-events: none; color: #4a5568; font-size: 12px; }
+        .combo-arrow { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); pointer-events: all; color: #4a5568; font-size: 12px; cursor: pointer; }
         .combo-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid #cbd5e0; border-top: none; max-height: 220px; overflow-y: auto; z-index: 1000; border-radius: 0 0 4px 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: none; }
         .combo-dropdown.open { display: block; }
         .combo-option { padding: 8px 12px; cursor: pointer; font-size: 0.85rem; color: #1a202c; }
         .combo-option:hover, .combo-option.selected { background: #e8f0fa; color: #1e6db5; }
 
         /* ===== LEAF TOGGLE ===== */
-        .leaf-toggle { display: flex; gap: 12px; margin-top: 4px; }
-        .leaf-btn { background: #f0f4f8; border: 2px solid #cbd5e0; border-radius: 6px; padding: 8px 12px; cursor: pointer; color: #4a5568; transition: all 0.15s; font-family: 'Play', sans-serif; }
+        .leaf-toggle { display: flex; gap: 8px; margin-top: 4px; }
+        .leaf-btn { background: #f0f4f8; border: 2px solid #cbd5e0; border-radius: 6px; padding: 5px 8px; cursor: pointer; color: #4a5568; transition: all 0.15s; line-height: 0; }
         .leaf-btn.active { background: #e8f0fa; border-color: #1e6db5; color: #1e6db5; }
         .leaf-btn:hover { border-color: #1e6db5; }
 
@@ -853,11 +853,11 @@
 
         <div class="main-layout">
             <div class="config-panel">
-                <h3 style="margin-bottom:20px; color:#1e3a5f;">ПАРАМЕТРЫ ДВЕРИ</h3>
-                <div id="configForm">ЗАГРУЗКА ПАРАМЕТРОВ...</div>
-                <div id="doorSvgPreview">
+                <h3 style="margin-bottom:12px; color:#1e3a5f;">ПАРАМЕТРЫ ДВЕРИ</h3>
+                <div id="doorSvgPreview" style="margin-bottom:14px; display:flex; justify-content:center;">
                     <svg id="doorSvg" width="160" height="200" viewBox="0 0 160 200"></svg>
                 </div>
+                <div id="configForm">ЗАГРУЗКА ПАРАМЕТРОВ...</div>
                 <details class="details-summary">
                     <summary>➕ ДОПОЛНИТЕЛЬНЫЕ ПАРАМЕТРЫ</summary>
                     <div id="extraParamsContainer" style="margin-top: 15px;"></div>
@@ -1102,14 +1102,19 @@ function parseDoorTypes(rows) {
         const hMatch = (findVal(row, "Высота") || "").match(/(\d+)\s*-\s*(\d+)/);
         if (hMatch) { heightMin = +hMatch[1]; heightMax = +hMatch[2]; }
 
+        // Опции разделены " -|- ", внутри могут быть \n — нормализуем
+        const parseOpts = (raw) => (raw || '').split(' -|- ')
+            .map(s => s.replace(/\n|\r/g, ' ').replace(/\s+/g, ' ').trim())
+            .filter(s => s && s !== '-' && s !== '—');
+
         let options = {};
         for (let f of CORE_FIELDS) {
-            options[f] = (findVal(row, f) || "").split(" -|- ").map(s => s.trim()).filter(s => s && s !== "-");
+            options[f] = parseOpts(findVal(row, f));
         }
 
         let extraOptions = {};
         for (let f of ALL_POSSIBLE_FIELDS) {
-            extraOptions[f] = (findVal(row, f) || "").split(" -|- ").map(s => s.trim()).filter(s => s && s !== "-");
+            extraOptions[f] = parseOpts(findVal(row, f));
         }
 
         doorTypes.push({ key, name, widthMin, widthMax, heightMin, heightMax, options, extraOptions });
@@ -1471,27 +1476,40 @@ document.getElementById("saveOrderBtn").addEventListener("click", async () => {
 });
 
 // ===== DOOR NAME GENERATION =====
+// dm() — точное воспроизведение VBA: делит на 100, округляет 0.5+ вверх
+function dm(mm) {
+    const sh = mm / 100;
+    const fix = Math.floor(sh);
+    return (sh - fix >= 0.5) ? fix + 1 : fix;
+}
+
 function buildDoorName(door) {
     const key = door['doorKey'] || door['Ключ'] || '';
     const base = key.replace(/ \((одн|двуп)\)$/, '').trim();
     const is2P = key.includes('двуп');
     const h = parseInt(door['Высота']) || 0;
     const w = parseInt(door['Ширина']) || 0;
+    const isGlazed = (v) => v && v !== '—' && v !== 'Нет' && String(v).trim() !== '';
 
     let name = '';
-    if (base === 'ДП1' || base === 'ДП2') {
-        const glazed = door['Остекление'] && door['Остекление'] !== '—' && door['Остекление'] !== 'Нет' && door['Остекление'] !== '';
-        name = 'ДВС' + (glazed ? 'Ч' : 'Г');
-    } else if (base === 'МАЯ') {
-        const glazed = door['Остекление'] && door['Остекление'] !== '—' && door['Остекление'] !== 'Нет' && door['Остекление'] !== '';
+    const glazed = isGlazed(door['Остекление']);
+
+    if (base === 'МАЯ') {
+        // ДМ-Г-О или ДМ-О-Д (глухая/остеклённая, одно/двупольная)
         name = 'ДМ-' + (glazed ? 'О-' : 'Г-') + (is2P ? 'Д ' : 'О ');
-    } else {
-        const glazed = door['Остекление'] && door['Остекление'] !== '—' && door['Остекление'] !== 'Нет' && door['Остекление'] !== '';
+        if (h > 0 && w > 0) name += dm(h) + '-' + dm(w);
+    } else if (base === 'ДП1' || base === 'ДП2') {
+        // ДВСГ/ДВСЧ + размеры через пробел
         name = 'ДВС' + (glazed ? 'Ч' : 'Г');
+        if (h > 0 && w > 0) name += ' ' + dm(h) + '-' + dm(w);
+    } else {
+        // ДН, ДВ, ОБЛ, ЛП и прочие: ДНСГ/ДВСЧ и т.д.
+        const prefix = base.length >= 2 ? base : 'ДВ';
+        name = prefix + 'С' + (glazed ? 'Ч' : 'Г');
+        if (h > 0 && w > 0) name += ' ' + dm(h) + '-' + dm(w);
     }
 
-    if (h > 0 && w > 0) name += ' ' + h + '-' + w;
-
+    // Направление открывания
     const opening = door['Открывание'] || '';
     if (is2P) {
         if (opening.includes('Лев')) name += ' 2Л';
@@ -1499,13 +1517,16 @@ function buildDoorName(door) {
         else name += ' 2П';
     } else {
         if (opening.includes('Лев')) name += ' Л';
+        // правое — суффикса нет (по VBA)
     }
 
+    // Порог → П
     const por = door['Порог'] || '';
-    if (por && por !== 'Без порога' && por !== '—' && por !== '') name += ' П';
+    if (por && por !== 'Без порога' && por !== '—' && String(por).trim() !== '') name += ' П';
 
+    // Фрамуга → Фр
     const fram = door['Фрамуга'] || '';
-    if (fram && fram !== 'Без фрамуги' && fram !== '—' && fram !== '') name += ' Фр';
+    if (fram && fram !== 'Без фрамуги' && fram !== '—' && String(fram).trim() !== '') name += ' Фр';
 
     return name.trim().replace(/\s+/g, ' ').replace(/--/g, '-');
 }
@@ -1547,7 +1568,25 @@ document.addEventListener('click', function(e) {
         if (input) { input.value = e.target.dataset.val; dd.classList.remove('open'); input.dispatchEvent(new Event('change', {bubbles:true})); }
         return;
     }
-    if (!e.target.classList.contains('combo-input') && !e.target.classList.contains('combo-arrow')) {
+    // Клик на стрелку — открыть/закрыть дропдаун этого комбо
+    if (e.target.classList.contains('combo-arrow')) {
+        const wrap = e.target.closest('.combo-wrap');
+        const input = wrap ? wrap.querySelector('.combo-input') : null;
+        if (input) {
+            const dd = document.getElementById(input.id + '_dd');
+            if (dd) {
+                if (dd.classList.contains('open')) {
+                    dd.classList.remove('open');
+                } else {
+                    dd.querySelectorAll('.combo-option').forEach(o => o.style.display = '');
+                    dd.classList.add('open');
+                    input.focus();
+                }
+            }
+        }
+        return;
+    }
+    if (!e.target.classList.contains('combo-input')) {
         document.querySelectorAll('.combo-dropdown.open').forEach(dd => dd.classList.remove('open'));
     }
 });
@@ -1594,18 +1633,18 @@ function renderConfigForm() {
     html += `<div class="form-group">
         <label>КОЛИЧЕСТВО СТВОРОК</label>
         <div class="leaf-toggle" id="leafToggle">
-            <button type="button" class="leaf-btn ${initLeaf === 'одн' ? 'active' : ''}" data-val="одн" title="Однопольная">
-                <svg width="36" height="48" viewBox="0 0 36 48">
-                    <rect x="2" y="2" width="32" height="44" rx="2" fill="none" stroke="currentColor" stroke-width="2.5"/>
-                    <line x1="2" y1="24" x2="6" y2="24" stroke="currentColor" stroke-width="2"/>
-                    <text x="18" y="28" text-anchor="middle" font-size="10" fill="currentColor" font-family="Play">1П</text>
+            <button type="button" class="leaf-btn ${initLeaf === 'одн' ? 'active' : ''}" data-val="одн" title="Однопольная (1П)">
+                <svg width="20" height="28" viewBox="0 0 20 28">
+                    <rect x="1" y="1" width="18" height="26" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+                    <circle cx="15" cy="14" r="1.5" fill="currentColor"/>
                 </svg>
             </button>
-            <button type="button" class="leaf-btn ${initLeaf === 'двуп' ? 'active' : ''}" data-val="двуп" title="Двупольная">
-                <svg width="52" height="48" viewBox="0 0 52 48">
-                    <rect x="2" y="2" width="22" height="44" rx="2" fill="none" stroke="currentColor" stroke-width="2.5"/>
-                    <rect x="28" y="2" width="22" height="44" rx="2" fill="none" stroke="currentColor" stroke-width="2.5"/>
-                    <text x="26" y="28" text-anchor="middle" font-size="10" fill="currentColor" font-family="Play">2П</text>
+            <button type="button" class="leaf-btn ${initLeaf === 'двуп' ? 'active' : ''}" data-val="двуп" title="Двупольная (2П)">
+                <svg width="32" height="28" viewBox="0 0 32 28">
+                    <rect x="1" y="1" width="13" height="26" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+                    <rect x="18" y="1" width="13" height="26" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+                    <circle cx="11" cy="14" r="1.5" fill="currentColor"/>
+                    <circle cx="21" cy="14" r="1.5" fill="currentColor"/>
                 </svg>
             </button>
         </div>
@@ -1811,10 +1850,11 @@ function renderColManager(allColumns) {
     const mgr = document.getElementById('colManager');
     if (!mgr) return;
 
+    // Столбцы которые никогда не скрываются автоматически — всегда в чипах
+    const neverAutoHide = new Set(['requestNumber', 'doorKey', 'naimenovanie', 'Высота', 'Ширина', 'Кол-во', ...CORE_FIELDS]);
     const autoEmpty = new Set();
-    const skipAutoHide = new Set(['requestNumber', 'doorKey', 'naimenovanie', 'Высота', 'Ширина', 'Кол-во']);
     allColumns.forEach(col => {
-        if (skipAutoHide.has(col)) return;
+        if (neverAutoHide.has(col)) return;
         const allEmpty = currentDoors.every(d => !d[col] || d[col] === '—' || d[col] === '');
         if (allEmpty) autoEmpty.add(col);
     });
@@ -2375,10 +2415,10 @@ window.generatePDF = function() {
     doc.setFont("PTSans", "normal"); doc.text(prepayment, col2x + 23, y);
     y += 7;
 
-    // ===== ТАБЛИЦА ДВЕРЕЙ =====
+    // ===== ТАБЛИЦА ДВЕРЕЙ (учитываем hiddenColumns) =====
     const baseColumns = ["requestNumber", "naimenovanie", "doorKey", "Высота", "Ширина", ...CORE_FIELDS, "Толщина стены, мм", "Кол-во"];
     const extraColumns = Array.from(usedExtraFields).sort();
-    const allColumns = [...baseColumns, ...extraColumns];
+    const allColumns = [...baseColumns, ...extraColumns].filter(col => !hiddenColumns.has(col));
 
     const colHeaders = allColumns.map(col => {
         if (col === "requestNumber") return "N";
