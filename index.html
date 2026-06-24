@@ -1046,6 +1046,7 @@
                         <th>Дата отгрузки</th>
                         <th>Дата по счёту</th>
                         <th>№ счёта</th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody id="productionTbody"></tbody>
@@ -3392,6 +3393,7 @@ function renderProductionTable(doors) {
             <td class="prod-date-cell" onclick="editProdDateCell(this, '${escapeAttr(door.orderId)}', ${door.doorRowIdx}, 'shipDate', '${escapeAttr(door.shipDate)}')">${door.shipDate || '<span style="color:#cbd5e0">—</span>'}</td>
             <td>${escapeHtml(door.invoiceDate || '')}</td>
             <td>${escapeHtml(door.invoiceNum  || '')}</td>
+            <td><button class="btn-small" onclick="printProductionSheet(${i})" title="Лист на печать">🖨</button></td>
         </tr>`;
     }).join('');
 
@@ -3458,6 +3460,220 @@ window.editProdDateCell = function(cell, orderId, doorRowIdx, fieldName, current
         }
     });
 };
+
+// ============================================================
+// НАРЯД НА ПРОИЗВОДСТВО — печать
+// ============================================================
+
+// Подключаем qrcodejs через динамический script (не раздувает основной бандл)
+(function() {
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+    document.head.appendChild(s);
+})();
+
+window.printProductionSheet = function(rowIdx) {
+    const door = prodFiltered[rowIdx];
+    if (!door) return;
+
+    const f = door.fields || {};
+    const get = (key) => {
+        if (f[key] !== undefined && f[key] !== "") return f[key];
+        // fallback к прямым полям
+        if (door[key] !== undefined && door[key] !== "") return String(door[key]);
+        return "";
+    };
+
+    // ── QR-данные ──
+    const qrText = [
+        "НАРЯД №" + door.prodNum,
+        "Клиент: " + door.client,
+        "Наименование: " + door.naimenovanie,
+        "Высота: " + door.height + " мм",
+        "Ширина: " + door.width + " мм",
+        "Открывание: " + (door.openingFull || door.opening),
+        "Цвет RAL: " + get("Цвет"),
+        "Коробка: " + get("Коробка"),
+        "Замок: " + get("Замок"),
+        "Ручка: " + get("Ручка"),
+        "Заводской №: " + get("Заводской номер"),
+        "Заказ: " + door.orderId.substring(0, 8).toUpperCase(),
+        "Менеджер: " + (currentUser || ""),
+        "Дата по счёту: " + door.invoiceDate,
+        "№ счёта: " + door.invoiceNum
+    ].filter(l => !l.endsWith(": ")).join("\n");
+
+    // ── HTML наряда ──
+    const paramRows = [
+        ["Коробка", get("Коробка")],
+        ["Открывание", door.openingFull || door.opening],
+        ["Металл", get("Металл")],
+        ["Порог", get("Порог")],
+        ["Цилиндр", get("Цилиндр")],
+        ["Доводчик", get("Доводчик")],
+        ["Остекление", get("Остекление")],
+        ["Заполнение", get("Заполнение")],
+        ["Петли", get("Петли")],
+        ["Ручка", get("Ручка")],
+        ["Замок", get("Замок")],
+        ["Антипаника", get("Антипаника")],
+        ["Наличник", get("Наличник")],
+        ["Тип отгрузки", get("Тип отгрузки")],
+        ["Толщина металла полотна", get("Толщина металла полотна")],
+        ["Толщина стены, мм", get("Толщина стены, мм")],
+        ["Примечание", get("Примечание")]
+    ].filter(r => r[1] !== "");
+
+    // Строки параметров — чередуем важные (выделяем)
+    const highlightFields = new Set(["Петли","Ручка","Замок","Антипаника","Цвет"]);
+    const paramHtml = paramRows.map(([label, val]) => {
+        const hl = highlightFields.has(label) ? ' class="ps-highlight"' : '';
+        return `<tr${hl}><td style="width:50%">${label}</td><td class="ps-val">${escapeHtml(val)}</td></tr>`;
+    }).join('');
+
+    const html = `
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:3mm;">
+        <div>
+            <div style="font-size:9pt; color:#555; margin-bottom:1mm;">${door.launchDate || '________'}</div>
+            <div class="ps-big">${escapeHtml(door.naimenovanie)}</div>
+        </div>
+        <div class="ps-qr-wrap"><canvas id="qrCanvas"></canvas></div>
+    </div>
+
+    <table class="ps-table">
+        <tr>
+            <td style="width:25%"><b>ЗАКАЗ-НАРЯД</b></td>
+            <td class="ps-val" style="width:15%">${door.prodNum}</td>
+            <td style="width:30%" class="ps-big">${escapeHtml(door.naimenovanie)}</td>
+            <td style="width:30%" class="ps-big" style="text-align:right">${escapeHtml(door.openingFull || door.opening)}</td>
+        </tr>
+        <tr>
+            <td>Размеры (по коробке)</td>
+            <td>высота</td>
+            <td class="ps-val" style="text-align:center">${door.height}</td>
+            <td>ширина <span class="ps-val">${door.width}</span></td>
+        </tr>
+        <tr>
+            <td colspan="4" class="ps-big">${escapeHtml(door.client)}</td>
+        </tr>
+    </table>
+
+    <table class="ps-table">
+        <tr><td colspan="2" class="ps-section">ПАРАМЕТРЫ ДВЕРИ</td></tr>
+        ${paramHtml}
+        <tr><td>Цвет RAL</td><td class="ps-val">${escapeHtml(get("Цвет"))}</td></tr>
+    </table>
+
+    <table class="ps-table" style="margin-top:3mm;">
+        <tr>
+            <td style="width:50%"><b>Площадь, м²</b></td>
+            <td class="ps-val">${door.area ? door.area.toFixed(4) : "—"}</td>
+        </tr>
+        <tr>
+            <td><b>Кол-во</b></td>
+            <td class="ps-val">${door.qty || 1}</td>
+        </tr>
+        ${door.invoiceDate ? `<tr><td><b>Дата по счёту</b></td><td class="ps-val">${escapeHtml(door.invoiceDate)}</td></tr>` : ''}
+        ${door.note ? `<tr><td><b>Примечание</b></td><td class="ps-val" style="background:#fff3cd">${escapeHtml(door.note)}</td></tr>` : ''}
+    </table>
+
+    <div class="ps-cut">✂ — — — — — — — — — — — — — — — — — — — — — — — — — — — — — — — — —</div>
+
+    <table class="ps-tag-table">
+        <tr>
+            <th colspan="3" style="font-size:14pt; text-align:left; padding:2mm 3mm;">${escapeHtml(door.client)}</th>
+            <th style="font-size:14pt;">${door.prodNum}</th>
+        </tr>
+        <tr>
+            <th>ПОЗИЦИЯ</th>
+            <th>ЗАВ. НОМЕР</th>
+            <th>ЦВЕТ RAL</th>
+            <th>МАРКИРОВКА</th>
+        </tr>
+        <tr>
+            <td class="ps-val">${door.prodNum}</td>
+            <td class="ps-val">${escapeHtml(get("Заводской номер") || door.prodNum)}</td>
+            <td class="ps-val">${escapeHtml(get("Цвет"))}</td>
+            <td class="ps-val">${escapeHtml(door.naimenovanie)}</td>
+        </tr>
+        <tr>
+            <th>В</th>
+            <th>Ш</th>
+            <th>ОТКРЫВАНИЕ</th>
+            <th>КОЛ-ВО</th>
+        </tr>
+        <tr>
+            <td class="ps-val">${door.height}</td>
+            <td class="ps-val">${door.width}</td>
+            <td class="ps-val">${escapeHtml(door.openingFull || door.opening)}</td>
+            <td class="ps-val">${door.qty || 1}</td>
+        </tr>
+    </table>`;
+
+    document.getElementById('printSheetContent').innerHTML = html;
+    document.getElementById('printSheetModal').classList.remove('hidden');
+
+    // Генерируем QR после рендера
+    setTimeout(() => {
+        const canvas = document.getElementById('qrCanvas');
+        if (canvas && window.QRCode) {
+            canvas.width = 0; canvas.height = 0;
+            try {
+                new QRCode(canvas, {
+                    text: qrText,
+                    width: 120,
+                    height: 120,
+                    correctLevel: QRCode.CorrectLevel.M
+                });
+            } catch(e) {
+                canvas.style.display = 'none';
+            }
+        }
+    }, 150);
+};
+
+window.doPrintSheet = function() {
+    window.print();
+};
+
 </script>
+
+<!-- НАРЯД НА ПЕЧАТЬ -->
+<div id="printSheetModal" class="overlay hidden">
+    <div class="overlay-header" style="grid-template-columns:1fr auto;">
+        <h2>ЛИСТ НА ПРОИЗВОДСТВО</h2>
+        <div style="display:flex;gap:10px;">
+            <button class="btn-save" onclick="doPrintSheet()">🖨 ПЕЧАТЬ</button>
+            <button class="close-btn" onclick="document.getElementById('printSheetModal').classList.add('hidden')">ЗАКРЫТЬ</button>
+        </div>
+    </div>
+    <div style="padding:24px; overflow-y:auto; flex:1; background:#f0f2f5; display:flex; justify-content:center;">
+        <div id="printSheetContent" style="background:#fff; width:210mm; min-height:297mm; padding:8mm 10mm; box-shadow:0 4px 24px rgba(0,0,0,0.12); font-family:Arial,sans-serif; font-size:11pt; color:#000;"></div>
+    </div>
+</div>
+
+<!-- Стили для печати -->
+<style>
+@media print {
+    body > *:not(#printSheetModal) { display:none !important; }
+    #printSheetModal { display:flex !important; position:static !important; background:none !important; }
+    #printSheetModal .overlay-header { display:none !important; }
+    #printSheetContent { box-shadow:none !important; padding:0 !important; width:100% !important; }
+}
+.ps-table { width:100%; border-collapse:collapse; margin-bottom:3mm; }
+.ps-table td, .ps-table th { border:1px solid #000; padding:2mm 3mm; vertical-align:middle; }
+.ps-table th { background:#e8e8e8; font-weight:700; }
+.ps-val { font-size:14pt; font-weight:700; }
+.ps-big { font-size:16pt; font-weight:900; }
+.ps-section { font-size:11pt; font-weight:700; background:#d0d0d0; }
+.ps-highlight { background:#ffe0e0; }
+.ps-cut { border-top:2px dashed #555; margin:5mm 0; padding-top:3mm; font-size:9pt; color:#555; text-align:center; letter-spacing:2px; }
+.ps-tag-table { width:100%; border-collapse:collapse; margin-top:3mm; }
+.ps-tag-table td, .ps-tag-table th { border:1px solid #000; padding:2mm 3mm; font-size:10pt; text-align:center; }
+.ps-tag-table th { background:#e8e8e8; font-size:9pt; }
+.ps-qr-wrap { display:flex; justify-content:flex-end; align-items:flex-start; }
+#qrCanvas { border:1px solid #ddd; }
+</style>
+
 </body>
 </html>
