@@ -960,8 +960,19 @@
         <div class="form-group"><label>Предоплата</label><input type="text" id="m_prepayment" placeholder="100%" value="100%"></div>
         <div class="form-group"><label>Доставка</label><input type="text" id="m_delivery" placeholder="Самовывоз" value="Самовывоз"></div>
 
-        <div class="modal-section-title">Подпись продавца</div>
+        <div class="modal-section-title">Менеджер и подпись</div>
+        <div class="form-group"><label>Менеджер (имя + телефон)</label><input type="text" id="m_managerInfo" placeholder="Алексей +375 (29) 627-83-72" value="Алексей +375 (29) 627-83-72"></div>
         <div class="form-group"><label>ФИО подписанта (Продавец)</label><input type="text" id="m_sellerName" placeholder="С.А. Богданович" value="С.А. Богданович"></div>
+
+        <div class="modal-section-title">Параметры таблицы</div>
+        <div class="form-group" style="flex-direction:row;align-items:center;gap:10px;">
+            <input type="checkbox" id="m_showTotal" style="width:16px;height:16px;cursor:pointer;">
+            <label for="m_showTotal" style="cursor:pointer;font-weight:600;">Показать ИТОГО (сумма по столбцу Цена)</label>
+        </div>
+        <div class="form-group" style="flex-direction:row;align-items:center;gap:10px;">
+            <input type="checkbox" id="m_showQtyTotal" checked style="width:16px;height:16px;cursor:pointer;">
+            <label for="m_showQtyTotal" style="cursor:pointer;font-weight:600;">Показать итоговое количество дверей</label>
+        </div>
 
         <div class="modal-actions">
             <button class="btn-cancel-modal" onclick="closePdfModal()">ОТМЕНА</button>
@@ -986,6 +997,8 @@ const ALL_POSSIBLE_FIELDS = [
     "Тип пакета", "Отбойник", "Замок", "Ручка", "Антипаника", "СКУД", "Петли",
     "Вент решетка", "Вент решетка 2 точка привязки", "Тип отгрузки"
 ];
+// Специальные столбцы — свободный ввод, всегда доступны для добавления
+const SPECIAL_FIELDS = ["Примечание", "Цена", "Заводской номер"];
 
 let doorTypes = [];
 let allClients = [];
@@ -1402,7 +1415,7 @@ function loadDoorsIntoConfig(doorsArr) {
 
         const row = { ...newDoor, id: Date.now() + Math.random(), requestNumber: i + 1 };
 
-        ALL_POSSIBLE_FIELDS.forEach(f => {
+        [...ALL_POSSIBLE_FIELDS, ...SPECIAL_FIELDS].forEach(f => {
             if (row[f] && row[f] !== "—") usedExtraFields.add(f);
         });
 
@@ -1843,8 +1856,10 @@ document.getElementById("addDoorBtn").addEventListener("click", () => {
 
 // ===== INLINE EDIT =====
 const NUMBER_COLS = new Set(["Высота", "Ширина", "Толщина стены, мм", "Кол-во"]);
+const PRICE_COL = "Цена"; // Числовой, но не NUMBER_COLS (не dblclick, показывается как строка)
 
 function getColOptions(doorKey, colName) {
+    if (SPECIAL_FIELDS.includes(colName)) return []; // Свободный ввод, без preset опций
     const type = doorTypes.find(t => t.key === doorKey);
     if (!type) return null;
     if (CORE_FIELDS.includes(colName)) return type.options[colName] || null;
@@ -1973,7 +1988,7 @@ function renderColManager(allColumns) {
         html += `<span class="col-chip ${isHidden ? 'hidden-col' : ''}" onclick="toggleColumn('${col}')" title="${isHidden ? 'Показать' : 'Скрыть'} столбец">${escapeHtml(colName)}</span>`;
     });
 
-    const availableToAdd = ALL_POSSIBLE_FIELDS.filter(f => !usedExtraFields.has(f));
+    const availableToAdd = [...ALL_POSSIBLE_FIELDS, ...SPECIAL_FIELDS].filter(f => !usedExtraFields.has(f));
     if (availableToAdd.length > 0) {
         html += `<div style="position:relative;display:inline-block;">
             <button class="btn-small" onclick="toggleAddColMenu()" style="font-size:12px;">＋ Столбец</button>
@@ -2445,98 +2460,175 @@ window.generatePDF = function() {
     const objectAddr   = document.getElementById("m_objectAddress").value.trim() || "___";
     const prepayment   = document.getElementById("m_prepayment").value.trim() || "___";
     const delivery     = document.getElementById("m_delivery").value.trim() || "___";
+    const managerInfo  = document.getElementById("m_managerInfo").value.trim() || "___";
     const sellerName   = document.getElementById("m_sellerName").value.trim() || "___";
+    const showTotal    = document.getElementById("m_showTotal").checked;
+    const showQtyTotal = document.getElementById("m_showQtyTotal").checked;
 
-    // Регистрируем PT Sans с поддержкой кириллицы
     doc.addFileToVFS("PTSans.ttf", PT_SANS_B64);
     doc.addFont("PTSans.ttf", "PTSans", "normal");
     doc.addFileToVFS("PTSans-Bold.ttf", PT_SANS_B64);
     doc.addFont("PTSans-Bold.ttf", "PTSans", "bold");
     doc.setFont("PTSans", "normal");
-    const pageW = doc.internal.pageSize.getWidth();
+
+    const pageW = doc.internal.pageSize.getWidth();   // 297mm landscape
+    const pageH = doc.internal.pageSize.getHeight();  // 210mm
     const margin = 12;
-    let y = 14;
+    const contentW = pageW - margin * 2;
+    let y = margin;
 
-    // ===== ШАПКА =====
-    doc.setFontSize(11);
+    // ===== ШАПКА: логотип-блок слева + реквизиты справа =====
+    const headerH = 32;
+
+    // Рамка шапки
+    doc.setDrawColor(200, 200, 200);
+    doc.setLineWidth(0.3);
+    doc.rect(margin, y, contentW, headerH);
+
+    // Вертикальный разделитель: логотип | продукты | реквизиты
+    const logoW = 38;
+    const prodW = 48;
+    doc.line(margin + logoW, y, margin + logoW, y + headerH);
+    doc.line(margin + logoW + prodW, y, margin + logoW + prodW, y + headerH);
+
+    // --- Логотип (текстовый) ---
     doc.setFont("PTSans", "bold");
-    doc.text("СЭТГОУ", pageW / 2, y, { align: "center" });
-    y += 5;
+    doc.setFontSize(18);
+    doc.setTextColor(200, 30, 30);
+    doc.text("СЭТГОУ", margin + logoW / 2, y + headerH / 2 + 3, { align: "center" });
+    doc.setTextColor(0, 0, 0);
 
-    doc.setFontSize(7);
-    doc.setFont("PTSans", "normal");
+    // --- Список продуктов (центр) ---
     const products = [
-        "Двери противопожарные","Металлические двери","Противопожарные люки",
-        "Металлические ворота","Комбинированные двери","Маятниковые двери",
+        "Двери противопожарные","Металлические двери",
+        "Противопожарные люки","Металлические ворота",
+        "Комбинированные двери","Маятниковые двери",
         "Двери из нержавеющей стали","Облегченные двери ZK"
     ];
-    doc.text(products.map(p => `* ${p} *`).join("   "), pageW / 2, y, { align: "center" });
-    y += 4;
+    doc.setFont("PTSans", "normal");
+    doc.setFontSize(6.2);
+    const prodCx = margin + logoW + prodW / 2;
+    products.forEach((p, idx) => {
+        doc.text("\u2731 " + p, prodCx, y + 5 + idx * 3.4, { align: "center" });
+    });
 
+    // --- Реквизиты (правая часть) ---
+    const reqX = margin + logoW + prodW + 4;
+    const reqW = contentW - logoW - prodW - 8;
+    doc.setFont("PTSans", "normal");
     doc.setFontSize(6.5);
-    doc.text("Юр. адрес: 220099, Минская обл., г. Минск, Казинца, дом № 11А – 94 (пом. 405а)", pageW / 2, y, { align: "center" });
-    y += 3.5;
-    doc.text("Почт. адрес: 220024, Минская обл., г. Минск, Стебенева, дом № 20 литера Е 1/к", pageW / 2, y, { align: "center" });
-    y += 3.5;
-    doc.text("Реквизиты: р/с BY87BELB30121708300090226000, Минское отд. №3 ОАО 'Банк БелВЭБ', код BELBBY2X, г. Минск, пр-т Мира 1", pageW / 2, y, { align: "center" });
-    y += 3.5;
-    doc.text("УНП 100072163", pageW / 2, y, { align: "center" });
-    y += 5;
+    const reqs = [
+        "Юридический адрес: 220099, Минская обл., г. Минск, Казинца, дом № 11А – 94 (пом. 405а)",
+        "Почтовый адрес: 220024, Минская обл., г. Минск, Стебенева, дом № 20 литера Е 1/к",
+        "Банковские реквизиты: р/с BY87BELB30121708300090226000, в банке Минское отд. №3 ОАО «Банк БелВЭБ»,",
+        "код BELBBY2X, г. Минск, пр-т Мира 1",
+        "УНП 100072163"
+    ];
+    reqs.forEach((line, idx) => {
+        doc.text(line, reqX, y + 6 + idx * 4.2);
+    });
 
-    doc.setDrawColor(180, 180, 180);
-    doc.line(margin, y, pageW - margin, y);
-    y += 5;
+    y += headerH + 5;
 
-    // ===== РЕКВИЗИТЫ ДОКУМЕНТА =====
+    // ===== ПРИЛОЖЕНИЕ + ДОГОВОР + ЗАГОЛОВОК =====
+    doc.setFont("PTSans", "normal");
     doc.setFontSize(8);
-    doc.setFont("PTSans", "bold");
+    doc.setTextColor(60, 60, 60);
     doc.text("Приложение №1", margin, y);
     y += 4.5;
     doc.text("К договору поставки № " + dogovorNum + " от " + dogovorDate + "г.", margin, y);
-    y += 4.5;
-    doc.text("Спецификация по счету № " + schetNum + " от " + schetDate + "г.", margin, y);
     y += 5;
 
-    doc.setFont("PTSans", "normal");
-    doc.setFontSize(7.5);
+    doc.setFont("PTSans", "bold");
+    doc.setFontSize(12);
+    doc.setTextColor(0, 0, 0);
+    doc.text("Спецификация по счету № " + schetNum + " от " + schetDate + "г.", margin, y);
+    y += 8;
 
+    // ===== МЕТА-БЛОК: 2 колонки =====
     const col1x = margin;
-    const col2x = pageW / 2 + 5;
+    const col2x = pageW / 2 + 10;
+    const metaLabelW = 32;
 
-    doc.setFont("PTSans", "bold"); doc.text("Номер клиента:", col1x, y);
-    doc.setFont("PTSans", "normal"); doc.text(clientInfo, col1x + 33, y);
-    doc.setFont("PTSans", "bold"); doc.text("Менеджер:", col2x, y);
-    doc.setFont("PTSans", "normal"); doc.text("Алексей +375 (29) 627-83-72", col2x + 23, y);
-    y += 4.5;
+    doc.setFont("PTSans", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(0, 0, 0);
 
-    doc.setFont("PTSans", "bold"); doc.text("Срок поставки:", col1x, y);
-    doc.setFont("PTSans", "normal"); doc.text(deliveryDate, col1x + 33, y);
-    doc.setFont("PTSans", "bold"); doc.text("Доставка:", col2x, y);
-    doc.setFont("PTSans", "normal"); doc.text(delivery, col2x + 23, y);
-    y += 4.5;
+    // Рамка мета-блока
+    const metaH = 16;
+    doc.setDrawColor(220, 220, 220);
+    doc.setFillColor(248, 250, 252);
+    doc.roundedRect(margin, y - 3, contentW, metaH, 2, 2, 'FD');
 
-    doc.setFont("PTSans", "bold"); doc.text("Адрес объекта:", col1x, y);
-    doc.setFont("PTSans", "normal"); doc.text(objectAddr, col1x + 33, y);
-    doc.setFont("PTSans", "bold"); doc.text("Предоплата:", col2x, y);
-    doc.setFont("PTSans", "normal"); doc.text(prepayment, col2x + 23, y);
-    y += 7;
+    // Строка 1
+    doc.setFont("PTSans", "bold"); doc.text("Номер клиента:", col1x + 2, y + 2);
+    doc.setFont("PTSans", "normal"); doc.text(clientInfo, col1x + metaLabelW, y + 2);
+    doc.setFont("PTSans", "bold"); doc.text("Срок поставки:", col2x, y + 2);
+    doc.setFont("PTSans", "normal"); doc.text(deliveryDate, col2x + metaLabelW, y + 2);
 
-    // ===== ТАБЛИЦА ДВЕРЕЙ (учитываем hiddenColumns) =====
-    const baseColumns = ["requestNumber", "naimenovanie", "doorKey", "Высота", "Ширина", ...CORE_FIELDS, "Толщина стены, мм", "Кол-во"];
+    // Строка 2
+    doc.setFont("PTSans", "bold"); doc.text("Адрес объекта:", col1x + 2, y + 7);
+    doc.setFont("PTSans", "normal"); doc.text(objectAddr, col1x + metaLabelW, y + 7);
+    doc.setFont("PTSans", "bold"); doc.text("Предоплата:", col2x, y + 7);
+    doc.setFont("PTSans", "normal"); doc.text(prepayment, col2x + metaLabelW, y + 7);
+
+    // Строка 3
+    doc.setFont("PTSans", "bold"); doc.text("Менеджер:", col1x + 2, y + 12);
+    doc.setFont("PTSans", "normal"); doc.text(managerInfo, col1x + metaLabelW, y + 12);
+    doc.setFont("PTSans", "bold"); doc.text("Доставка:", col2x, y + 12);
+    doc.setFont("PTSans", "normal"); doc.text(delivery, col2x + metaLabelW, y + 12);
+
+    y += metaH + 5;
+
+    // ===== ТАБЛИЦА =====
+    const baseColumns = ["requestNumber", "naimenovanie", "Высота", "Ширина", ...CORE_FIELDS, "Толщина стены, мм", "Кол-во"];
     const extraColumns = Array.from(usedExtraFields).sort();
     const allColumns = [...baseColumns, ...extraColumns].filter(col => !hiddenColumns.has(col));
 
     const colHeaders = allColumns.map(col => {
-        if (col === "requestNumber") return "N";
+        if (col === "requestNumber") return "№ поз";
+        if (col === "naimenovanie") return "Наименование\nдвери";
         if (col === "doorKey") return "Тип";
-        if (col === "naimenovanie") return "Наименование";
         return col;
     });
 
     const tableData = currentDoors.map(d => allColumns.map(col => {
         let v = d[col] !== undefined ? d[col] : "—";
+        if (col === "Цена" && (v === "—" || v === "" || v === null)) return "";
         return String(v);
     }));
+
+    // Итоговая строка
+    if (showQtyTotal || showTotal) {
+        const totalRow = allColumns.map(col => {
+            if (col === "Кол-во" && showQtyTotal) {
+                const sum = currentDoors.reduce((a, d) => a + (parseFloat(d["Кол-во"]) || 1), 0);
+                return String(sum);
+            }
+            if (col === "Цена" && showTotal) {
+                const sum = currentDoors.reduce((a, d) => a + (parseFloat(d["Цена"]) || 0), 0);
+                return sum > 0 ? sum.toLocaleString('ru-RU') + " руб." : "";
+            }
+            if (col === "requestNumber") return "ИТОГО";
+            return "";
+        });
+        tableData.push(totalRow);
+    }
+
+    // Определим ширины колонок
+    const colWidths = {};
+    allColumns.forEach((col, idx) => {
+        if (col === "requestNumber") colWidths[idx] = { cellWidth: 10 };
+        else if (col === "naimenovanie") colWidths[idx] = { cellWidth: 26, halign: 'left' };
+        else if (col === "Высота" || col === "Ширина") colWidths[idx] = { cellWidth: 13 };
+        else if (col === "Кол-во") colWidths[idx] = { cellWidth: 12 };
+        else if (col === "Цена") colWidths[idx] = { cellWidth: 18 };
+        else if (col === "Примечание") colWidths[idx] = { cellWidth: 28, halign: 'left' };
+        else if (col === "Заводской номер") colWidths[idx] = { cellWidth: 22 };
+        else if (col === "Толщина стены, мм") colWidths[idx] = { cellWidth: 14 };
+    });
+
+    const totalRowIdx = (showQtyTotal || showTotal) ? tableData.length - 1 : -1;
 
     doc.autoTable({
         startY: y,
@@ -2545,46 +2637,67 @@ window.generatePDF = function() {
         margin: { left: margin, right: margin },
         styles: {
             fontSize: 7,
-            cellPadding: 2,
+            cellPadding: { top: 2.5, right: 2, bottom: 2.5, left: 2 },
             overflow: 'linebreak',
             font: 'PTSans',
             halign: 'center',
             valign: 'middle',
-            lineColor: [180, 180, 180],
-            lineWidth: 0.2,
+            lineColor: [210, 218, 230],
+            lineWidth: 0.25,
+            textColor: [26, 32, 44],
         },
         headStyles: {
-            fillColor: [30, 41, 59],
-            textColor: [203, 213, 225],
-            fontStyle: 'bold', font: 'PTSans',
-            fontSize: 7,
+            fillColor: [30, 58, 95],
+            textColor: [226, 232, 240],
+            fontStyle: 'bold',
+            font: 'PTSans',
+            fontSize: 6.5,
+            cellPadding: { top: 3, right: 2, bottom: 3, left: 2 },
         },
-        alternateRowStyles: { fillColor: [245, 247, 250] },
-        columnStyles: {
-            0: { cellWidth: 8 },
-            1: { cellWidth: 22, halign: 'left' },
+        alternateRowStyles: {
+            fillColor: [247, 249, 252],
         },
-        didDrawPage: function() {
+        columnStyles: colWidths,
+        willDrawCell: function(data) {
+            // Итоговая строка — синяя подложка
+            if (totalRowIdx >= 0 && data.row.index === totalRowIdx) {
+                doc.setFillColor(30, 109, 181);
+                doc.setTextColor(255, 255, 255);
+                doc.setFont("PTSans", "bold");
+            }
+        },
+        didDrawCell: function(data) {
+            if (totalRowIdx >= 0 && data.row.index === totalRowIdx) {
+                doc.setTextColor(26, 32, 44);
+                doc.setFont("PTSans", "normal");
+            }
+        },
+        didDrawPage: function(data) {
+            // Нумерация страниц
             doc.setFontSize(7);
             doc.setFont("PTSans", "normal");
-            doc.text("Стр. " + doc.internal.getCurrentPageInfo().pageNumber, pageW - margin, doc.internal.pageSize.getHeight() - 5, { align: 'right' });
+            doc.setTextColor(120, 120, 120);
+            doc.text(
+                "Стр. " + doc.internal.getCurrentPageInfo().pageNumber,
+                pageW - margin, pageH - 5, { align: 'right' }
+            );
+            doc.setTextColor(0, 0, 0);
         }
     });
 
     y = doc.lastAutoTable.finalY + 8;
 
-    // ===== БЛОК РЕКВИЗИТОВ =====
-    if (y + 50 > doc.internal.pageSize.getHeight() - 10) {
-        doc.addPage();
-        y = 15;
-    }
+    // ===== ФУТЕР =====
+    if (y + 35 > pageH - 10) { doc.addPage(); y = 15; }
 
-    doc.setDrawColor(180, 180, 180);
+    doc.setDrawColor(200, 200, 200);
+    doc.setLineWidth(0.3);
     doc.line(margin, y, pageW - margin, y);
     y += 5;
 
     doc.setFontSize(7.5);
     doc.setFont("PTSans", "normal");
+    doc.setTextColor(60, 60, 60);
     doc.text("Выписка и получение товара производится на складе, г. Минск, ул. Стебенева, 20В/1.", margin, y);
     y += 4;
     doc.text("Отгрузка производится в рабочие дни с 8:00-12:00; 12:30-16:00", margin, y);
@@ -2592,24 +2705,29 @@ window.generatePDF = function() {
     doc.text("Поставщик имеет право изменить адрес отгрузки. Схемы проезда на сайте WWW.SETGOU.BY", margin, y);
     y += 9;
 
-    const halfW = (pageW - margin * 2) / 2;
+    // ===== ПОДПИСИ =====
+    const halfW = (contentW) / 2;
+
     doc.setFont("PTSans", "bold");
     doc.setFontSize(8);
+    doc.setTextColor(0, 0, 0);
     doc.text("ПРОДАВЕЦ", margin, y);
     doc.text("ПОКУПАТЕЛЬ", margin + halfW, y);
     y += 5;
 
     doc.setFont("PTSans", "normal");
     doc.setFontSize(7.5);
-    doc.text("УП 'СЭТГОУ'", margin, y);
+    doc.text("УП \u00abСЭТГОУ\u00bb", margin, y);
     doc.text(clientInfo, margin + halfW, y);
-    y += 6;
+    y += 8;
 
+    doc.setDrawColor(160, 160, 160);
     doc.line(margin, y, margin + halfW - 10, y);
     doc.line(margin + halfW, y, pageW - margin, y);
     y += 4;
 
     doc.setFontSize(7);
+    doc.setTextColor(100, 100, 100);
     doc.text("/ " + sellerName, margin + 35, y);
     doc.text("/ ________________________", margin + halfW + 35, y);
 
