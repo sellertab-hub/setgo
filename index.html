@@ -805,6 +805,29 @@
         .prod-row-launch-today { background: #dcfce7 !important; }
         .prod-row-ready { background: #dbeafe !important; }
         .prod-row-shipped { background: #f1f5f9 !important; color: #94a3b8; }
+
+        .prod-filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 10px;
+            align-items: end;
+        }
+        .prod-filters-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 14px;
+            padding-top: 12px;
+            border-top: 1px solid #e2e8f0;
+        }
+        .prod-chips-row {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
         .prod-date-cell {
             min-width: 110px;
             cursor: pointer;
@@ -851,10 +874,13 @@
             <h2>СИСТЕМА УПРАВЛЕНИЯ ЗАКАЗАМИ</h2>
 
             <div class="client-row">
-                <input type="text" id="clientSearch" class="client-input" list="clientDatalist" placeholder="Начните вводить имя клиента..." autocomplete="off">
+                <div class="combo-wrap" style="flex:1; position:relative;">
+                    <input type="text" class="combo-input client-input" id="clientSearch" autocomplete="off" placeholder="Начните вводить имя клиента...">
+                    <span class="combo-arrow" id="clientSearchArrow">▼</span>
+                    <div class="combo-dropdown" id="clientSearch_dd"></div>
+                </div>
                 <button id="addClientOpenBtn" class="btn-save plus-btn">+</button>
             </div>
-            <datalist id="clientDatalist"></datalist>
 
             <button id="refreshBtn" class="btn-main" style="margin-bottom: 20px;">ОБНОВИТЬ ДАННЫЕ</button>
             <button id="startNewOrderBtn" class="btn-save" style="width: 100%; padding: 14px; display: none;">+ СОЗДАТЬ НОВЫЙ ЗАКАЗ</button>
@@ -947,8 +973,8 @@
 
     <div id="productionView" style="display:none; padding:20px; flex:1; overflow-y:auto;">
         <!-- Фильтры -->
-        <div class="panel-box" style="margin-bottom:16px;">
-            <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:flex-end;">
+        <div class="panel-box" style="margin-bottom:16px; max-width:none;">
+            <div class="prod-filters-grid">
                 <div class="form-group" style="min-width:180px;">
                     <label>Клиент</label>
                     <input type="text" id="pf_client" placeholder="Поиск по клиенту...">
@@ -982,13 +1008,15 @@
                         <option value="ОТГРУЖЕН">ОТГРУЖЕН</option>
                     </select>
                 </div>
-                <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+            </div>
+            <div class="prod-filters-bottom">
+                <div class="prod-chips-row">
                     <button class="prod-filter-chip" data-highlight="today">🔴 Запуск сегодня</button>
                     <button class="prod-filter-chip" data-highlight="due-soon">🟡 Сдача скоро (≤3 дн.)</button>
                     <button class="prod-filter-chip" data-highlight="overdue">⚫ Просрочены</button>
                     <button class="prod-filter-chip active" data-highlight="all">Все</button>
                 </div>
-                <button id="prod_refresh_btn" class="btn-main" style="height:38px;">ОБНОВИТЬ</button>
+                <button id="prod_refresh_btn" class="btn-main" style="height:36px; padding:0 28px; white-space:nowrap;">ОБНОВИТЬ</button>
             </div>
         </div>
 
@@ -1307,8 +1335,8 @@ async function loadDataFromAPI() {
             invoiceNum:   o["Номер счёта"] || ""
         })).sort((a, b) => parseDateTime(b.date) - parseDateTime(a.date));
 
-        const datalist = document.getElementById("clientDatalist");
-        datalist.innerHTML = allClients.map(c => `<option value="${escapeHtml(c)}">`).join('');
+        // Обновляем кастомный комбобокс поиска клиента
+        rebuildClientCombo();
 
         if (doorTypes.length) currentTypeKey = doorTypes[0].key;
         if (selectedClient) renderClientOrders();
@@ -1362,10 +1390,94 @@ function parseDoorTypes(rows) {
 }
 
 // ===== CLIENT SEARCH =====
-document.getElementById("clientSearch").addEventListener("input", (e) => {
-    selectedClient = e.target.value.trim();
-    const startNewBtn = document.getElementById("startNewOrderBtn");
+// clientSearch — обновляется через rebuildClientCombo() + selectClient()
+// слушатель ввода для фильтрации выпадашки
+document.getElementById("clientSearch").addEventListener("input", function() {
+    const q = this.value.trim().toLowerCase();
+    const dd = document.getElementById("clientSearch_dd");
+    if (!dd) return;
+    dd.querySelectorAll(".combo-option").forEach(opt => {
+        opt.style.display = opt.dataset.val.toLowerCase().includes(q) ? "" : "none";
+    });
+    // Открываем если что-то введено
+    if (q) {
+        dd.classList.add("open");
+        positionComboDropdown(this, dd);
+    } else {
+        dd.classList.remove("open");
+        // Сброс выбора если поле очищено
+        selectedClient = "";
+        document.getElementById("startNewOrderBtn").style.display = "none";
+        document.getElementById("ordersPanel").style.display = "none";
+    }
+});
 
+document.getElementById("clientSearch").addEventListener("focus", function() {
+    const dd = document.getElementById("clientSearch_dd");
+    if (dd && allClients.length) {
+        dd.querySelectorAll(".combo-option").forEach(opt => opt.style.display = "");
+        dd.classList.add("open");
+        positionComboDropdown(this, dd);
+    }
+});
+
+document.getElementById("clientSearchArrow").addEventListener("click", function() {
+    const inp = document.getElementById("clientSearch");
+    const dd = document.getElementById("clientSearch_dd");
+    if (!dd) return;
+    if (dd.classList.contains("open")) {
+        dd.classList.remove("open");
+    } else {
+        dd.querySelectorAll(".combo-option").forEach(opt => opt.style.display = "");
+        dd.classList.add("open");
+        positionComboDropdown(inp, dd);
+        inp.focus();
+    }
+});
+
+function positionComboDropdown(input, dd) {
+    // Алиас для openComboDropdown — позиционирует и открывает
+    if (dd.parentElement !== document.body) document.body.appendChild(dd);
+    const rect = input.getBoundingClientRect();
+    const ddH = 220;
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const spaceAbove = rect.top;
+    if (spaceBelow < ddH && spaceAbove > spaceBelow) {
+        dd.style.top = ''; dd.style.bottom = (window.innerHeight - rect.top) + 'px';
+    } else {
+        dd.style.bottom = ''; dd.style.top = rect.bottom + 'px';
+    }
+    dd.style.left  = rect.left + 'px';
+    dd.style.width = Math.max(rect.width, 220) + 'px';
+}
+
+function rebuildClientCombo() {
+    const dd = document.getElementById("clientSearch_dd");
+    if (!dd) return;
+    dd.innerHTML = allClients.map(c =>
+        `<div class="combo-option" data-val="${escapeAttr(c)}">${escapeHtml(c)}</div>`
+    ).join("");
+    dd.querySelectorAll(".combo-option").forEach(opt => {
+        opt.addEventListener("click", () => {
+            selectClient(opt.dataset.val);
+        });
+    });
+}
+
+// Слушаем change на clientSearch — срабатывает когда выбрана опция из выпадашки
+document.addEventListener('change', function(e) {
+    if (e.target.id === 'clientSearch') {
+        selectClient(e.target.value.trim());
+    }
+});
+
+function selectClient(name) {
+    const inp = document.getElementById("clientSearch");
+    if (inp) inp.value = name;
+    const dd = document.getElementById("clientSearch_dd");
+    if (dd) dd.classList.remove("open");
+    selectedClient = name;
+    const startNewBtn = document.getElementById("startNewOrderBtn");
     if (selectedClient && allClients.includes(selectedClient)) {
         startNewBtn.style.display = "block";
         renderClientOrders();
@@ -1373,7 +1485,7 @@ document.getElementById("clientSearch").addEventListener("input", (e) => {
         startNewBtn.style.display = "none";
         document.getElementById("ordersPanel").style.display = "none";
     }
-});
+}
 
 function getStatusClass(status) {
     const s = String(status || "").trim().toUpperCase();
