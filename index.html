@@ -691,9 +691,10 @@
         .combo-input { width: 100%; padding: 8px 30px 8px 10px; background: #fff; border: 1px solid #cbd5e0; color: #1a202c; font-size: 0.85rem; font-family: 'Play', monospace; border-radius: 4px; cursor: text; }
         .combo-input:focus { border-color: #1e6db5; outline: none; box-shadow: 0 0 0 3px rgba(30,109,181,0.12); }
         .combo-arrow { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); pointer-events: all; color: #4a5568; font-size: 12px; cursor: pointer; }
-        .combo-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid #cbd5e0; border-top: none; max-height: 220px; overflow-y: auto; z-index: 1000; border-radius: 0 0 4px 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: none; }
+        /* Дропдаун через position:fixed — не обрезается overflow родителя */
+        .combo-dropdown { position: fixed; background: #fff; border: 1px solid #cbd5e0; max-height: 220px; overflow-y: auto; z-index: 50000; border-radius: 4px; box-shadow: 0 4px 16px rgba(0,0,0,0.15); display: none; min-width: 180px; }
         .combo-dropdown.open { display: block; }
-        .combo-option { padding: 8px 12px; cursor: pointer; font-size: 0.85rem; color: #1a202c; }
+        .combo-option { padding: 8px 12px; cursor: pointer; font-size: 0.85rem; color: #1a202c; white-space: nowrap; }
         .combo-option:hover, .combo-option.selected { background: #e8f0fa; color: #1e6db5; }
 
         /* ===== LEAF TOGGLE ===== */
@@ -1544,6 +1545,37 @@ function makeCombo(id, options, currentVal) {
     </div>`;
 }
 
+// ===== COMBO HELPERS =====
+function openComboDropdown(input) {
+    let dd = document.getElementById(input.id + '_dd');
+    if (!dd) return;
+
+    // Закрыть все другие
+    document.querySelectorAll('.combo-dropdown.open').forEach(d => { if (d !== dd) d.classList.remove('open'); });
+
+    // Перенести dropdown в body если ещё не там — чтобы overflow родителя не обрезал
+    if (dd.parentElement !== document.body) {
+        document.body.appendChild(dd);
+    }
+
+    // Позиционировать через getBoundingClientRect (position:fixed — viewport coords)
+    const rect = input.getBoundingClientRect();
+    const ddH = 220;
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const spaceAbove = rect.top;
+    if (spaceBelow < ddH && spaceAbove > spaceBelow) {
+        dd.style.top = '';
+        dd.style.bottom = (window.innerHeight - rect.top) + 'px';
+    } else {
+        dd.style.bottom = '';
+        dd.style.top = rect.bottom + 'px';
+    }
+    dd.style.left = rect.left + 'px';
+    dd.style.width = Math.max(rect.width, 180) + 'px';
+    dd.querySelectorAll('.combo-option').forEach(o => o.style.display = '');
+    dd.classList.add('open');
+}
+
 document.addEventListener('input', function(e) {
     if (!e.target.classList.contains('combo-input')) return;
     const dd = document.getElementById(e.target.id + '_dd');
@@ -1552,13 +1584,13 @@ document.addEventListener('input', function(e) {
     dd.querySelectorAll('.combo-option').forEach(opt => {
         opt.style.display = opt.dataset.val.toLowerCase().includes(q) ? '' : 'none';
     });
-    dd.classList.add('open');
+    // Если уже открыт — просто фильтруем, иначе открываем
+    if (!dd.classList.contains('open')) openComboDropdown(e.target);
 });
 
 document.addEventListener('focus', function(e) {
     if (!e.target.classList.contains('combo-input')) return;
-    const dd = document.getElementById(e.target.id + '_dd');
-    if (dd) { dd.querySelectorAll('.combo-option').forEach(o => o.style.display = ''); dd.classList.add('open'); }
+    openComboDropdown(e.target);
 }, true);
 
 document.addEventListener('click', function(e) {
@@ -1568,20 +1600,16 @@ document.addEventListener('click', function(e) {
         if (input) { input.value = e.target.dataset.val; dd.classList.remove('open'); input.dispatchEvent(new Event('change', {bubbles:true})); }
         return;
     }
-    // Клик на стрелку — открыть/закрыть дропдаун этого комбо
     if (e.target.classList.contains('combo-arrow')) {
         const wrap = e.target.closest('.combo-wrap');
         const input = wrap ? wrap.querySelector('.combo-input') : null;
         if (input) {
             const dd = document.getElementById(input.id + '_dd');
-            if (dd) {
-                if (dd.classList.contains('open')) {
-                    dd.classList.remove('open');
-                } else {
-                    dd.querySelectorAll('.combo-option').forEach(o => o.style.display = '');
-                    dd.classList.add('open');
-                    input.focus();
-                }
+            if (dd && dd.classList.contains('open')) {
+                dd.classList.remove('open');
+            } else if (input) {
+                openComboDropdown(input);
+                input.focus();
             }
         }
         return;
@@ -1590,6 +1618,19 @@ document.addEventListener('click', function(e) {
         document.querySelectorAll('.combo-dropdown.open').forEach(dd => dd.classList.remove('open'));
     }
 });
+
+// При скролле — перепозиционируем открытый дропдаун
+document.addEventListener('scroll', function() {
+    document.querySelectorAll('.combo-dropdown.open').forEach(dd => {
+        const input = document.getElementById(dd.id.replace('_dd',''));
+        if (input) {
+            const rect = input.getBoundingClientRect();
+            dd.style.bottom = '';
+            dd.style.top = rect.bottom + 'px';
+            dd.style.left = rect.left + 'px';
+        }
+    });
+}, true);
 
 // ===== CONFIG FORM =====
 function renderConfigForm() {
@@ -1824,24 +1865,33 @@ function makeCellEditable(td, doorIdx, colName) {
         input.addEventListener("blur", save);
         input.addEventListener("keydown", e => { if (e.key === "Enter") save(); if (e.key === "Escape") renderRightTable(); });
     } else {
-        const opts = getColOptions(door["doorKey"] || door["Ключ"], colName);
-        if (!opts || opts.length === 0) return;
+        const opts = getColOptions(door["doorKey"] || door["Ключ"], colName) || [];
         const inp = document.createElement('input');
         inp.type = 'text';
-        inp.value = currentVal;
-        inp.style.cssText = 'width:100%;padding:4px;font-family:Play;font-size:12px;border:1px solid #1e6db5;border-radius:3px;';
-        const dl = document.createElement('datalist');
-        dl.id = 'cell_dl_' + Date.now();
-        inp.setAttribute('list', dl.id);
-        opts.forEach(o => { const op = document.createElement('option'); op.value = o; dl.appendChild(op); });
-        td.innerHTML = ''; td.appendChild(inp); td.appendChild(dl); inp.focus(); inp.select();
+        inp.value = currentVal === '—' ? '' : currentVal;
+        inp.style.cssText = 'width:100%;padding:4px;font-family:Play;font-size:12px;border:1px solid #1e6db5;border-radius:3px;box-sizing:border-box;';
+        inp.placeholder = 'Введите...';
+        td.innerHTML = '';
+        if (opts.length > 0) {
+            // Есть опции — даталист + автодополнение
+            const dl = document.createElement('datalist');
+            dl.id = 'cell_dl_' + Date.now();
+            inp.setAttribute('list', dl.id);
+            opts.forEach(o => { const op = document.createElement('option'); op.value = o; dl.appendChild(op); });
+            td.appendChild(inp); td.appendChild(dl);
+        } else {
+            // Нет опций — простой ввод (Colour, произвольный текст)
+            td.appendChild(inp);
+        }
+        inp.focus(); inp.select();
         const save = () => {
-            currentDoors[doorIdx][colName] = inp.value;
+            const v = inp.value.trim();
+            currentDoors[doorIdx][colName] = v || '—';
             currentDoors[doorIdx].naimenovanie = buildDoorName(currentDoors[doorIdx]);
             renderRightTable();
         };
         inp.addEventListener('blur', save);
-        inp.addEventListener('keydown', e => { if (e.key === 'Enter') save(); if (e.key === 'Escape') renderRightTable(); });
+        inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); save(); } if (e.key === 'Escape') renderRightTable(); });
     }
 }
 
