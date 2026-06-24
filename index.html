@@ -1088,7 +1088,7 @@ function renderClientOrders() {
     tbody.innerHTML = groupedClientOrders.map(group => `
         <tr
             data-dateiso="${escapeAttr(parseDateToISO(group.date))}"
-            data-date="${escapeAttr(formatDisplayDate(group.date).toLowerCase())}"
+            data-date="${escapeAttr(String(formatDisplayDate(group.date) || '').toLowerCase())}"
             data-doors="${escapeAttr(String(group.doors.length).toLowerCase())}"
             data-status="${escapeAttr(String(group.status || '').toLowerCase())}"
             data-total="${escapeAttr(formatMoney(group.orderTotal).toLowerCase())}"
@@ -1192,7 +1192,7 @@ function renderAllOrders() {
 
     tbody.innerHTML = sorted.map(group => `
         <tr
-            data-gclient="${escapeAttr(group.client.toLowerCase())}"
+            data-gclient="${escapeAttr(String(group.client || '').toLowerCase())}"
             data-gdateiso="${escapeAttr(parseDateToISO(group.date))}"
             data-gdoors="${escapeAttr(String(group.doors.length))}"
             data-gstatus="${escapeAttr(String(group.status || '').toLowerCase())}"
