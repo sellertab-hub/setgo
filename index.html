@@ -3498,7 +3498,7 @@ window.printProductionSheet = function(rowIdx) {
         "Ручка: " + get("Ручка"),
         "Заводской №: " + get("Заводской номер"),
         "Заказ: " + door.orderId.substring(0, 8).toUpperCase(),
-        "Менеджер: " + (currentUser || ""),
+        "Менеджер: " + (currentUserLogin || ""),
         "Дата по счёту: " + door.invoiceDate,
         "№ счёта: " + door.invoiceNum
     ].filter(l => !l.endsWith(": ")).join("\n");
