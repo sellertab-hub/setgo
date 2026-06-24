@@ -752,6 +752,73 @@
             background: #1e6db5;
             border-color: #1e6db5;
         }
+
+        /* ===== PRODUCTION TAB STYLES ===== */
+        #appNav {
+            background: #1e3a5f;
+            display: flex;
+            gap: 0;
+            border-bottom: 3px solid #1e6db5;
+            flex-shrink: 0;
+        }
+        .app-tab {
+            padding: 14px 32px;
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.65);
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -3px;
+            transition: all 0.2s;
+            font-family: 'Play', sans-serif;
+        }
+        .app-tab:hover { color: #fff; background: rgba(255,255,255,0.07); }
+        .app-tab.active { color: #fff; border-bottom-color: #4a9ede; background: rgba(255,255,255,0.1); }
+        #salesView { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+        #productionView { flex: 1; overflow-y: auto; }
+        .prod-filter-chip {
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            color: #475569;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            font-family: 'Play', sans-serif;
+        }
+        .prod-filter-chip.active {
+            background: #1e6db5;
+            color: #fff;
+            border-color: #1e6db5;
+        }
+        .prod-filter-chip:hover:not(.active) {
+            background: #e2e8f0;
+        }
+        .prod-row-overdue { background: #fee2e2 !important; }
+        .prod-row-due-soon { background: #fef3c7 !important; }
+        .prod-row-launch-today { background: #dcfce7 !important; }
+        .prod-row-ready { background: #dbeafe !important; }
+        .prod-row-shipped { background: #f1f5f9 !important; color: #94a3b8; }
+        .prod-date-cell {
+            min-width: 110px;
+            cursor: pointer;
+            position: relative;
+        }
+        .prod-date-cell:hover::after {
+            content: "✎";
+            position: absolute;
+            right: 4px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 11px;
+            color: #94a3b8;
+        }
     </style>
 </head>
 <body>
@@ -774,6 +841,11 @@
 </div>
 
 <div id="mainApp">
+    <div id="appNav">
+        <button class="app-tab active" data-tab="sales">ПРОДАЖИ</button>
+        <button class="app-tab" data-tab="production">ПРОИЗВОДСТВО</button>
+    </div>
+    <div id="salesView">
     <div id="startScreen" class="start-screen">
         <div class="panel-box">
             <h2>СИСТЕМА УПРАВЛЕНИЯ ЗАКАЗАМИ</h2>
@@ -871,6 +943,88 @@
             <div id="ordersPagination" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; padding:12px 4px; border-top:1px solid #e2e8f0; margin-top:4px; background:#fff;"></div>
         </div>
     </div>
+    </div><!-- /#salesView -->
+
+    <div id="productionView" style="display:none; padding:20px; flex:1; overflow-y:auto;">
+        <!-- Фильтры -->
+        <div class="panel-box" style="margin-bottom:16px;">
+            <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:flex-end;">
+                <div class="form-group" style="min-width:180px;">
+                    <label>Клиент</label>
+                    <input type="text" id="pf_client" placeholder="Поиск по клиенту...">
+                </div>
+                <div class="form-group" style="min-width:130px;">
+                    <label>Дата запуска от</label>
+                    <input type="date" id="pf_launch_from">
+                </div>
+                <div class="form-group" style="min-width:130px;">
+                    <label>Дата запуска до</label>
+                    <input type="date" id="pf_launch_to">
+                </div>
+                <div class="form-group" style="min-width:130px;">
+                    <label>Дата готовности от</label>
+                    <input type="date" id="pf_ready_from">
+                </div>
+                <div class="form-group" style="min-width:130px;">
+                    <label>Дата готовности до</label>
+                    <input type="date" id="pf_ready_to">
+                </div>
+                <div class="form-group" style="min-width:160px;">
+                    <label>Тип двери</label>
+                    <input type="text" id="pf_type" placeholder="Тип...">
+                </div>
+                <div class="form-group" style="min-width:140px;">
+                    <label>Статус</label>
+                    <select id="pf_status">
+                        <option value="">Все</option>
+                        <option value="ПРОИЗВОДСТВО">ПРОИЗВОДСТВО</option>
+                        <option value="ГОТОВ">ГОТОВ</option>
+                        <option value="ОТГРУЖЕН">ОТГРУЖЕН</option>
+                    </select>
+                </div>
+                <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+                    <button class="prod-filter-chip" data-highlight="today">🔴 Запуск сегодня</button>
+                    <button class="prod-filter-chip" data-highlight="due-soon">🟡 Сдача скоро (≤3 дн.)</button>
+                    <button class="prod-filter-chip" data-highlight="overdue">⚫ Просрочены</button>
+                    <button class="prod-filter-chip active" data-highlight="all">Все</button>
+                </div>
+                <button id="prod_refresh_btn" class="btn-main" style="height:38px;">ОБНОВИТЬ</button>
+            </div>
+        </div>
+
+        <!-- Легенда -->
+        <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:12px; font-size:12px; color:#64748b;">
+            <span style="display:flex;align-items:center;gap:5px;"><span style="width:14px;height:14px;background:#fee2e2;border:1px solid #fca5a5;display:inline-block;border-radius:2px;"></span> Просрочена готовность</span>
+            <span style="display:flex;align-items:center;gap:5px;"><span style="width:14px;height:14px;background:#fef3c7;border:1px solid #fcd34d;display:inline-block;border-radius:2px;"></span> Готовность ≤ 3 дня</span>
+            <span style="display:flex;align-items:center;gap:5px;"><span style="width:14px;height:14px;background:#dcfce7;border:1px solid #86efac;display:inline-block;border-radius:2px;"></span> Запуск сегодня</span>
+            <span style="display:flex;align-items:center;gap:5px;"><span style="width:14px;height:14px;background:#dbeafe;border:1px solid #93c5fd;display:inline-block;border-radius:2px;"></span> Готово</span>
+        </div>
+
+        <!-- Таблица -->
+        <div class="table-wrapper" style="overflow-x:auto;">
+            <table class="orders-table" id="productionTable">
+                <thead>
+                    <tr>
+                        <th>№</th>
+                        <th>Дата запуска</th>
+                        <th>Клиент</th>
+                        <th>Наименование</th>
+                        <th>В</th>
+                        <th>Ш</th>
+                        <th>Откр.</th>
+                        <th>Пл., м²</th>
+                        <th>Примечание</th>
+                        <th>Дата готовности</th>
+                        <th>Дата отгрузки</th>
+                        <th>Дата по счёту</th>
+                        <th>№ счёта</th>
+                    </tr>
+                </thead>
+                <tbody id="productionTbody"></tbody>
+            </table>
+        </div>
+        <div id="prodStats" style="padding:10px 0; font-size:13px; color:#64748b;"></div>
+    </div><!-- /#productionView -->
 
     <div id="configOverlay" class="overlay hidden">
         <div class="overlay-header">
@@ -979,6 +1133,15 @@
                 <div>Долг: <span id="paymentsDebtTotal">0</span></div>
             </div>
 
+            <div class="form-group" style="margin-top:16px;">
+                <label>ДАТА ПО СЧЁТУ (при первой оплате)</label>
+                <input type="date" id="financeInvoiceDateInput">
+            </div>
+            <div class="form-group">
+                <label>НОМЕР СЧЁТА</label>
+                <input type="text" id="financeInvoiceNumInput" placeholder="Например: 2391-04">
+            </div>
+
             <button id="saveFinanceBtn" class="btn-save" style="width:100%; padding:14px; margin-top:20px;">СОХРАНИТЬ ФИНАНСЫ</button>
         </div>
     </div>
@@ -1063,6 +1226,8 @@ let currentUserRole = "";
 let currentOrderStatus = "В РАБОТЕ";
 let currentPayments = [];
 let currentOrderTotal = 0;
+let currentInvoiceDate = '';
+let currentInvoiceNum = '';
 
 // ===== LOGIN =====
 const loginScreen = document.getElementById('loginScreen');
@@ -1137,7 +1302,9 @@ async function loadDataFromAPI() {
             orderTotal:   parseFloat(o["Итого заказа"]) || 0,
             paidTotal:    parseFloat(o["Итого оплат"]) || 0,
             debt:         parseFloat(o["Долг"]) || 0,
-            paymentsJson: o["Оплаты JSON"] || "[]"
+            paymentsJson: o["Оплаты JSON"] || "[]",
+            invoiceDate:  o["Дата по счёту"] || "",
+            invoiceNum:   o["Номер счёта"] || ""
         })).sort((a, b) => parseDateTime(b.date) - parseDateTime(a.date));
 
         const datalist = document.getElementById("clientDatalist");
@@ -1459,6 +1626,8 @@ window.editOrder = async function(orderId) {
     currentOrderId = orderId;
     currentOrderStatus = group.status || "В РАБОТЕ";
     currentOrderTotal = parseFloat(group.orderTotal) || 0;
+    currentInvoiceDate = group.invoiceDate || '';
+    currentInvoiceNum  = group.invoiceNum  || '';
 
     try {
         currentPayments = group.paymentsJson ? JSON.parse(group.paymentsJson) : [];
@@ -2351,6 +2520,8 @@ document.getElementById("saveClientBtn").addEventListener("click", async () => {
 function openFinanceModal() {
     document.getElementById("financeModal").classList.remove("hidden");
     document.getElementById("financeOrderTotalInput").value = currentOrderTotal || 0;
+    document.getElementById("financeInvoiceDateInput").value = currentInvoiceDate || '';
+    document.getElementById("financeInvoiceNumInput").value  = currentInvoiceNum  || '';
     renderPaymentsRows();
     refreshFinanceTotals();
 }
@@ -2398,7 +2569,9 @@ document.getElementById("saveFinanceBtn").addEventListener("click", async () => 
                 orderId: currentOrderId,
                 status: currentOrderStatus,
                 payments: currentPayments,
-                orderTotal: currentOrderTotal
+                orderTotal: currentOrderTotal,
+                invoiceDate: document.getElementById("financeInvoiceDateInput").value,
+                invoiceNum:  document.getElementById("financeInvoiceNumInput").value.trim()
             })
         });
 
@@ -2876,6 +3049,294 @@ window.generatePDF = function() {
     doc.save(filename);
     closePdfModal();
     showToast("PDF успешно скачан!");
+};
+
+// ===== PRODUCTION TAB =====
+
+let productionDoors = [];     // все двери из API
+let prodFiltered = [];        // после фильтрации
+let activeHighlightFilter = 'all';
+
+// Переключение вкладок
+document.querySelectorAll('.app-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.app-tab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const tab = btn.dataset.tab;
+        document.getElementById('salesView').style.display = tab === 'sales' ? '' : 'none';
+        document.getElementById('productionView').style.display = tab === 'production' ? '' : 'none';
+        if (tab === 'production') loadProductionData();
+    });
+});
+
+// Кнопка обновить
+document.getElementById('prod_refresh_btn').addEventListener('click', () => {
+    loadProductionData();
+});
+
+// Чипы быстрых фильтров
+document.querySelectorAll('.prod-filter-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+        document.querySelectorAll('.prod-filter-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        activeHighlightFilter = chip.dataset.highlight;
+        applyProductionFilters();
+    });
+});
+
+// Фильтры — live update
+['pf_client', 'pf_type'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', applyProductionFilters);
+});
+['pf_launch_from', 'pf_launch_to', 'pf_ready_from', 'pf_ready_to', 'pf_status'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('change', applyProductionFilters);
+});
+
+async function loadProductionData() {
+    showLoading("Загрузка производства...");
+    try {
+        const res = await fetch(API_URL + "?action=getProduction");
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+        productionDoors = data.doors || [];
+        applyProductionFilters();
+    } catch (err) {
+        alert("Ошибка загрузки производства: " + err.message);
+    } finally {
+        hideLoading();
+    }
+}
+
+function parseProdDate(str) {
+    // Ожидаем dd.MM.yyyy или yyyy-MM-dd
+    if (!str) return null;
+    str = str.trim();
+    if (!str) return null;
+    // dd.MM.yyyy
+    const m1 = str.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+    if (m1) return new Date(m1[3], m1[2] - 1, m1[1]);
+    // yyyy-MM-dd (из input type=date)
+    const m2 = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (m2) return new Date(m2[1], m2[2] - 1, m2[3]);
+    return null;
+}
+
+function dateToDDMMYYYY(isoStr) {
+    // yyyy-MM-dd → dd.MM.yyyy
+    if (!isoStr) return '';
+    const m = isoStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (m) return m[3] + '.' + m[2] + '.' + m[1];
+    return isoStr;
+}
+
+function dateToISO(ddmmyyyy) {
+    // dd.MM.yyyy → yyyy-MM-dd
+    if (!ddmmyyyy) return '';
+    const m = ddmmyyyy.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+    if (m) return m[3] + '-' + m[2] + '-' + m[1];
+    return ddmmyyyy;
+}
+
+function applyProductionFilters() {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const clientFilter     = (document.getElementById('pf_client')?.value     || '').trim().toLowerCase();
+    const typeFilter       = (document.getElementById('pf_type')?.value       || '').trim().toLowerCase();
+    const statusFilter     = (document.getElementById('pf_status')?.value     || '').trim();
+    const launchFromFilter = document.getElementById('pf_launch_from')?.value || '';
+    const launchToFilter   = document.getElementById('pf_launch_to')?.value   || '';
+    const readyFromFilter  = document.getElementById('pf_ready_from')?.value  || '';
+    const readyToFilter    = document.getElementById('pf_ready_to')?.value    || '';
+
+    let result = productionDoors.filter(d => {
+        if (clientFilter && !d.client.toLowerCase().includes(clientFilter)) return false;
+        if (typeFilter   && !d.naimenovanie.toLowerCase().includes(typeFilter)) return false;
+        if (statusFilter && d.status !== statusFilter) return false;
+
+        if (launchFromFilter && d.launchDate) {
+            const ld = parseProdDate(d.launchDate);
+            const lf = new Date(launchFromFilter);
+            if (ld && ld < lf) return false;
+        }
+        if (launchToFilter && d.launchDate) {
+            const ld = parseProdDate(d.launchDate);
+            const lt = new Date(launchToFilter);
+            if (ld && ld > lt) return false;
+        }
+        if (readyFromFilter && d.readyDate) {
+            const rd = parseProdDate(d.readyDate);
+            const rf = new Date(readyFromFilter);
+            if (rd && rd < rf) return false;
+        }
+        if (readyToFilter && d.readyDate) {
+            const rd = parseProdDate(d.readyDate);
+            const rt = new Date(readyToFilter);
+            if (rd && rd > rt) return false;
+        }
+        return true;
+    });
+
+    // Применяем чип-фильтр подсветки
+    if (activeHighlightFilter === 'today') {
+        result = result.filter(d => {
+            if (!d.launchDate) return false;
+            const ld = parseProdDate(d.launchDate);
+            if (!ld) return false;
+            ld.setHours(0,0,0,0);
+            return ld.getTime() === today.getTime();
+        });
+    } else if (activeHighlightFilter === 'due-soon') {
+        result = result.filter(d => {
+            if (!d.readyDate) return false;
+            const rd = parseProdDate(d.readyDate);
+            if (!rd) return false;
+            rd.setHours(0,0,0,0);
+            const diff = Math.floor((rd - today) / 86400000);
+            return diff >= 0 && diff <= 3;
+        });
+    } else if (activeHighlightFilter === 'overdue') {
+        result = result.filter(d => {
+            if (!d.readyDate) return false;
+            const rd = parseProdDate(d.readyDate);
+            if (!rd) return false;
+            rd.setHours(0,0,0,0);
+            return rd < today;
+        });
+    }
+
+    prodFiltered = result;
+    renderProductionTable(prodFiltered);
+}
+
+function getRowClass(door) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (door.status === 'ОТГРУЖЕН') return 'prod-row-shipped';
+    if (door.status === 'ГОТОВ')    return 'prod-row-ready';
+
+    if (door.readyDate) {
+        const rd = parseProdDate(door.readyDate);
+        if (rd) {
+            rd.setHours(0, 0, 0, 0);
+            if (rd < today) return 'prod-row-overdue';
+            const diff = Math.floor((rd - today) / 86400000);
+            if (diff <= 3) return 'prod-row-due-soon';
+        }
+    }
+
+    if (door.launchDate) {
+        const ld = parseProdDate(door.launchDate);
+        if (ld) {
+            ld.setHours(0, 0, 0, 0);
+            if (ld.getTime() === today.getTime()) return 'prod-row-launch-today';
+        }
+    }
+
+    return '';
+}
+
+function renderProductionTable(doors) {
+    const tbody = document.getElementById('productionTbody');
+    if (!tbody) return;
+
+    if (!doors.length) {
+        tbody.innerHTML = '<tr><td colspan="13" style="text-align:center; color:#94a3b8; padding:20px;">Нет данных</td></tr>';
+        document.getElementById('prodStats').textContent = 'Всего: 0 дверей, Площадь: 0 м²';
+        return;
+    }
+
+    let totalArea = 0;
+    tbody.innerHTML = doors.map((door, i) => {
+        const rowClass = getRowClass(door);
+        totalArea += door.area || 0;
+
+        const launchVal = dateToISO(door.launchDate);
+        const readyVal  = dateToISO(door.readyDate);
+        const shipVal   = dateToISO(door.shipDate);
+
+        return `<tr class="${rowClass}" data-order-id="${escapeAttr(door.orderId)}" data-door-idx="${door.doorRowIdx}">
+            <td>${door.prodNum}</td>
+            <td class="prod-date-cell" onclick="editProdDateCell(this, '${escapeAttr(door.orderId)}', ${door.doorRowIdx}, 'launchDate', '${escapeAttr(door.launchDate)}')">${door.launchDate || '<span style="color:#cbd5e0">—</span>'}</td>
+            <td>${escapeHtml(door.client)}</td>
+            <td>${escapeHtml(door.naimenovanie)}</td>
+            <td>${door.height || ''}</td>
+            <td>${door.width  || ''}</td>
+            <td>${door.opening || ''}</td>
+            <td>${door.area   ? door.area.toFixed(4) : ''}</td>
+            <td>${escapeHtml(door.note || '')}</td>
+            <td class="prod-date-cell" onclick="editProdDateCell(this, '${escapeAttr(door.orderId)}', ${door.doorRowIdx}, 'readyDate', '${escapeAttr(door.readyDate)}')">${door.readyDate || '<span style="color:#cbd5e0">—</span>'}</td>
+            <td class="prod-date-cell" onclick="editProdDateCell(this, '${escapeAttr(door.orderId)}', ${door.doorRowIdx}, 'shipDate', '${escapeAttr(door.shipDate)}')">${door.shipDate || '<span style="color:#cbd5e0">—</span>'}</td>
+            <td>${escapeHtml(door.invoiceDate || '')}</td>
+            <td>${escapeHtml(door.invoiceNum  || '')}</td>
+        </tr>`;
+    }).join('');
+
+    const totalAreaRounded = Math.round(totalArea * 10000) / 10000;
+    document.getElementById('prodStats').textContent = `Всего: ${doors.length} дверей, Площадь: ${totalAreaRounded.toFixed(4)} м²`;
+}
+
+window.editProdDateCell = function(cell, orderId, doorRowIdx, fieldName, currentVal) {
+    // Если уже редактируется — не делаем ничего
+    if (cell.querySelector('input')) return;
+
+    const isoVal = dateToISO(currentVal);
+    const originalContent = cell.innerHTML;
+
+    cell.innerHTML = `<input type="date" value="${escapeAttr(isoVal)}" style="width:100%; font-size:12px; border:1px solid #93c5fd; border-radius:4px; padding:2px 4px;" />`;
+    const input = cell.querySelector('input');
+    input.focus();
+
+    const save = async () => {
+        const newIsoVal = input.value;
+        const newDisplayVal = dateToDDMMYYYY(newIsoVal);
+        cell.innerHTML = newDisplayVal || '<span style="color:#cbd5e0">—</span>';
+
+        // Найдём дверь в productionDoors и обновим
+        const door = productionDoors.find(d => d.orderId === orderId && d.doorRowIdx === doorRowIdx);
+
+        const body = {
+            action: 'updateProductionRow',
+            orderId: orderId,
+            doorRowIdx: doorRowIdx
+        };
+        body[fieldName] = newDisplayVal;
+
+        if (door) {
+            door[fieldName] = newDisplayVal;
+            // Обновим строку в prodFiltered тоже
+            const pf = prodFiltered.find(d => d.orderId === orderId && d.doorRowIdx === doorRowIdx);
+            if (pf) pf[fieldName] = newDisplayVal;
+        }
+
+        try {
+            const res = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(body)
+            });
+            const result = await res.json();
+            if (result.error) throw new Error(result.error);
+            showToast('Дата сохранена');
+            // Перерисуем строку с новой подсветкой
+            applyProductionFilters();
+        } catch (err) {
+            alert('Ошибка сохранения: ' + err.message);
+            cell.innerHTML = originalContent;
+        }
+    };
+
+    input.addEventListener('blur', save);
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { input.blur(); }
+        if (e.key === 'Escape') {
+            cell.innerHTML = originalContent;
+            input.removeEventListener('blur', save);
+        }
+    });
 };
 </script>
 </body>
