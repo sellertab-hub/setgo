@@ -1127,31 +1127,18 @@ async function loadDataFromAPI() {
         allClientsFull = data.clientsFull || [];
         allOrders = data.orders || [];
 
-        // Pre-group orders by OrderID for pagination
-        {
-            const _g = {};
-            allOrders.forEach(d => {
-                const _id = d["Order ID"];
-                if (!_id) return;
-                if (!_g[_id]) {
-                    _g[_id] = {
-                        id: _id,
-                        client: d["Имя клиента"] || "",
-                        date: d["Дата"],
-                        doorCount: 0,
-                        status: d["Статус заказа"] || "В РАБОТЕ",
-                        orderTotal: parseFloat(d["Итого заказа"]) || 0,
-                        paidTotal: parseFloat(d["Итого оплат"]) || 0,
-                        debt: parseFloat(d["Долг"]) || 0,
-                        paymentsJson: d["Оплаты JSON"] || "[]",
-                        doors: []
-                    };
-                }
-                _g[_id].doors.push(d);
-                _g[_id].doorCount++;
-            });
-            allOrderGroups = Object.values(_g).sort((a, b) => parseDateTime(b.date) - parseDateTime(a.date));
-        }
+        // New GAS: data.orders is already unique order summaries with _doorCount
+        allOrderGroups = allOrders.map(o => ({
+            id:           o["Order ID"],
+            client:       o["Имя клиента"] || "",
+            date:         o["Дата"],
+            doorCount:    parseInt(o["_doorCount"]) || 0,
+            status:       o["Статус заказа"] || "В РАБОТЕ",
+            orderTotal:   parseFloat(o["Итого заказа"]) || 0,
+            paidTotal:    parseFloat(o["Итого оплат"]) || 0,
+            debt:         parseFloat(o["Долг"]) || 0,
+            paymentsJson: o["Оплаты JSON"] || "[]"
+        })).sort((a, b) => parseDateTime(b.date) - parseDateTime(a.date));
 
         const datalist = document.getElementById("clientDatalist");
         datalist.innerHTML = allClients.map(c => `<option value="${escapeHtml(c)}">`).join('');
@@ -1237,27 +1224,8 @@ function renderClientOrders() {
     const tbody = document.getElementById("ordersTbody");
     panel.style.display = "block";
 
-    const clientDoors = allOrders.filter(o => o["Имя клиента"] === selectedClient);
-    const groups = {};
-
-    clientDoors.forEach(d => {
-        const id = d["Order ID"];
-        if (!groups[id]) {
-            groups[id] = {
-                id,
-                date: d["Дата"],
-                doors: [],
-                status: d["Статус заказа"] || "В РАБОТЕ",
-                orderTotal: parseFloat(d["Итого заказа"]) || 0,
-                paidTotal: parseFloat(d["Итого оплат"]) || 0,
-                debt: parseFloat(d["Долг"]) || 0,
-                paymentsJson: d["Оплаты JSON"] || "[]"
-            };
-        }
-        groups[id].doors.push(d);
-    });
-
-    groupedClientOrders = Object.values(groups).sort((a, b) => parseDateTime(b.date) - parseDateTime(a.date));
+    // Filter allOrderGroups (already built from order summaries) by client
+    groupedClientOrders = allOrderGroups.filter(g => g.client === selectedClient);
 
     if (groupedClientOrders.length === 0) {
         tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">У этого клиента еще нет заказов</td></tr>`;
@@ -1268,14 +1236,14 @@ function renderClientOrders() {
         <tr
             data-dateiso="${escapeAttr(parseDateToISO(group.date))}"
             data-date="${escapeAttr(String(formatDisplayDate(group.date) || '').toLowerCase())}"
-            data-doors="${escapeAttr(String(group.doors.length).toLowerCase())}"
+            data-doors="${escapeAttr(String(group.doorCount).toLowerCase())}"
             data-status="${escapeAttr(String(group.status || '').toLowerCase())}"
             data-total="${escapeAttr(formatMoney(group.orderTotal).toLowerCase())}"
             data-paid="${escapeAttr(formatMoney(group.paidTotal).toLowerCase())}"
             data-debt="${escapeAttr(formatMoney(group.debt).toLowerCase())}"
         >
             <td>${escapeHtml(formatDisplayDate(group.date))}</td>
-            <td>${group.doors.length} шт.</td>
+            <td>${group.doorCount} шт.</td>
             <td><span class="status-badge ${getStatusClass(group.status)}">${escapeHtml(group.status || "В РАБОТЕ")}</span></td>
             <td>${formatMoney(group.orderTotal)}</td>
             <td>${formatMoney(group.paidTotal)}</td>
@@ -1359,7 +1327,7 @@ function renderOrderPage() {
         <tr
             data-gclient="${escapeAttr(String(group.client || '').toLowerCase())}"
             data-gdateiso="${escapeAttr(parseDateToISO(group.date))}"
-            data-gdoors="${escapeAttr(String(group.doors.length))}"
+            data-gdoors="${escapeAttr(String(group.doorCount))}"
             data-gstatus="${escapeAttr(String(group.status || '').toLowerCase())}"
             data-gtotal="${escapeAttr(formatMoney(group.orderTotal).toLowerCase())}"
             data-gpaid="${escapeAttr(formatMoney(group.paidTotal).toLowerCase())}"
@@ -1367,7 +1335,7 @@ function renderOrderPage() {
         >
             <td style="text-align:left; font-weight:700; color:#1e6db5;">${escapeHtml(group.client)}</td>
             <td>${escapeHtml(formatDisplayDate(group.date))}</td>
-            <td>${group.doors.length} шт.</td>
+            <td>${group.doorCount} шт.</td>
             <td><span class="status-badge ${getStatusClass(group.status)}">${escapeHtml(group.status || "В РАБОТЕ")}</span></td>
             <td>${formatMoney(group.orderTotal)}</td>
             <td>${formatMoney(group.paidTotal)}</td>
@@ -1443,7 +1411,7 @@ function applyGlobalFilters() {
         const rowDate = parseDateToISO(group.date);
         const dateOk  = (!dateFrom || rowDate >= dateFrom) && (!dateTo || rowDate <= dateTo);
         const clientLow = String(group.client || '').toLowerCase();
-        const doorsStr  = String(group.doors.length);
+        const doorsStr  = String(group.doorCount);
         const statusLow = String(group.status || '').toLowerCase();
         const totalStr  = formatMoney(group.orderTotal).toLowerCase();
         const paidStr   = formatMoney(group.paidTotal).toLowerCase();
@@ -1483,8 +1451,9 @@ document.getElementById("startNewOrderBtn").addEventListener("click", () => {
     openConfigurator();
 });
 
-window.editOrder = function(orderId) {
-    const group = groupedClientOrders.find(g => g.id === orderId);
+window.editOrder = async function(orderId) {
+    const group = groupedClientOrders.find(g => g.id === orderId)
+               || allOrderGroups.find(g => g.id === orderId);
     if (!group) return;
 
     currentOrderId = orderId;
@@ -1497,22 +1466,40 @@ window.editOrder = function(orderId) {
         currentPayments = [];
     }
 
-    loadDoorsIntoConfig(group.doors);
-    document.getElementById("configHeaderTitle").innerText = `РЕДАКТИРОВАНИЕ ЗАКАЗА: ${selectedClient}`;
-    openConfigurator();
+    showLoading("Загрузка дверей заказа...");
+    try {
+        const res = await fetch(API_URL + "?action=getOrderDoors&orderId=" + encodeURIComponent(orderId));
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+        loadDoorsIntoConfig(data.doors || []);
+        document.getElementById("configHeaderTitle").innerText = `РЕДАКТИРОВАНИЕ ЗАКАЗА: ${selectedClient}`;
+        openConfigurator();
+    } catch (err) {
+        alert("Ошибка загрузки дверей: " + err.message);
+    } finally {
+        hideLoading();
+    }
 };
 
-window.duplicateOrder = function(orderId) {
-    const group = groupedClientOrders.find(g => g.id === orderId);
-    if (!group) return;
-
+window.duplicateOrder = async function(orderId) {
     currentOrderId = null;
     currentOrderStatus = "В РАБОТЕ";
     currentOrderTotal = 0;
     currentPayments = [];
-    loadDoorsIntoConfig(group.doors);
-    document.getElementById("configHeaderTitle").innerText = `КОПИЯ ЗАКАЗА: ${selectedClient}`;
-    openConfigurator();
+
+    showLoading("Загрузка дверей заказа...");
+    try {
+        const res = await fetch(API_URL + "?action=getOrderDoors&orderId=" + encodeURIComponent(orderId));
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+        loadDoorsIntoConfig(data.doors || []);
+        document.getElementById("configHeaderTitle").innerText = `КОПИЯ ЗАКАЗА: ${selectedClient}`;
+        openConfigurator();
+    } catch (err) {
+        alert("Ошибка загрузки дверей: " + err.message);
+    } finally {
+        hideLoading();
+    }
 };
 
 function loadDoorsIntoConfig(doorsArr) {
