@@ -843,6 +843,7 @@
             color: #94a3b8;
         }
     </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
 
@@ -859,6 +860,10 @@
         <label for="passwordInput">ПАРОЛЬ</label>
         <input type="password" id="passwordInput" placeholder="Введите пароль">
         <div id="loginError" class="error-msg"></div>
+        <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:#94a3b8; cursor:pointer; margin-bottom:10px;">
+            <input type="checkbox" id="rememberMe" checked style="width:15px;height:15px;cursor:pointer;">
+            Запомнить меня
+        </label>
         <button id="loginBtn" class="btn-login">ВОЙТИ</button>
     </div>
 </div>
@@ -1288,10 +1293,20 @@ document.getElementById('loginBtn').addEventListener('click', async () => {
         if (data.success) {
             currentUserLogin = data.login || login;
             currentUserRole = data.role || "user";
+            // Запоминаем сессию
+            if (document.getElementById('rememberMe').checked) {
+                localStorage.setItem('st_login', login);
+                localStorage.setItem('st_pass', password);
+            } else {
+                sessionStorage.setItem('st_login', login);
+                sessionStorage.setItem('st_pass', password);
+            }
             loginScreen.style.display = 'none';
             mainApp.style.display = 'flex';
             await loadDataFromAPI();
         } else {
+            localStorage.removeItem('st_login');
+            localStorage.removeItem('st_pass');
             loginError.textContent = data.message || 'Неверный логин или пароль';
         }
     } catch (err) {
@@ -1307,6 +1322,80 @@ document.getElementById('passwordInput').addEventListener('keypress', (e) => {
 document.getElementById('loginInput').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') document.getElementById('passwordInput').focus();
 });
+
+// ── АВТОЛОГИН — проверяем сохранённую сессию ──────────────────
+async function tryAutoLogin() {
+    const login    = localStorage.getItem('st_login') || sessionStorage.getItem('st_login');
+    const password = localStorage.getItem('st_pass')  || sessionStorage.getItem('st_pass');
+    if (!login || !password) return false;
+
+    showLoading('Восстановление сессии...');
+    try {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'login', login, password })
+        });
+        const data = await response.json();
+        if (data.success) {
+            currentUserLogin = data.login || login;
+            currentUserRole  = data.role  || "user";
+            loginScreen.style.display = 'none';
+            mainApp.style.display = 'flex';
+            await loadDataFromAPI();
+            return true;
+        } else {
+            // Сессия устарела — чистим
+            localStorage.removeItem('st_login');
+            localStorage.removeItem('st_pass');
+            sessionStorage.removeItem('st_login');
+            sessionStorage.removeItem('st_pass');
+            return false;
+        }
+    } catch (e) {
+        return false;
+    } finally {
+        hideLoading();
+    }
+}
+
+// Добавляем кнопку выхода в шапку при необходимости
+function addLogoutButton() {
+    const nav = document.getElementById('appNav');
+    if (!nav || document.getElementById('logoutBtn')) return;
+    const btn = document.createElement('button');
+    btn.id = 'logoutBtn';
+    btn.className = 'app-tab';
+    btn.style.cssText = 'margin-left:auto; color:rgba(255,255,255,0.5); font-size:12px;';
+    btn.textContent = currentUserLogin + '  ⏻';
+    btn.title = 'Выйти';
+    btn.addEventListener('click', () => {
+        localStorage.removeItem('st_login');
+        localStorage.removeItem('st_pass');
+        sessionStorage.removeItem('st_login');
+        sessionStorage.removeItem('st_pass');
+        currentUserLogin = '';
+        currentUserRole  = '';
+        mainApp.style.display = 'none';
+        loginScreen.style.display = 'flex';
+        btn.remove();
+    });
+    nav.appendChild(btn);
+}
+
+// Запуск при загрузке
+tryAutoLogin().then(ok => {
+    if (ok) addLogoutButton();
+});
+
+// Обновляем кнопку выхода после ручного логина
+const _origLoginClick = document.getElementById('loginBtn').onclick;
+document.getElementById('loginBtn').addEventListener('click', () => {
+    setTimeout(() => {
+        if (currentUserLogin) addLogoutButton();
+    }, 1000);
+});
+
 
 // ===== DATA LOAD =====
 async function loadDataFromAPI() {
@@ -3465,12 +3554,7 @@ window.editProdDateCell = function(cell, orderId, doorRowIdx, fieldName, current
 // НАРЯД НА ПРОИЗВОДСТВО — печать
 // ============================================================
 
-// Подключаем qrcodejs через динамический script (не раздувает основной бандл)
-(function() {
-    const s = document.createElement('script');
-    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
-    document.head.appendChild(s);
-})();
+// qrcodejs уже подключён в <head>
 
 window.printProductionSheet = function(rowIdx) {
     const door = prodFiltered[rowIdx];
@@ -3537,7 +3621,7 @@ window.printProductionSheet = function(rowIdx) {
             <div style="font-size:9pt; color:#555; margin-bottom:1mm;">${door.launchDate || '________'}</div>
             <div class="ps-big">${escapeHtml(door.naimenovanie)}</div>
         </div>
-        <div class="ps-qr-wrap"><canvas id="qrCanvas"></canvas></div>
+        <div class="ps-qr-wrap"><div id="qrCodeDiv"></div></div>
     </div>
 
     <table class="ps-table">
@@ -3615,21 +3699,26 @@ window.printProductionSheet = function(rowIdx) {
 
     // Генерируем QR после рендера
     setTimeout(() => {
-        const canvas = document.getElementById('qrCanvas');
-        if (canvas && window.QRCode) {
-            canvas.width = 0; canvas.height = 0;
+        const qrDiv = document.getElementById('qrCodeDiv');
+        if (!qrDiv) return;
+        qrDiv.innerHTML = '';  // очищаем предыдущий
+        if (window.QRCode) {
             try {
-                new QRCode(canvas, {
+                new QRCode(qrDiv, {
                     text: qrText,
-                    width: 120,
-                    height: 120,
+                    width: 130,
+                    height: 130,
                     correctLevel: QRCode.CorrectLevel.M
                 });
             } catch(e) {
-                canvas.style.display = 'none';
+                qrDiv.textContent = 'QR: ' + qrText.split("\n")[0];
             }
+        } else {
+            // fallback — QR библиотека не загрузилась, показываем текст
+            qrDiv.style.cssText = 'font-size:8pt;max-width:130px;word-break:break-all;border:1px solid #ccc;padding:4px;';
+            qrDiv.textContent = qrText.split("\n").slice(0,6).join(" | ");
         }
-    }, 150);
+    }, 200);
 };
 
 window.doPrintSheet = function() {
@@ -3672,7 +3761,8 @@ window.doPrintSheet = function() {
 .ps-tag-table td, .ps-tag-table th { border:1px solid #000; padding:2mm 3mm; font-size:10pt; text-align:center; }
 .ps-tag-table th { background:#e8e8e8; font-size:9pt; }
 .ps-qr-wrap { display:flex; justify-content:flex-end; align-items:flex-start; }
-#qrCanvas { border:1px solid #ddd; }
+#qrCodeDiv { border:1px solid #ddd; display:inline-block; }
+#qrCodeDiv img { display:block; }
 </style>
 
 </body>
