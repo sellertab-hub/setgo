@@ -1593,21 +1593,33 @@ document.addEventListener('focus', function(e) {
     openComboDropdown(e.target);
 }, true);
 
+// Предотвращаем blur при клике на опцию или стрелку
+document.addEventListener('mousedown', function(e) {
+    if (e.target.classList.contains('combo-option') || e.target.classList.contains('combo-arrow')) {
+        e.preventDefault();
+    }
+});
+
 document.addEventListener('click', function(e) {
     if (e.target.classList.contains('combo-option')) {
         const dd = e.target.closest('.combo-dropdown');
         const input = dd ? document.getElementById(dd.id.replace('_dd','')) : null;
-        if (input) { input.value = e.target.dataset.val; dd.classList.remove('open'); input.dispatchEvent(new Event('change', {bubbles:true})); }
+        if (input) {
+            input.value = e.target.dataset.val;
+            dd.classList.remove('open');
+            input.dispatchEvent(new Event('change', {bubbles:true}));
+        }
         return;
     }
     if (e.target.classList.contains('combo-arrow')) {
-        const wrap = e.target.closest('.combo-wrap');
+        // Стрелка работает и в .combo-wrap и в .cell-combo-wrap
+        const wrap = e.target.closest('.combo-wrap, .cell-combo-wrap');
         const input = wrap ? wrap.querySelector('.combo-input') : null;
         if (input) {
             const dd = document.getElementById(input.id + '_dd');
             if (dd && dd.classList.contains('open')) {
                 dd.classList.remove('open');
-            } else if (input) {
+            } else {
                 openComboDropdown(input);
                 input.focus();
             }
@@ -1842,57 +1854,101 @@ function getColOptions(doorKey, colName) {
 }
 
 function makeCellEditable(td, doorIdx, colName) {
-    if (colName === 'naimenovanie') return; // Not editable
-    if (td.querySelector("select,input")) return;
-    const door = currentDoors[doorIdx];
-    const currentVal = door[colName] !== undefined ? String(door[colName]) : "—";
+    if (colName === 'naimenovanie') return;
+    if (td.querySelector("select,input,.cell-combo-wrap")) return;
 
+    const door = currentDoors[doorIdx];
+    const currentVal = door[colName] !== undefined ? String(door[colName]) : '—';
+
+    // Числовые поля — простой number input
     if (NUMBER_COLS.has(colName)) {
-        const input = document.createElement("input");
-        input.type = "number";
+        const input = document.createElement('input');
+        input.type = 'number';
         input.value = parseFloat(currentVal) || 0;
-        input.style.cssText = "width:70px;background:#fff;border:1px solid #1e6db5;color:#1a202c;font-family:Play;font-size:12px;padding:2px 4px;border-radius:3px;";
-        td.innerHTML = "";
+        input.style.cssText = 'width:70px;background:#fff;border:1px solid #1e6db5;color:#1a202c;font-family:Play;font-size:12px;padding:2px 4px;border-radius:3px;';
+        td.innerHTML = '';
         td.appendChild(input);
-        input.focus();
-        input.select();
+        input.focus(); input.select();
         const save = () => {
             const v = parseFloat(input.value) || 0;
             currentDoors[doorIdx][colName] = v;
             currentDoors[doorIdx].naimenovanie = buildDoorName(currentDoors[doorIdx]);
             renderRightTable();
         };
-        input.addEventListener("blur", save);
-        input.addEventListener("keydown", e => { if (e.key === "Enter") save(); if (e.key === "Escape") renderRightTable(); });
-    } else {
-        const opts = getColOptions(door["doorKey"] || door["Ключ"], colName) || [];
-        const inp = document.createElement('input');
-        inp.type = 'text';
-        inp.value = currentVal === '—' ? '' : currentVal;
-        inp.style.cssText = 'width:100%;padding:4px;font-family:Play;font-size:12px;border:1px solid #1e6db5;border-radius:3px;box-sizing:border-box;';
-        inp.placeholder = 'Введите...';
-        td.innerHTML = '';
-        if (opts.length > 0) {
-            // Есть опции — даталист + автодополнение
-            const dl = document.createElement('datalist');
-            dl.id = 'cell_dl_' + Date.now();
-            inp.setAttribute('list', dl.id);
-            opts.forEach(o => { const op = document.createElement('option'); op.value = o; dl.appendChild(op); });
-            td.appendChild(inp); td.appendChild(dl);
-        } else {
-            // Нет опций — простой ввод (Colour, произвольный текст)
-            td.appendChild(inp);
-        }
-        inp.focus(); inp.select();
-        const save = () => {
-            const v = inp.value.trim();
-            currentDoors[doorIdx][colName] = v || '—';
-            currentDoors[doorIdx].naimenovanie = buildDoorName(currentDoors[doorIdx]);
-            renderRightTable();
-        };
-        inp.addEventListener('blur', save);
-        inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); save(); } if (e.key === 'Escape') renderRightTable(); });
+        input.addEventListener('blur', save);
+        input.addEventListener('keydown', e => { if (e.key === 'Enter') save(); if (e.key === 'Escape') renderRightTable(); });
+        return;
     }
+
+    // Текстовые / списочные поля — кастомный комбобокс (= как в конфигураторе)
+    const opts = getColOptions(door['doorKey'] || door['Ключ'], colName) || [];
+    const safeCurrentVal = currentVal === '—' ? '' : currentVal;
+
+    // Строим комбо HTML вручную (не через makeCombo чтобы не пересоздавать всю таблицу)
+    const comboId = 'cellcmb_' + doorIdx + '_' + colName.replace(/\s+/g,'_') + '_' + Date.now();
+    const allOpts = opts.length > 0 ? ['—', ...opts] : [];
+
+    const wrap = document.createElement('div');
+    wrap.className = 'cell-combo-wrap';
+    wrap.style.cssText = 'position:relative;display:flex;align-items:center;min-width:80px;';
+
+    const inp = document.createElement('input');
+    inp.type = 'text';
+    inp.id = comboId;
+    inp.className = 'combo-input'; // чтобы глобальные хендлеры (focus, input, click) работали
+    inp.value = safeCurrentVal;
+    inp.autocomplete = 'off';
+    inp.placeholder = 'Введите...';
+    inp.style.cssText = 'flex:1;padding:4px 24px 4px 6px;font-family:Play;font-size:12px;border:1px solid #1e6db5;border-radius:3px;box-sizing:border-box;min-width:60px;background:#fff;color:#1a202c;';
+    wrap.appendChild(inp);
+
+    if (allOpts.length > 0) {
+        const arrow = document.createElement('span');
+        arrow.className = 'combo-arrow';
+        arrow.textContent = '▼';
+        arrow.style.cssText = 'position:absolute;right:6px;top:50%;transform:translateY(-50%);font-size:10px;cursor:pointer;pointer-events:all;color:#4a5568;';
+        wrap.appendChild(arrow);
+
+        const dd = document.createElement('div');
+        dd.className = 'combo-dropdown';
+        dd.id = comboId + '_dd';
+        allOpts.forEach(o => {
+            const opt = document.createElement('div');
+            opt.className = 'combo-option' + (o === safeCurrentVal ? ' selected' : '');
+            opt.dataset.val = o;
+            opt.textContent = o;
+            dd.appendChild(opt);
+        });
+        document.body.appendChild(dd);
+    }
+
+    td.innerHTML = '';
+    td.appendChild(wrap);
+    inp.focus(); inp.select();
+
+    // Открыть дропдаун сразу
+    if (allOpts.length > 0) openComboDropdown(inp);
+
+    let _saved = false;
+    const save = (val) => {
+        if (_saved) return;
+        _saved = true;
+        const v = (val !== undefined ? val : inp.value).trim();
+        currentDoors[doorIdx][colName] = v || '—';
+        currentDoors[doorIdx].naimenovanie = buildDoorName(currentDoors[doorIdx]);
+        const ddEl = document.getElementById(comboId + '_dd');
+        if (ddEl) ddEl.remove();
+        renderRightTable();
+    };
+
+    // change срабатывает при выборе опции (диспатч из глобального click хендлера)
+    inp.addEventListener('change', e => save(e.target.value));
+    // blur — если не успел сохраниться через change
+    inp.addEventListener('blur', () => { setTimeout(save, 200); });
+    inp.addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); save(); }
+        if (e.key === 'Escape') { _saved = true; const ddEl = document.getElementById(comboId + '_dd'); if (ddEl) ddEl.remove(); renderRightTable(); }
+    });
 }
 
 // ===== COLUMN MANAGER =====
