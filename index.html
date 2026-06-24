@@ -843,7 +843,6 @@
             color: #94a3b8;
         }
     </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
 
@@ -3621,7 +3620,7 @@ window.printProductionSheet = function(rowIdx) {
             <div style="font-size:9pt; color:#555; margin-bottom:1mm;">${door.launchDate || '________'}</div>
             <div class="ps-big">${escapeHtml(door.naimenovanie)}</div>
         </div>
-        <div class="ps-qr-wrap"><div id="qrCodeDiv"></div></div>
+        <div class="ps-qr-wrap"><img id="qrCodeImg" src="" alt="QR" style="width:130px;height:130px;border:1px solid #ddd;display:block;"></div>
     </div>
 
     <table class="ps-table">
@@ -3697,28 +3696,13 @@ window.printProductionSheet = function(rowIdx) {
     document.getElementById('printSheetContent').innerHTML = html;
     document.getElementById('printSheetModal').classList.remove('hidden');
 
-    // Генерируем QR после рендера
+    // Генерируем QR через Google Charts API (не требует библиотек)
     setTimeout(() => {
-        const qrDiv = document.getElementById('qrCodeDiv');
-        if (!qrDiv) return;
-        qrDiv.innerHTML = '';  // очищаем предыдущий
-        if (window.QRCode) {
-            try {
-                new QRCode(qrDiv, {
-                    text: qrText,
-                    width: 130,
-                    height: 130,
-                    correctLevel: QRCode.CorrectLevel.M
-                });
-            } catch(e) {
-                qrDiv.textContent = 'QR: ' + qrText.split("\n")[0];
-            }
-        } else {
-            // fallback — QR библиотека не загрузилась, показываем текст
-            qrDiv.style.cssText = 'font-size:8pt;max-width:130px;word-break:break-all;border:1px solid #ccc;padding:4px;';
-            qrDiv.textContent = qrText.split("\n").slice(0,6).join(" | ");
-        }
-    }, 200);
+        const img = document.getElementById('qrCodeImg');
+        if (!img) return;
+        const encoded = encodeURIComponent(qrText);
+        img.src = 'https://chart.googleapis.com/chart?cht=qr&chs=130x130&chld=M|1&chl=' + encoded;
+    }, 50);
 };
 
 window.doPrintSheet = function() {
@@ -3761,8 +3745,7 @@ window.doPrintSheet = function() {
 .ps-tag-table td, .ps-tag-table th { border:1px solid #000; padding:2mm 3mm; font-size:10pt; text-align:center; }
 .ps-tag-table th { background:#e8e8e8; font-size:9pt; }
 .ps-qr-wrap { display:flex; justify-content:flex-end; align-items:flex-start; }
-#qrCodeDiv { border:1px solid #ddd; display:inline-block; }
-#qrCodeDiv img { display:block; }
+#qrCodeImg { border:1px solid #ddd; display:block; }
 </style>
 
 </body>
