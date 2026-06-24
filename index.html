@@ -2630,14 +2630,19 @@ window.generatePDF = function() {
 
     // Итоговая строка
     if (showQtyTotal || showTotal) {
+        // Цена * Кол-во для каждой позиции
+        const totalQty = currentDoors.reduce((a,d) => a + (parseFloat(d["Кол-во"]) || 1), 0);
+        const totalPrice = currentDoors.reduce((a,d) => {
+            const price = parseFloat(d["Цена"]) || 0;
+            const qty   = parseFloat(d["Кол-во"]) || 1;
+            return a + price * qty;
+        }, 0);
+
         const totalRow = allColumns.map(col => {
-            if (col === "Кол-во" && showQtyTotal)
-                return String(currentDoors.reduce((a,d) => a+(parseFloat(d["Кол-во"])||1), 0));
-            if (col === "Цена" && showTotal) {
-                const s = currentDoors.reduce((a,d)=>a+(parseFloat(d["Цена"])||0),0);
-                return s>0 ? s.toLocaleString('ru-RU')+" руб." : "";
-            }
-            if (col === "requestNumber") return "ИТОГО";
+            if (col === "requestNumber") return "";  // пусто — ИТОГО будет в naimenovanie
+            if (col === "naimenovanie")  return "ИТОГО";
+            if (col === "Кол-во" && showQtyTotal) return String(totalQty);
+            if (col === "Цена" && showTotal) return totalPrice > 0 ? totalPrice.toLocaleString('ru-RU') + " руб." : "";
             return "";
         });
         tableData.push(totalRow);
@@ -2686,6 +2691,14 @@ window.generatePDF = function() {
         },
         alternateRowStyles: { fillColor: BGROW },
         columnStyles: colStyles,
+        didParseCell: function(data) {
+            // Строка ИТОГО — принудительно тёмный фон + белый текст + жирный
+            if (totalRowIdx >= 0 && data.row.index === totalRowIdx && data.section === 'body') {
+                data.cell.styles.fillColor = NAVY;
+                data.cell.styles.textColor = WHITE;
+                data.cell.styles.fontStyle = 'bold';
+            }
+        },
         willDrawCell: function(data) {
             if (totalRowIdx >= 0 && data.row.index === totalRowIdx && data.section === 'body') {
                 doc.setFillColor(...NAVY);
