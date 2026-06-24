@@ -2453,6 +2453,13 @@ window.generatePDF = function() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
 
+    // Шрифт с кириллицей
+    doc.addFileToVFS("PTSans.ttf", PT_SANS_B64);
+    doc.addFont("PTSans.ttf", "PTSans", "normal");
+    doc.addFileToVFS("PTSans-Bold.ttf", PT_SANS_B64);
+    doc.addFont("PTSans-Bold.ttf", "PTSans", "bold");
+
+    // Данные из модала
     const dogovorNum   = document.getElementById("m_dogovorNum").value.trim() || "___";
     const dogovorDate  = document.getElementById("m_dogovorDate").value.trim() || "___";
     const schetNum     = document.getElementById("m_schetNum").value.trim() || "___";
@@ -2467,195 +2474,188 @@ window.generatePDF = function() {
     const showTotal    = document.getElementById("m_showTotal").checked;
     const showQtyTotal = document.getElementById("m_showQtyTotal").checked;
 
-    doc.addFileToVFS("PTSans.ttf", PT_SANS_B64);
-    doc.addFont("PTSans.ttf", "PTSans", "normal");
-    doc.addFileToVFS("PTSans-Bold.ttf", PT_SANS_B64);
-    doc.addFont("PTSans-Bold.ttf", "PTSans", "bold");
-    doc.setFont("PTSans", "normal");
+    const pageW = doc.internal.pageSize.getWidth();   // 297
+    const pageH = doc.internal.pageSize.getHeight();  // 210
+    const margin = 15;
+    const cw = pageW - margin * 2;
 
-    const pageW = doc.internal.pageSize.getWidth();
-    const pageH = doc.internal.pageSize.getHeight();
-    const margin = 14;
-    const contentW = pageW - margin * 2;
-
-    // ======= ЦВЕТОВАЯ ПАЛИТРА =======
-    const RED    = [196, 30, 30];
-    const DARK   = [18, 24, 38];
-    const GRAY   = [90, 100, 115];
-    const LGRAY  = [220, 225, 232];
-    const BGROW  = [247, 248, 251];
+    // Цвета системы
+    const NAVY   = [30, 58, 95];     // #1e3a5f — nav
+    const BLUE   = [30, 109, 181];   // #1e6db5 — accent
+    const DARK   = [26, 32, 44];     // #1a202c — text
+    const MGRAY  = [74, 85, 104];    // #4a5568 — secondary
+    const LGRAY  = [226, 232, 240];  // #e2e8f0 — border
+    const BGROW  = [247, 249, 252];  // alt row
     const WHITE  = [255, 255, 255];
-    const ACCENT = [196, 30, 30];  // красный акцент
 
-    let y = margin;
+    let y = 0;
 
-    // ======= ШАПКА =======
-    // Тёмная полоса сверху (фирменный акцент)
-    doc.setFillColor(...DARK);
-    doc.rect(0, 0, pageW, 6, 'F');
+    // ══════════════════════════════════════════
+    // ШАПКА — тёмно-синяя полоса как nav в системе
+    // ══════════════════════════════════════════
+    const headerH = 18;
+    doc.setFillColor(...NAVY);
+    doc.rect(0, 0, pageW, headerH, 'F');
 
-    // Красная линия-акцент
-    doc.setFillColor(...RED);
-    doc.rect(0, 6, pageW, 1.2, 'F');
-
-    y = 10;
-
-    // Логотип (PNG, пропорции 827x301 → вписываем в ~42x15mm)
-    const logoH = 14;
-    const logoW = logoH * (827 / 301);  // ~38.5mm
+    // Логотип в шапке
+    const logoH = 10;
+    const logoW = logoH * (827 / 301); // ~27.5mm
     try {
-        doc.addImage("data:image/png;base64," + SETGOU_LOGO_B64, "PNG", margin, y, logoW, logoH);
+        doc.addImage("data:image/png;base64," + SETGOU_LOGO_B64, "PNG",
+            margin, (headerH - logoH) / 2, logoW, logoH);
     } catch(e) {
-        // Fallback если логотип не загрузился
-        doc.setFont("PTSans", "bold"); doc.setFontSize(14); doc.setTextColor(...RED);
-        doc.text("СЭТГОУ", margin, y + 10);
+        doc.setFont("PTSans", "bold");
+        doc.setFontSize(13);
+        doc.setTextColor(...WHITE);
+        doc.text("СЭТГОУ", margin, headerH / 2 + 2);
     }
 
-    // Реквизиты справа от логотипа
-    const reqX = margin + logoW + 8;
+    // Название документа в шапке
+    doc.setFont("PTSans", "bold");
+    doc.setFontSize(9);
+    doc.setTextColor(...WHITE);
+    doc.text("СПЕЦИФИКАЦИЯ", pageW / 2, headerH / 2 + 1.5, { align: "center" });
+
+    // Счёт справа в шапке
     doc.setFont("PTSans", "normal");
-    doc.setFontSize(6);
-    doc.setTextColor(...GRAY);
-    const reqs = [
-        "УП «СЭТГОУ»  |  УНП 100072163",
-        "Юридический адрес: 220099, Минская обл., г. Минск, Казинца, д. 11А–94, пом. 405а",
-        "Почтовый адрес: 220024, г. Минск, Стебенева, 20, лит. Е 1/к",
-        "р/с BY87BELB30121708300090226000, ОАО «Банк БелВЭБ», код BELBBY2X, пр-т Мира 1",
-        "Сайт: WWW.SETGOU.BY"
+    doc.setFontSize(7);
+    doc.setTextColor(180, 200, 220);
+    doc.text("Счёт № " + schetNum + " от " + schetDate + "г.", pageW - margin, headerH / 2 + 1.5, { align: "right" });
+
+    y = headerH + 6;
+
+    // ══════════════════════════════════════════
+    // СТРОКА ДОКУМЕНТА
+    // ══════════════════════════════════════════
+    doc.setFont("PTSans", "normal");
+    doc.setFontSize(7);
+    doc.setTextColor(...MGRAY);
+    doc.text(
+        "Приложение №1   ·   К договору поставки № " + dogovorNum + " от " + dogovorDate + "г.",
+        margin, y
+    );
+    y += 5;
+
+    // ══════════════════════════════════════════
+    // МЕТА-ИНФО: 2 колонки + реквизиты
+    // ══════════════════════════════════════════
+    // Левая колонка метаданных
+    const metaRows = [
+        ["Клиент:", clientInfo],
+        ["Адрес объекта:", objectAddr],
+        ["Менеджер:", managerInfo],
     ];
-    reqs.forEach((line, i) => {
-        doc.text(line, reqX, y + 3 + i * 3.2);
+    const metaRows2 = [
+        ["Срок поставки:", deliveryDate],
+        ["Предоплата:", prepayment],
+        ["Доставка:", delivery],
+    ];
+    const colMid = pageW / 2;
+
+    doc.setFontSize(7.5);
+    metaRows.forEach(([label, val], i) => {
+        doc.setFont("PTSans", "bold"); doc.setTextColor(...DARK);
+        doc.text(label, margin, y + i * 4.5);
+        doc.setFont("PTSans", "normal"); doc.setTextColor(...MGRAY);
+        // Обрезаем длинный текст
+        const maxV = 55;
+        doc.text(val.length > maxV ? val.substring(0, maxV) + "…" : val, margin + 28, y + i * 4.5);
+    });
+    metaRows2.forEach(([label, val], i) => {
+        doc.setFont("PTSans", "bold"); doc.setTextColor(...DARK);
+        doc.text(label, colMid + 5, y + i * 4.5);
+        doc.setFont("PTSans", "normal"); doc.setTextColor(...MGRAY);
+        doc.text(val, colMid + 35, y + i * 4.5);
     });
 
-    // Список продуктов — справа вертикально
-    const prodX = pageW - margin;
+    // Реквизиты — правый блок
+    const reqX = pageW - margin - 60;
     doc.setFontSize(5.8);
-    doc.setTextColor(...GRAY);
-    const prods = ["Двери противопожарные","Металлические двери","Противопожарные люки",
-                   "Металлические ворота","Комбинированные двери","Маятниковые двери",
-                   "Двери из нержавеющей стали"];
-    prods.forEach((p, i) => {
-        doc.text("✦  " + p, prodX, y + 2 + i * 2.85, { align: "right" });
+    doc.setTextColor(...MGRAY);
+    [
+        "УП «СЭТГОУ»  ·  УНП 100072163",
+        "220099 г. Минск, Казинца 11А–94, пом. 405а",
+        "р/с BY87BELB30121708300090226000",
+        "ОАО «Банк БелВЭБ», код BELBBY2X",
+        "WWW.SETGOU.BY"
+    ].forEach((line, i) => {
+        doc.text(line, pageW - margin, y + i * 3, { align: "right" });
     });
 
-    y += logoH + 4;
+    y += 15;
 
-    // Линия-разделитель под шапкой
+    // Разделитель
     doc.setDrawColor(...LGRAY);
     doc.setLineWidth(0.4);
     doc.line(margin, y, pageW - margin, y);
     y += 5;
 
-    // ======= ЗАГОЛОВОК ДОКУМЕНТА =======
-    // "Приложение №1 / К договору..."  — серым мелко
-    doc.setFont("PTSans", "normal");
-    doc.setFontSize(7);
-    doc.setTextColor(...GRAY);
-    doc.text("Приложение №1   ·   К договору поставки № " + dogovorNum + " от " + dogovorDate + "г.", margin, y);
-    y += 5;
-
-    // Крупный заголовок
-    doc.setFont("PTSans", "bold");
-    doc.setFontSize(13);
-    doc.setTextColor(...DARK);
-    doc.text("СПЕЦИФИКАЦИЯ", margin, y);
-
-    // Счёт — рядом серым
-    doc.setFont("PTSans", "normal");
-    doc.setFontSize(8);
-    doc.setTextColor(...GRAY);
-    doc.text("по счёту № " + schetNum + " от " + schetDate + "г.", margin + 57, y + 0.5);
-    y += 7;
-
-    // ======= МЕТА-БЛОК (карточки) =======
-    const cardH = 14;
-    const cardGap = 3;
-    const numCards = 6;
-    const cardW = (contentW - cardGap * (numCards - 1)) / numCards;
-
-    const cards = [
-        { label: "КЛИЕНТ", value: clientInfo },
-        { label: "АДРЕС ОБЪЕКТА", value: objectAddr || "—" },
-        { label: "СРОК ПОСТАВКИ", value: deliveryDate },
-        { label: "ПРЕДОПЛАТА", value: prepayment },
-        { label: "ДОСТАВКА", value: delivery },
-        { label: "МЕНЕДЖЕР", value: managerInfo },
-    ];
-
-    cards.forEach((card, i) => {
-        const cx = margin + i * (cardW + cardGap);
-        // Фон карточки
-        doc.setFillColor(...BGROW);
-        doc.setDrawColor(...LGRAY);
-        doc.setLineWidth(0.25);
-        doc.roundedRect(cx, y, cardW, cardH, 1.5, 1.5, 'FD');
-        // Красная верхняя линия
-        doc.setFillColor(...RED);
-        doc.roundedRect(cx, y, cardW, 1.5, 1, 1, 'F');
-        // Label
-        doc.setFont("PTSans", "normal");
-        doc.setFontSize(5.5);
-        doc.setTextColor(...GRAY);
-        doc.text(card.label, cx + cardW / 2, y + 4, { align: "center", maxWidth: cardW - 3 });
-        // Value
-        doc.setFont("PTSans", "bold");
-        doc.setFontSize(6.5);
-        doc.setTextColor(...DARK);
-        // Обрезаем длинные строки
-        const maxLen = 22;
-        const val = card.value.length > maxLen ? card.value.substring(0, maxLen) + "…" : card.value;
-        doc.text(val, cx + cardW / 2, y + 9.5, { align: "center", maxWidth: cardW - 3 });
-    });
-
-    y += cardH + 6;
-
-    // ======= ТАБЛИЦА =======
+    // ══════════════════════════════════════════
+    // ТАБЛИЦА
+    // ══════════════════════════════════════════
     const baseColumns = ["requestNumber", "naimenovanie", "Высота", "Ширина", ...CORE_FIELDS, "Толщина стены, мм", "Кол-во"];
     const extraColumns = Array.from(usedExtraFields).sort();
     const allColumns = [...baseColumns, ...extraColumns].filter(col => !hiddenColumns.has(col));
 
+    // Заголовки — короткие, без переносов где возможно
     const colHeaders = allColumns.map(col => {
-        if (col === "requestNumber") return "№";
-        if (col === "naimenovanie") return "Наименование\nдвери";
-        if (col === "doorKey") return "Тип";
-        if (col === "Толщина стены, мм") return "Толщина\nстены, мм";
-        if (col === "Заводской номер") return "Завод.\n№";
-        return col;
+        const names = {
+            "requestNumber": "№",
+            "naimenovanie":  "Наименование двери",
+            "doorKey":       "Тип",
+            "Высота":        "Высота",
+            "Ширина":        "Ширина",
+            "Коробка":       "Коробка",
+            "Открывание":    "Откры-вание",
+            "Металл":        "Металл",
+            "Порог":         "Порог",
+            "Цилиндр":       "Цилиндр",
+            "Доводчик":      "Доводчик",
+            "Цвет":          "Цвет",
+            "Остекление":    "Остекл.",
+            "Толщина стены, мм": "Толщ. стены",
+            "Кол-во":        "Кол-во",
+            "Цена":          "Цена",
+            "Примечание":    "Примечание",
+            "Заводской номер": "Завод. №"
+        };
+        return names[col] || col;
     });
 
     const tableData = currentDoors.map(d => allColumns.map(col => {
         let v = d[col] !== undefined ? d[col] : "—";
-        if ((col === "Цена" || col === "Примечание" || col === "Заводской номер") && (v === "—" || v === "")) return "";
+        if (["Цена","Примечание","Заводской номер"].includes(col) && (v==="—"||v==="")) return "";
         return String(v);
     }));
 
-    const totalRowIdx = (showQtyTotal || showTotal) ? tableData.length : -1;
-
+    // Итоговая строка
     if (showQtyTotal || showTotal) {
         const totalRow = allColumns.map(col => {
-            if (col === "Кол-во" && showQtyTotal) {
-                return String(currentDoors.reduce((a, d) => a + (parseFloat(d["Кол-во"]) || 1), 0));
-            }
+            if (col === "Кол-во" && showQtyTotal)
+                return String(currentDoors.reduce((a,d) => a+(parseFloat(d["Кол-во"])||1), 0));
             if (col === "Цена" && showTotal) {
-                const sum = currentDoors.reduce((a, d) => a + (parseFloat(d["Цена"]) || 0), 0);
-                return sum > 0 ? sum.toLocaleString('ru-RU') + " руб." : "";
+                const s = currentDoors.reduce((a,d)=>a+(parseFloat(d["Цена"])||0),0);
+                return s>0 ? s.toLocaleString('ru-RU')+" руб." : "";
             }
             if (col === "requestNumber") return "ИТОГО";
             return "";
         });
         tableData.push(totalRow);
     }
+    const totalRowIdx = (showQtyTotal||showTotal) ? tableData.length-1 : -1;
 
-    const colWidths = {};
+    // Ширины колонок
+    const colStyles = {};
     allColumns.forEach((col, idx) => {
-        if (col === "requestNumber")      colWidths[idx] = { cellWidth: 8 };
-        else if (col === "naimenovanie")  colWidths[idx] = { cellWidth: 28, halign: 'left' };
-        else if (col === "Высота" || col === "Ширина") colWidths[idx] = { cellWidth: 12 };
-        else if (col === "Кол-во")        colWidths[idx] = { cellWidth: 11 };
-        else if (col === "Цена")          colWidths[idx] = { cellWidth: 18 };
-        else if (col === "Примечание")    colWidths[idx] = { cellWidth: 30, halign: 'left' };
-        else if (col === "Заводской номер") colWidths[idx] = { cellWidth: 20 };
-        else if (col === "Толщина стены, мм") colWidths[idx] = { cellWidth: 13 };
+        if (col==="requestNumber")     colStyles[idx]={cellWidth:8};
+        else if (col==="naimenovanie") colStyles[idx]={cellWidth:30,halign:'left'};
+        else if (col==="Высота"||col==="Ширина") colStyles[idx]={cellWidth:13};
+        else if (col==="Кол-во")       colStyles[idx]={cellWidth:11};
+        else if (col==="Цена")         colStyles[idx]={cellWidth:18};
+        else if (col==="Примечание")   colStyles[idx]={cellWidth:28,halign:'left'};
+        else if (col==="Заводской номер") colStyles[idx]={cellWidth:18};
+        else if (col==="Толщина стены, мм") colStyles[idx]={cellWidth:14};
+        else if (col==="doorKey")      colStyles[idx]={cellWidth:12};
     });
 
     doc.autoTable({
@@ -2663,11 +2663,9 @@ window.generatePDF = function() {
         head: [colHeaders],
         body: tableData,
         margin: { left: margin, right: margin },
-        tableLineColor: LGRAY,
-        tableLineWidth: 0.25,
         styles: {
             fontSize: 7,
-            cellPadding: { top: 2.8, right: 2.5, bottom: 2.8, left: 2.5 },
+            cellPadding: { top: 2.5, right: 2, bottom: 2.5, left: 2 },
             overflow: 'linebreak',
             font: 'PTSans',
             halign: 'center',
@@ -2677,56 +2675,50 @@ window.generatePDF = function() {
             textColor: DARK,
         },
         headStyles: {
-            fillColor: DARK,
-            textColor: [200, 208, 220],
+            fillColor: NAVY,
+            textColor: [203, 213, 225],
             fontStyle: 'bold',
             font: 'PTSans',
             fontSize: 6.5,
-            cellPadding: { top: 3.5, right: 2.5, bottom: 3.5, left: 2.5 },
-            lineColor: DARK,
+            cellPadding: { top: 3, right: 2, bottom: 3, left: 2 },
+            lineColor: NAVY,
+            overflow: 'linebreak',
         },
-        alternateRowStyles: {
-            fillColor: BGROW,
-        },
-        columnStyles: colWidths,
+        alternateRowStyles: { fillColor: BGROW },
+        columnStyles: colStyles,
         willDrawCell: function(data) {
-            // Итоговая строка — тёмный акцент
-            if (totalRowIdx >= 0 && data.row.index === totalRowIdx - 1 && data.section === 'body') {
-                doc.setFillColor(...DARK);
+            if (totalRowIdx >= 0 && data.row.index === totalRowIdx && data.section === 'body') {
+                doc.setFillColor(...NAVY);
                 doc.setTextColor(...WHITE);
                 doc.setFont("PTSans", "bold");
             }
         },
         didDrawCell: function(data) {
-            if (totalRowIdx >= 0 && data.row.index === totalRowIdx - 1 && data.section === 'body') {
+            if (totalRowIdx >= 0 && data.row.index === totalRowIdx && data.section === 'body') {
                 doc.setTextColor(...DARK);
                 doc.setFont("PTSans", "normal");
             }
         },
         didDrawPage: function() {
-            // Нижняя полоска на каждой странице
-            doc.setFillColor(...DARK);
-            doc.rect(0, pageH - 8, pageW, 8, 'F');
-            doc.setFillColor(...RED);
-            doc.rect(0, pageH - 8, pageW, 1, 'F');
+            // Нижняя строка с номером страницы
             doc.setFont("PTSans", "normal");
             doc.setFontSize(6.5);
-            doc.setTextColor(160, 165, 175);
-            doc.text("WWW.SETGOU.BY", margin, pageH - 3.5);
+            doc.setTextColor(...MGRAY);
+            doc.text("WWW.SETGOU.BY", margin, pageH - 5);
             doc.text(
                 "Стр. " + doc.internal.getCurrentPageInfo().pageNumber,
-                pageW - margin, pageH - 3.5, { align: 'right' }
+                pageW - margin, pageH - 5, { align: "right" }
             );
             doc.setTextColor(...DARK);
         }
     });
 
     y = doc.lastAutoTable.finalY + 7;
+    if (y + 28 > pageH - 10) { doc.addPage(); y = 20; }
 
-    // ======= ФУТЕР / УСЛОВИЯ =======
-    const footerH = pageH - 8;  // с учётом нижней тёмной полосы
-    if (y + 30 > footerH - 5) { doc.addPage(); y = margin + 4; }
-
+    // ══════════════════════════════════════════
+    // УСЛОВИЯ
+    // ══════════════════════════════════════════
     doc.setDrawColor(...LGRAY);
     doc.setLineWidth(0.3);
     doc.line(margin, y, pageW - margin, y);
@@ -2734,40 +2726,36 @@ window.generatePDF = function() {
 
     doc.setFont("PTSans", "normal");
     doc.setFontSize(7);
-    doc.setTextColor(...GRAY);
+    doc.setTextColor(...MGRAY);
     doc.text("Выписка и получение товара: г. Минск, ул. Стебенева, 20В/1  ·  Отгрузка: пн–пт 8:00–12:00, 12:30–16:00", margin, y);
     y += 3.8;
     doc.text("Поставщик имеет право изменить адрес отгрузки. Схемы проезда на сайте WWW.SETGOU.BY", margin, y);
-    y += 7;
+    y += 8;
 
-    // ======= ПОДПИСИ =======
-    const sigW = (contentW - 10) / 2;
-
-    // Блоки подписей
-    [
-        { label: "ПРОДАВЕЦ", name: "УП «СЭТГОУ»", signer: sellerName, x: margin },
-        { label: "ПОКУПАТЕЛЬ", name: clientInfo, signer: "________________________", x: margin + sigW + 10 }
-    ].forEach(sig => {
+    // ══════════════════════════════════════════
+    // ПОДПИСИ
+    // ══════════════════════════════════════════
+    const sigW = (cw - 15) / 2;
+    [[margin, "ПРОДАВЕЦ", "УП «СЭТГОУ»", sellerName],
+     [margin + sigW + 15, "ПОКУПАТЕЛЬ", clientInfo, "________________________"]
+    ].forEach(([x, title, name, signer]) => {
         doc.setFont("PTSans", "bold");
-        doc.setFontSize(7);
-        doc.setTextColor(...DARK);
-        doc.text(sig.label, sig.x, y);
-
+        doc.setFontSize(7.5);
+        doc.setTextColor(...NAVY);
+        doc.text(title, x, y);
         doc.setFont("PTSans", "normal");
         doc.setFontSize(7);
-        doc.setTextColor(...GRAY);
-        doc.text(sig.name, sig.x, y + 4.5);
-
-        // Линия подписи
+        doc.setTextColor(...DARK);
+        doc.text(name.length > 40 ? name.substring(0,40)+"…" : name, x, y + 5);
         doc.setDrawColor(...LGRAY);
         doc.setLineWidth(0.4);
-        doc.line(sig.x, y + 10, sig.x + sigW - 5, y + 10);
-
+        doc.line(x, y + 11, x + sigW, y + 11);
         doc.setFontSize(6.5);
-        doc.text("подпись  /  " + sig.signer, sig.x + 3, y + 14);
+        doc.setTextColor(...MGRAY);
+        doc.text("подпись  /  " + signer, x + 3, y + 15);
     });
 
-    const filename = "Спецификация_" + (schetNum !== "___" ? schetNum : dogovorNum) + "_" + clientInfo.split(" ")[0] + ".pdf";
+    const filename = "Спецификация_" + (schetNum!=="___"?schetNum:dogovorNum) + "_" + clientInfo.split(" ")[0] + ".pdf";
     doc.save(filename);
     closePdfModal();
     showToast("PDF успешно скачан!");
