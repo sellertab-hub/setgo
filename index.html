@@ -2391,13 +2391,63 @@ function getColOptions(doorKey, colName) {
 }
 
 function makeCellEditable(td, doorIdx, colName) {
-    if (colName === 'naimenovanie') return;
     if (td.querySelector("select,input,.cell-combo-wrap")) return;
 
     const door = currentDoors[doorIdx];
     const currentVal = door[colName] !== undefined ? String(door[colName]) : '—';
 
-    // Числовые поля — простой number input
+    // ── Редактирование наименования вручную ──
+    if (colName === 'naimenovanie') {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = currentVal === '—' ? '' : currentVal;
+        input.style.cssText = 'width:100%;min-width:120px;background:#fff;border:1px solid #1e6db5;color:#1a202c;font-family:Play;font-size:11px;font-weight:700;padding:2px 4px;border-radius:3px;box-sizing:border-box;';
+        td.innerHTML = '';
+        td.appendChild(input);
+        input.focus(); input.select();
+        const save = () => {
+            const v = input.value.trim();
+            if (v) {
+                currentDoors[doorIdx].naimenovanie = v;
+                currentDoors[doorIdx]._manualName = true;  // флаг: автогенерация отключена
+            } else {
+                // Пустая строка — сбрасываем флаг и восстанавливаем автогенерацию
+                currentDoors[doorIdx]._manualName = false;
+                currentDoors[doorIdx].naimenovanie = buildDoorName(currentDoors[doorIdx]);
+            }
+            renderRightTable();
+        };
+        input.addEventListener('blur', save);
+        input.addEventListener('keydown', e => {
+            if (e.key === 'Enter') { e.preventDefault(); save(); }
+            if (e.key === 'Escape') renderRightTable();
+        });
+        return;
+    }
+
+    // ── Редактирование порядкового номера ──
+    if (colName === 'requestNumber') {
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.value = parseInt(currentVal) || doorIdx + 1;
+        input.min = 1;
+        input.style.cssText = 'width:50px;background:#fff;border:1px solid #1e6db5;color:#1a202c;font-family:Play;font-size:12px;font-weight:700;padding:2px 4px;border-radius:3px;text-align:center;';
+        td.innerHTML = '';
+        td.appendChild(input);
+        input.focus(); input.select();
+        const save = () => {
+            const v = parseInt(input.value);
+            if (!isNaN(v) && v >= 1) {
+                currentDoors[doorIdx].requestNumber = v;
+            }
+            renderRightTable();
+        };
+        input.addEventListener('blur', save);
+        input.addEventListener('keydown', e => { if (e.key === 'Enter') save(); if (e.key === 'Escape') renderRightTable(); });
+        return;
+    }
+
+    // ── Числовые поля — простой number input ──
     if (NUMBER_COLS.has(colName)) {
         const input = document.createElement('input');
         input.type = 'number';
@@ -2409,7 +2459,8 @@ function makeCellEditable(td, doorIdx, colName) {
         const save = () => {
             const v = parseFloat(input.value) || 0;
             currentDoors[doorIdx][colName] = v;
-            currentDoors[doorIdx].naimenovanie = buildDoorName(currentDoors[doorIdx]);
+            if (!currentDoors[doorIdx]._manualName)
+                currentDoors[doorIdx].naimenovanie = buildDoorName(currentDoors[doorIdx]);
             renderRightTable();
         };
         input.addEventListener('blur', save);
@@ -2472,7 +2523,9 @@ function makeCellEditable(td, doorIdx, colName) {
         _saved = true;
         const v = (val !== undefined ? val : inp.value).trim();
         currentDoors[doorIdx][colName] = v || '—';
-        currentDoors[doorIdx].naimenovanie = buildDoorName(currentDoors[doorIdx]);
+        // Перестраиваем наименование только если оно не было задано вручную
+        if (!currentDoors[doorIdx]._manualName)
+            currentDoors[doorIdx].naimenovanie = buildDoorName(currentDoors[doorIdx]);
         const ddEl = document.getElementById(comboId + '_dd');
         if (ddEl) ddEl.remove();
         renderRightTable();
@@ -2574,15 +2627,17 @@ function renderRightTable() {
         for (let col of visibleColumns) {
             let value = d[col] !== undefined ? d[col] : "—";
             const isNum = NUMBER_COLS.has(col);
-            const isEditable = col !== "requestNumber" && col !== "naimenovanie";
-            if (isEditable) {
+            if (col === 'naimenovanie') {
+                // Одинарный клик — редактировать; если задано вручную — карандаш ✏
+                const isManual = currentDoors[i]._manualName ? ' ✏' : '';
+                bodyHtml += `<td onclick="makeCellEditable(this,${i},'naimenovanie')" title="Клик для редактирования" style="cursor:pointer;text-align:left;font-size:11px;color:#1e3a5f;font-weight:700;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" class="editable-cell">${escapeHtml(String(value))}${isManual}</td>`;
+            } else if (col === 'requestNumber') {
+                // Двойной клик — редактировать
+                bodyHtml += `<td ondblclick="makeCellEditable(this,${i},'requestNumber')" title="Двойной клик для изменения" style="cursor:default;font-weight:700;text-align:center;" class="editable-cell">${escapeHtml(String(value))}</td>`;
+            } else {
                 const title = isNum ? "Двойной клик для редактирования" : "Клик для редактирования";
                 const event = isNum ? `ondblclick="makeCellEditable(this,${i},'${col}')"` : `onclick="makeCellEditable(this,${i},'${col}')"`;
                 bodyHtml += `<td ${event} title="${title}" style="cursor:pointer;" class="editable-cell">${escapeHtml(String(value))}</td>`;
-            } else if (col === 'naimenovanie') {
-                bodyHtml += `<td style="text-align:left;font-size:11px;color:#1e3a5f;font-weight:700;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${escapeAttr(String(value))}">${escapeHtml(String(value))}</td>`;
-            } else {
-                bodyHtml += `<td>${escapeHtml(String(value))}</td>`;
             }
         }
         bodyHtml += `</tr>`;
