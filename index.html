@@ -1236,7 +1236,7 @@
                 <div id="sigPreviewMsg" style="font-size:11px;color:#9ca3af;">
                     Подпись не добавлена — <button onclick="openSignaturePad()" style="background:none;border:none;color:#1e6db5;cursor:pointer;font-weight:700;padding:0;">нарисовать</button>
                 </div>
-                <canvas id="sigPreviewCanvas" style="display:none;border:1px solid #e2e8f0;border-radius:4px;max-width:100%;height:50px;"></canvas>
+                <canvas id="sigPreviewCanvas" style="display:none;border:1px solid #e2e8f0;border-radius:4px;width:100%;"></canvas>
             </div>
         </div>
 
@@ -3606,9 +3606,11 @@ window.generatePDF = function() {
     doc.text(buyerShort, bx, y + 4.5);
 
     if (includeSign && signatureB64) {
-        // Изображение подписи
+        // Вставляем подпись с сохранением пропорций (канвас 472×160)
         try {
-            doc.addImage(signatureB64, 'PNG', bx, y + 6, sigW * 0.6, 10);
+            const sigImgW = sigW * 0.65;          // ширина в мм
+            const sigImgH = sigImgW * (160 / 472); // пропорциональная высота (~9мм)
+            doc.addImage(signatureB64, 'PNG', bx, y + 5, sigImgW, sigImgH);
         } catch(e) {}
     }
 
@@ -3728,11 +3730,16 @@ window.saveSignature = function() {
     const prev = document.getElementById('sigPreviewCanvas');
     const msg  = document.getElementById('sigPreviewMsg');
     if (prev) {
+        // Сохраняем пропорции канваса 472×160
+        const dispW = prev.offsetWidth || 400;
+        const dispH = Math.round(dispW * (160 / 472));
+        prev.width  = dispW;
+        prev.height = dispH;
+        prev.style.height = dispH + 'px';
         prev.style.display = 'block';
-        prev.width = 400; prev.height = 60;
         const pctx = prev.getContext('2d');
         const img = new Image();
-        img.onload = () => pctx.drawImage(img, 0, 0, 400, 60);
+        img.onload = () => pctx.drawImage(img, 0, 0, dispW, dispH);
         img.src = signatureB64;
     }
     if (msg) msg.style.display = 'none';
