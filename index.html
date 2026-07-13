@@ -2000,7 +2000,7 @@ function loadDoorsIntoConfig(doorsArr) {
         ];
         ORDER_META_FIELDS.forEach(f => delete newDoor[f]);
 
-        const row = { ...newDoor, id: Date.now() + Math.random(), requestNumber: i + 1 };
+        const row = { ...newDoor, id: Date.now() + Math.random(), requestNumber: i + 1, doorPosition: newDoor.doorPosition || '' };
 
         // Стандартные дополнительные поля
         const knownExtra = new Set([...ALL_POSSIBLE_FIELDS, ...SPECIAL_FIELDS]);
@@ -2010,7 +2010,7 @@ function loadDoorsIntoConfig(doorsArr) {
 
         // Пользовательские (нестандартные) столбцы: проверяем все ключи двери
         const baseKnown = new Set([
-            'id', 'requestNumber', 'naimenovanie', 'doorKey', '_manualName', '_fromProem',
+            'id', 'requestNumber', 'doorPosition', 'naimenovanie', 'doorKey', '_manualName', '_fromProem', 'Тип размера',
             'Высота', 'Ширина', 'Кол-во', 'Толщина стены, мм',
             ...CORE_FIELDS, ...ALL_POSSIBLE_FIELDS, ...SPECIAL_FIELDS,
             'Дата', 'Имя клиента', 'Order ID', 'Статус заказа',
@@ -2457,15 +2457,13 @@ document.getElementById("addDoorBtn").addEventListener("click", () => {
     const rawH = parseInt(document.getElementById("cfg_Высота").value) || type.heightMin;
     const rawW = parseInt(document.getElementById("cfg_Ширина").value) || type.widthMin;
     const fromProem = currentSizeMode === 'proem';
-    const finalH = fromProem ? rawH - PROEM_DEDUCT_H : rawH;
-    const finalW = fromProem ? rawW - PROEM_DEDUCT_W : rawW;
-
+    // Размеры сохраняются КАК ВВЕДЕНЫ — без вычитания
     let cfg = {
         doorKey: currentTypeKey,
         doorName: type.name,
-        Высота: finalH,
-        Ширина: finalW,
-        _fromProem: fromProem,  // флаг для подсветки жёлтым
+        Высота: rawH,
+        Ширина: rawW,
+        _fromProem: fromProem,  // флаг для подсветки жёлтым и столбца 'Тип размера'
         "Толщина стены, мм": parseInt(document.getElementById("wallThick").value) || 100,
         "Кол-во": parseInt(document.getElementById("quantity").value) || 1,
     };
@@ -2544,18 +2542,20 @@ function makeCellEditable(td, doorIdx, colName) {
         return;
     }
 
-    // ── Редактирование порядкового номера ──
-    if (colName === 'requestNumber') {
+    // ── N (порядковый) — нередактируемый ──
+    if (colName === 'requestNumber') return;
+
+    // ── Редактирование ПОЗИЦИИ ──
+    if (colName === 'doorPosition') {
         const input = document.createElement('input');
-        input.type = 'text';  // любые символы: цифры и буквы
-        input.value = currentVal === '—' ? '' : currentVal;
-        input.style.cssText = 'width:60px;background:#fff;border:1px solid #1e6db5;color:#1a202c;font-family:Play;font-size:12px;font-weight:700;padding:2px 4px;border-radius:3px;text-align:center;';
+        input.type = 'text';
+        input.value = door.doorPosition || '';
+        input.style.cssText = 'width:80px;background:#fff;border:1px solid #1e6db5;color:#1a202c;font-family:Play;font-size:12px;padding:2px 4px;border-radius:3px;text-align:center;';
         td.innerHTML = '';
         td.appendChild(input);
         input.focus(); input.select();
         const save = () => {
-            const v = input.value.trim();
-            if (v) currentDoors[doorIdx].requestNumber = v;
+            currentDoors[doorIdx].doorPosition = input.value.trim();
             renderRightTable();
         };
         input.addEventListener('blur', save);
@@ -2690,10 +2690,8 @@ function renderColManager(allColumns) {
     });
 
     orderedCols.forEach(col => {
-        const label = col === 'requestNumber' ? 'N'
-            : col === 'doorKey' ? 'ТИП'
-            : col === 'naimenovanie' ? 'НАИМЕНОВАНИЕ'
-            : col;
+        const COL_LABELS = { requestNumber: 'N', doorPosition: 'ПОЗИЦИЯ', naimenovanie: 'НАИМЕНОВАНИЕ', doorKey: 'ТИП', 'Тип размера': 'ТИП РАЗМЕРА' };
+        const label = COL_LABELS[col] || col;
         const isHidden = hiddenColumns.has(col);
 
         const chip = document.createElement('span');
@@ -2724,12 +2722,14 @@ function renderColManager(allColumns) {
         // Клик на × — удаляем полностью
         delEl.addEventListener('click', e => {
             e.stopPropagation();
-            hiddenColumns.delete(col);
+            // Удаляем из usedExtraFields и customUserColumns
             usedExtraFields.delete(col);
             const ci = customUserColumns.indexOf(col);
             if (ci > -1) customUserColumns.splice(ci, 1);
             const oi = columnOrder.indexOf(col);
             if (oi > -1) columnOrder.splice(oi, 1);
+            // Базовые столбцы скрываем через hiddenColumns
+            hiddenColumns.add(col);
             renderRightTable();
         });
 
@@ -2858,7 +2858,7 @@ window.addExtraColumn = function(field) {
 // ===== RENDER RIGHT TABLE =====
 function renderRightTable() {
     const tbody = document.getElementById("doorsTbody");
-    const baseColumns = ['requestNumber', 'naimenovanie', 'doorKey', 'Высота', 'Ширина', ...CORE_FIELDS, 'Толщина стены, мм', 'Кол-во'];
+    const baseColumns = ['requestNumber', 'doorPosition', 'naimenovanie', 'doorKey', 'Тип размера', 'Высота', 'Ширина', ...CORE_FIELDS, 'Толщина стены, мм', 'Кол-во'];
     const extraColumns = Array.from(usedExtraFields);
     const allColumns = [...baseColumns, ...extraColumns.filter(c => !baseColumns.includes(c))];
 
@@ -2873,7 +2873,8 @@ function renderRightTable() {
 
     let headerHtml = `<tr><th>ДЕЙСТВИЯ</th>`;
     for (let col of visibleColumns) {
-        let name = col === "requestNumber" ? "N" : col === "doorKey" ? "ТИП" : col === "naimenovanie" ? "НАИМЕНОВАНИЕ" : col.toUpperCase();
+        const COL_NAMES = { requestNumber: 'N', doorPosition: 'ПОЗИЦИЯ', naimenovanie: 'НАИМЕНОВАНИЕ', doorKey: 'ТИП', 'Тип размера': 'ТИП РАЗМЕРА' };
+        let name = COL_NAMES[col] || col.toUpperCase();
         headerHtml += `<th>${escapeHtml(name)}</th>`;
     }
     headerHtml += `</tr>`;
@@ -2896,17 +2897,27 @@ function renderRightTable() {
             + ` ondragend="rowDragEnd(event)">`;
         bodyHtml += `<td class="door-actions" style="cursor:default;"><button onclick="copyRow(${i})" title="Копировать">📋</button><button onclick="delRow(${i})" title="Удалить">❌</button></td>`;
         for (let col of visibleColumns) {
-            let value = d[col] !== undefined ? d[col] : "—";
+            let value = d[col] !== undefined ? d[col] : "";
             const isNum = NUMBER_COLS.has(col);
-            if (col === 'naimenovanie') {
-                const isManual = currentDoors[i]._manualName ? ' ✏' : '';
+            if (col === 'requestNumber') {
+                // Порядковый номер — нередактируемый, серый
+                bodyHtml += `<td style="cursor:default;font-weight:600;text-align:center;color:#9ca3af;background:#f8fafc;font-size:11px;">${d.requestNumber}</td>`;
+            } else if (col === 'doorPosition') {
+                // Позиция — редактируемый, копируется
+                const pv = d.doorPosition || '';
+                bodyHtml += `<td onclick="makeCellEditable(this,${i},'doorPosition')" title="Клик для редактирования" style="cursor:pointer;text-align:center;" class="editable-cell">${pv ? escapeHtml(pv) : '<span style="color:#cbd5e0">—</span>'}</td>`;
+            } else if (col === 'Тип размера') {
+                // Проём/Коробок — нередактируемый
+                const label = d._fromProem ? 'Проём' : 'Короб.';
+                const color = d._fromProem ? '#b45309' : '#64748b';
+                bodyHtml += `<td style="cursor:default;text-align:center;font-size:11px;color:${color};font-weight:600;">${label}</td>`;
+            } else if (col === 'naimenovanie') {
+                const isManual = d._manualName ? ' ✏' : '';
                 bodyHtml += `<td onclick="makeCellEditable(this,${i},'naimenovanie')" title="Клик для редактирования" style="cursor:pointer;text-align:left;font-size:11px;color:#1e3a5f;font-weight:700;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" class="editable-cell">${escapeHtml(String(value))}${isManual}</td>`;
-            } else if (col === 'requestNumber') {
-                bodyHtml += `<td ondblclick="makeCellEditable(this,${i},'requestNumber')" title="Двойной клик для изменения" style="cursor:default;font-weight:700;text-align:center;" class="editable-cell">${escapeHtml(String(value))}</td>`;
             } else {
                 const title = isNum ? "Двойной клик для редактирования" : "Клик для редактирования";
                 const event = isNum ? `ondblclick="makeCellEditable(this,${i},'${col}')"` : `onclick="makeCellEditable(this,${i},'${col}')"`;
-                bodyHtml += `<td ${event} title="${title}" style="cursor:pointer;" class="editable-cell">${escapeHtml(String(value))}</td>`;
+                bodyHtml += `<td ${event} title="${title}" style="cursor:pointer;" class="editable-cell">${value ? escapeHtml(String(value)) : '<span style="color:#cbd5e0">—</span>'}</td>`;
             }
         }
         bodyHtml += `</tr>`;
@@ -3481,13 +3492,16 @@ window.generatePDF = function() {
     y += 4;
 
     // ── ТАБЛИЦА
-    const baseColumns = ["requestNumber", "naimenovanie", "Высота", "Ширина", ...CORE_FIELDS, "Толщина стены, мм", "Кол-во"];
+    // В PDF: requestNumber идёт как '№', doorPosition как 'Позиция', Тип размера — как записано
+    // requestNumber — в PDF не выводится (заменяем на doorPosition если есть, иначе порядковый номер)
+    const PDF_EXCLUDE = new Set(['requestNumber', 'doorKey']);
+    const baseColumns = ["doorPosition", "naimenovanie", "Тип размера", "Высота", "Ширина", ...CORE_FIELDS, "Толщина стены, мм", "Кол-во"];
     const extraColumns = Array.from(usedExtraFields);
-    const allColumns = [...baseColumns, ...extraColumns.filter(c => !baseColumns.includes(c))].filter(col => !hiddenColumns.has(col));
+    const allColumns = [...baseColumns, ...extraColumns.filter(c => !baseColumns.includes(c))].filter(col => !hiddenColumns.has(col) && !PDF_EXCLUDE.has(col));
 
     const colHeaders = allColumns.map(col => ({
-        "requestNumber": "\u2116", "naimenovanie": "Наименование",
-        "doorKey": "Тип", "Высота": "Выс.", "Ширина": "Шир.",
+        "doorPosition": "№", "naimenovanie": "Наименование",
+        "Тип размера": "Тип разм.", "Высота": "Выс.", "Ширина": "Шир.",
         "Коробка": "Коробка", "Открывание": "Откр.", "Металл": "Металл",
         "Порог": "Порог", "Цилиндр": "Цилиндр", "Доводчик": "Доводчик",
         "Цвет": "Цвет", "Остекление": "Остекл.",
@@ -3495,7 +3509,9 @@ window.generatePDF = function() {
         "Цена": "Цена, руб.", "Примечание": "Примечание", "Заводской номер": "Завод. \u2116"
     }[col] || col));
 
-    const tableData = currentDoors.map(d => allColumns.map(col => {
+    const tableData = currentDoors.map((d, rowIdx) => allColumns.map(col => {
+        if (col === 'doorPosition') return String(d.doorPosition || (rowIdx + 1));
+        if (col === 'Тип размера') return d._fromProem ? 'Проём' : 'Короб.';
         let v = d[col] !== undefined ? d[col] : "—";
         if (["Цена","Примечание","Заводской номер"].includes(col) && (v==="—"||v==="")) return "";
         return String(v);
@@ -3507,7 +3523,7 @@ window.generatePDF = function() {
             return a + (parseFloat(d["Цена"]) || 0) * (parseFloat(d["Кол-во"]) || 1);
         }, 0);
         const totalRow = allColumns.map(col => {
-            if (col === "requestNumber") return "";
+            if (col === "doorPosition") return "";
             if (col === "naimenovanie")  return "ИТОГО";
             if (col === "Кол-во" && showQtyTotal) return String(totalQty);
             if (col === "Цена" && showTotal) return totalPrice > 0 ? totalPrice.toLocaleString('ru-RU') + " руб." : "";
@@ -3519,8 +3535,9 @@ window.generatePDF = function() {
 
     const colStyles = {};
     allColumns.forEach((col, idx) => {
-        if (col==="requestNumber")        colStyles[idx]={cellWidth:8};
+        if (col==="doorPosition")         colStyles[idx]={cellWidth:10};
         else if (col==="naimenovanie")    colStyles[idx]={cellWidth:32,halign:'left'};
+        else if (col==="Тип размера")      colStyles[idx]={cellWidth:12};
         else if (col==="Высота"||col==="Ширина") colStyles[idx]={cellWidth:12};
         else if (col==="Кол-во")         colStyles[idx]={cellWidth:10};
         else if (col==="Цена")            colStyles[idx]={cellWidth:20};
