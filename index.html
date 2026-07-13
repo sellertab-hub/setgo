@@ -1523,9 +1523,10 @@ async function loadDataFromAPI() {
             orderTotal:   parseFloat(o["Итого заказа"]) || 0,
             paidTotal:    parseFloat(o["Итого оплат"]) || 0,
             debt:         parseFloat(o["Долг"]) || 0,
-            paymentsJson: o["Оплаты JSON"] || "[]",
-            invoiceDate:  o["Дата по счёту"] || "",
-            invoiceNum:   o["Номер счёта"] || ""
+            paymentsJson:      o["Оплаты JSON"] || "[]",
+            invoiceDate:       o["Дата по счёту"] || "",
+            invoiceNum:        o["Номер счёта"] || "",
+            'Подпись клиента': o["Подпись клиента"] || ""
         })).sort((a, b) => parseDateTime(b.date) - parseDateTime(a.date));
 
         // Обновляем кастомный комбобокс поиска клиента
@@ -1916,6 +1917,7 @@ document.getElementById("startNewOrderBtn").addEventListener("click", () => {
     currentPayments = [];
     currentOrderStatus = "В РАБОТЕ";
     currentOrderTotal = 0;
+    signatureB64 = null;  // сбрасываем подпись для нового заказа
     usedExtraFields.clear();
     hiddenColumns.clear();
     customUserColumns = [];
@@ -1935,6 +1937,9 @@ window.editOrder = async function(orderId) {
     currentOrderTotal = parseFloat(group.orderTotal) || 0;
     currentInvoiceDate = group.invoiceDate || '';
     currentInvoiceNum  = group.invoiceNum  || '';
+
+    // Восстанавливаем подпись покупателя из заказа
+    signatureB64 = group['Подпись клиента'] || null;
 
     try {
         currentPayments = group.paymentsJson ? JSON.parse(group.paymentsJson) : [];
@@ -2064,7 +2069,8 @@ document.getElementById("saveOrderBtn").addEventListener("click", async () => {
         payments: currentPayments,
         orderTotal: currentOrderTotal,
         doors: currentDoors,
-        createdBy: currentUserLogin  // привязка заказа к менеджеру
+        createdBy: currentUserLogin,
+        clientSignature: signatureB64 || ""  // base64 подпись покупателя
     };
 
     try {
@@ -3605,25 +3611,27 @@ window.generatePDF = function() {
     const buyerShort = clientInfo.length > 40 ? clientInfo.substring(0,40)+"\u2026" : clientInfo;
     doc.text(buyerShort, bx, y + 4.5);
 
+    // Подпись — над чертой
     if (includeSign && signatureB64) {
-        // Вставляем подпись с сохранением пропорций (канвас 472×160)
         try {
-            const sigImgW = sigW * 0.65;          // ширина в мм
-            const sigImgH = sigImgW * (160 / 472); // пропорциональная высота (~9мм)
-            doc.addImage(signatureB64, 'PNG', bx, y + 5, sigImgW, sigImgH);
+            const sigImgW = sigW * 0.65;
+            const sigImgH = sigImgW * (160 / 472);
+            // Размещаем над линией: черта на y+16, подпись занимает sigImgH мм, старт = y+16-sigImgH
+            const imgY = y + 16 - sigImgH;
+            doc.addImage(signatureB64, 'PNG', bx, imgY, sigImgW, sigImgH);
         } catch(e) {}
     }
 
     doc.setDrawColor(...LGRAY); doc.setLineWidth(0.35);
-    doc.line(bx, y + 17, bx + sigW, y + 17);
+    doc.line(bx, y + 16, bx + sigW, y + 16);
     doc.setFontSize(6.5); doc.setTextColor(...MGRAY);
 
     if (includeSign) {
         const nameStr = buyerName || "_________________________";
         const titleStr = buyerTitle ? " / " + buyerTitle : "";
-        doc.text(nameStr + titleStr, bx + 2, y + 21);
+        doc.text(nameStr + titleStr, bx + 2, y + 20);
     } else {
-        doc.text("подпись", bx + 2, y + 21);
+        doc.text("подпись", bx + 2, y + 20);
     }
 
     const filename = "Спецификация_" + (schetNum!=="___"?schetNum:dogovorNum) + "_" + clientInfo.split(" ")[0] + ".pdf";
