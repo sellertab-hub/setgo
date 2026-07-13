@@ -1991,14 +1991,14 @@ function loadDoorsIntoConfig(doorsArr) {
 
     currentDoors = doorsArr.map((d, i) => {
         const newDoor = { ...d };
-        delete newDoor["Дата"];
-        delete newDoor["Имя клиента"];
-        delete newDoor["Order ID"];
-        delete newDoor["Статус заказа"];
-        delete newDoor["Оплаты JSON"];
-        delete newDoor["Итого заказа"];
-        delete newDoor["Итого оплат"];
-        delete newDoor["Долг"];
+        // Удаляем все служебные поля заказа — они не должны попасть в двери
+        const ORDER_META_FIELDS = [
+            "Дата", "Имя клиента", "Order ID", "Статус заказа",
+            "Оплаты JSON", "Итого заказа", "Итого оплат", "Долг",
+            "Менеджер", "Дата по счёту", "Номер счёта",
+            "Подпись клиента", "doorName", "_sigInited"
+        ];
+        ORDER_META_FIELDS.forEach(f => delete newDoor[f]);
 
         const row = { ...newDoor, id: Date.now() + Math.random(), requestNumber: i + 1 };
 
@@ -2015,7 +2015,8 @@ function loadDoorsIntoConfig(doorsArr) {
             ...CORE_FIELDS, ...ALL_POSSIBLE_FIELDS, ...SPECIAL_FIELDS,
             'Дата', 'Имя клиента', 'Order ID', 'Статус заказа',
             'Оплаты JSON', 'Итого заказа', 'Итого оплат', 'Долг', 'Менеджер',
-            'Дата по счёту', 'Номер счёта'
+            'Дата по счёту', 'Номер счёта',
+            'Подпись клиента', 'doorName', '_sigInited'
         ]);
         Object.keys(row).forEach(k => {
             if (!baseKnown.has(k) && row[k] && row[k] !== '—') {
