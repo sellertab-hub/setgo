@@ -4412,7 +4412,7 @@ function buildDoorSvgMarkup(params) {
         return null;
     })();
 
-    const CANVAS_W = 155;
+    const CANVAS_W = 130;
     const NW = 13;
     const hasNalich  = !!nalichnikParsed;
     const hasNalichB = hasNalich && nalichnikParsed.B !== null;
@@ -4637,7 +4637,11 @@ window.printProductionSheet = function(rowIdx) {
 <style>
 
 @page { size: A4; margin: 10mm; }
-.nr { font-family: Arial, Helvetica, sans-serif; font-size: 9pt; color: #111; line-height: 1.3; }
+@media print { #printSheetContent > .nr { margin: 0 !important; } }
+html, body { height: auto !important; overflow: visible !important; }
+.nr { font-family: Arial, Helvetica, sans-serif; font-size: 9pt; color: #111; line-height: 1.3; page-break-after: avoid; }
+.nr * { page-break-inside: avoid; }
+.nr-stub { page-break-after: avoid !important; break-after: avoid !important; }
 
 .nr-top { margin-bottom: 2mm; }
 .nr-order-row { display: flex; align-items: stretch; border: 1.5px solid #222; margin-bottom: 0; }
@@ -4830,7 +4834,7 @@ window.doPrintSheet = function() {
         </div>
     </div>
     <div style="padding:24px; overflow-y:auto; flex:1; background:#f0f2f5; display:flex; justify-content:center;">
-        <div id="printSheetContent" style="background:#fff; width:210mm; min-height:297mm; padding:8mm 10mm; box-shadow:0 4px 24px rgba(0,0,0,0.12); font-family:Arial,sans-serif; font-size:11pt; color:#000;"></div>
+        <div id="printSheetContent" style="background:#fff; width:210mm; padding:8mm 10mm; box-shadow:0 4px 24px rgba(0,0,0,0.12); font-family:Arial,sans-serif; font-size:11pt; color:#000;"></div>
     </div>
 </div>
 
