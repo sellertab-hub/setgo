@@ -416,8 +416,9 @@
         }
 
 
+
         #unsavedModal {
-            position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:9999;
+            position:absolute;inset:0;background:rgba(0,0,0,0.45);z-index:200;
             display:none;align-items:center;justify-content:center;
         }
         #unsavedModal .um-box {
@@ -1253,6 +1254,18 @@
             <button id="saveClientBtn" class="btn-save" style="width:100%; padding:14px; margin-top:20px;">СОХРАНИТЬ КЛИЕНТА</button>
         </div>
     </div>
+
+
+    <div id="unsavedModal" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,0.45);z-index:200;align-items:center;justify-content:center;">
+        <div class="um-box">
+            <div class="um-title">Есть несохранённые изменения</div>
+            <div class="um-text">Вы внесли изменения в заказ, но не сохранили его. Что хотите сделать?</div>
+            <div class="um-btns">
+                <button id="umLeaveBtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Выйти без сохранения</button>
+                <button id="umSaveBtn" style="background:#16a34a;color:#fff;border-color:#16a34a;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Сохранить</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div id="financeModal" class="overlay hidden">
@@ -2054,7 +2067,7 @@ function loadDoorsIntoConfig(doorsArr) {
 
         const knownExtra = new Set([...ALL_POSSIBLE_FIELDS, ...SPECIAL_FIELDS]);
         [...ALL_POSSIBLE_FIELDS, ...SPECIAL_FIELDS].forEach(f => {
-            if (row[f] && row[f] !== '—') usedExtraFields.add(f);
+            if (row[f] && row[f] !== '—' && !['_visGlazing','_visVent','_visCloser','_manualName','_fromProem'].includes(f)) usedExtraFields.add(f);
         });
 
         const baseKnown = new Set([
@@ -2068,7 +2081,7 @@ function loadDoorsIntoConfig(doorsArr) {
         ]);
         Object.keys(row).forEach(k => {
             if (!baseKnown.has(k) && row[k] && row[k] !== '—') {
-                usedExtraFields.add(k);
+                if (!['_visGlazing','_visVent','_visCloser','_manualName','_fromProem'].includes(k)) usedExtraFields.add(k);
                 if (!customUserColumns.includes(k)) customUserColumns.push(k);
             }
         });
@@ -2944,8 +2957,9 @@ window.addExtraColumn = function(field) {
 
 function renderRightTable() {
     const tbody = document.getElementById("doorsTbody");
+    const INTERNAL_COLS = new Set(['_visGlazing','_visVent','_visCloser','_manualName','_fromProem','_sigInited','doorName']);
     const baseColumns = ['requestNumber', 'doorPosition', 'naimenovanie', 'doorKey', 'Тип размера', 'Высота', 'Ширина', ...CORE_FIELDS, 'Толщина стены, мм', 'Кол-во'];
-    const extraColumns = Array.from(usedExtraFields);
+    const extraColumns = Array.from(usedExtraFields).filter(c => !INTERNAL_COLS.has(c));
     const allColumns = [...baseColumns, ...extraColumns.filter(c => !baseColumns.includes(c))];
 
     renderColManager(allColumns);
@@ -3690,7 +3704,7 @@ window.generatePDF = function() {
     doc.line(margin, y, pageW - margin, y);
     y += 4;
 
-    const PDF_EXCLUDE = new Set(['requestNumber', 'doorKey']);
+    const PDF_EXCLUDE = new Set(['requestNumber', 'doorKey', '_visGlazing', '_visVent', '_visCloser', '_manualName', '_fromProem', '_sigInited', 'doorName']);
     const baseColumns = ["doorPosition", "naimenovanie", "Тип размера", "Высота", "Ширина", ...CORE_FIELDS, "Толщина стены, мм", "Кол-во"];
     const extraColumns = Array.from(usedExtraFields);
     const allColumns = [...baseColumns, ...extraColumns.filter(c => !baseColumns.includes(c))].filter(col => !hiddenColumns.has(col) && !PDF_EXCLUDE.has(col));
@@ -4702,17 +4716,6 @@ window.doPrintSheet = function() {
         <div style="display:flex;gap:10px;justify-content:flex-end;">
             <button id="delOrderCancelBtn" style="padding:8px 16px;border:1px solid #cbd5e0;background:#fff;border-radius:6px;cursor:pointer;font-family:'Play',sans-serif;font-size:0.85rem;color:#4a5568;">Отмена</button>
             <button id="delOrderConfirmBtn" style="padding:8px 16px;border:none;background:#dc2626;color:#fff;border-radius:6px;cursor:pointer;font-family:'Play',sans-serif;font-weight:700;font-size:0.85rem;">Да, удалить</button>
-        </div>
-    </div>
-</div>
-
-<div id="unsavedModal">
-    <div class="um-box">
-        <div class="um-title">Есть несохранённые изменения</div>
-        <div class="um-text">Вы внесли изменения в заказ, но не сохранили его. Что хотите сделать?</div>
-        <div class="um-btns">
-            <button id="umLeaveBtn" style="padding:8px 16px;border:1px solid #cbd5e0;background:#fff;border-radius:6px;cursor:pointer;font-family:'Play',sans-serif;font-size:0.85rem;color:#4a5568;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Выйти без сохранения</button>
-            <button id="umSaveBtn" style="padding:8px 16px;border:none;background:#16a34a;color:#fff;border-radius:6px;cursor:pointer;font-family:'Play',sans-serif;font-weight:700;font-size:0.85rem;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Сохранить</button>
         </div>
     </div>
 </div>
