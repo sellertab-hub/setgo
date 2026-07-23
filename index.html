@@ -4467,9 +4467,12 @@ function buildDoorSvgMarkup(params) {
             o += `<text x="${boxX+totalBoxW/2}" y="${ny+NW*0.72}" text-anchor="middle" dominant-baseline="middle" font-size="${nFs}" font-weight="bold" fill="${C.text}" font-family="Arial">${n.T}</text>`;
         }
 
+        const pthHnalich = hasPorch ? 7 : 0; // высота порога совпадает с pthH в блоке порога
+        const sideH_extra = boxH + pthHnalich; // полная высота сторон включая порог
+
         if (hasL) {
             const nyL = hasT ? boxY - NW : boxY;
-            const nhL = hasT ? boxH + NW : boxH;
+            const nhL = hasT ? sideH_extra + NW : sideH_extra;
             const midL = nyL + nhL / 2;
             o += `<rect x="${boxX - NW}" y="${nyL}" width="${NW}" height="${nhL}" fill="none" stroke="${C.nalich}" stroke-width="${NSW}"/>`;
             o += `<text x="${boxX - NW/2}" y="${midL}" text-anchor="middle" dominant-baseline="middle" font-size="${nFs}" font-weight="bold" fill="${C.text}" font-family="Arial" transform="rotate(-90,${boxX - NW/2},${midL})">${n.L}</text>`;
@@ -4478,7 +4481,7 @@ function buildDoorSvgMarkup(params) {
         if (hasR) {
             const rx  = boxX + totalBoxW;
             const nyR = hasT ? boxY - NW : boxY;
-            const nhR = hasT ? boxH + NW : boxH;
+            const nhR = hasT ? sideH_extra + NW : sideH_extra;
             const midR = nyR + nhR / 2;
             o += `<rect x="${rx}" y="${nyR}" width="${NW}" height="${nhR}" fill="none" stroke="${C.nalich}" stroke-width="${NSW}"/>`;
             o += `<text x="${rx + NW/2}" y="${midR}" text-anchor="middle" dominant-baseline="middle" font-size="${nFs}" font-weight="bold" fill="${C.text}" font-family="Arial" transform="rotate(90,${rx + NW/2},${midR})">${n.R}</text>`;
@@ -4522,9 +4525,15 @@ function buildDoorSvgMarkup(params) {
         }
     }
 
-    [0.18,0.50,0.82].forEach(t => {
-        const hy = boxY+FW+mainLeafH*t;
-        const hrx = hingeRight ? (mainLeafX+mainLeafW-1) : (mainLeafX+1);
+    const hingeCnt = h <= 1700 ? 2 : h <= 2200 ? 3 : 4;
+    const hingePositions = hingeCnt === 2 ? [0.2, 0.8]
+                         : hingeCnt === 3 ? [0.15, 0.5, 0.85]
+                         :                  [0.12, 0.38, 0.62, 0.88];
+    hingePositions.forEach(t => {
+        const hy = boxY + FW + mainLeafH * t;
+        const hrx = hingeRight
+            ? (mainLeafX + mainLeafW - 1.5)  // правая сторона — к правой рамке
+            : (mainLeafX - 3);                // левая сторона — к левой рамке
         o += `<rect x="${hrx}" y="${hy-3.5}" width="4.5" height="7" rx="0" fill="${C.hinge}" stroke="${C.stroke}" stroke-width="0.5"/>`;
     });
 
