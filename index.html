@@ -4423,7 +4423,8 @@ function buildDoorSvgMarkup(params) {
     const padL = ARROW_LEFT + (hasNalich && nalichnikParsed.L > 0 ? NW + 2 : 2);
     const padR = hasNalich && nalichnikParsed.R > 0 ? NW + 4 : 4;
     const padT = 4 + (hasNalich ? NW + 2 : 0);
-    const padB = ARROW_BOT + (hasNalichB ? NW + 2 : 0);
+    const ARROW_BOT_BASE = 28; // место для стрелки ширины (линия + текст)
+    const padB = ARROW_BOT_BASE + (hasNalichB ? NW + 2 : 0) + (hasPorch ? 10 : 0);
 
     const availW  = CANVAS_W - padL - padR;
     const availH  = CANVAS_H_MAX - padT - padB;
@@ -4527,10 +4528,14 @@ function buildDoorSvgMarkup(params) {
     const bottomY = boxY+boxH;
     let extraH = 0;
     if (hasPorch) {
-        o += `<rect x="${boxX}" y="${bottomY}" width="${totalBoxW}" height="4.5" fill="${C.thresh}" stroke="${C.stroke}" stroke-width="0.7"/>`;
-        extraH = 4.5;
-        const pl = (porchLabel.length>14) ? porchLabel.substring(0,14)+'\u2026' : porchLabel;
-        o += `<text x="${boxX+totalBoxW/2}" y="${bottomY+extraH+7}" text-anchor="middle" font-size="5.5" fill="${C.text}" font-family="Arial">${pl}</text>`;
+        const pthH = 7;
+        o += `<rect x="${boxX}" y="${bottomY}" width="${totalBoxW}" height="${pthH}" fill="${C.thresh}" stroke="${C.stroke}" stroke-width="0.7"/>`;
+        extraH = pthH;
+        const pl = porchLabel && porchLabel !== '—' ? porchLabel : '';
+        if (pl) {
+            const pls = pl.length > 16 ? pl.substring(0,16)+'\u2026' : pl;
+            o += `<text x="${boxX+totalBoxW/2}" y="${bottomY+pthH*0.68}" text-anchor="middle" dominant-baseline="middle" font-size="4.5" fill="${C.stroke}" font-family="Arial">${pls}</text>`;
+        }
     }
 
     const aColor = '#4a6a8a';
@@ -4545,7 +4550,7 @@ function buildDoorSvgMarkup(params) {
     o += `<line x1="${hvCx-3}" y1="${hvY2}" x2="${hvCx+3}" y2="${hvY2}" stroke="${aColor}" stroke-width="0.8"/>`;
     o += `<text x="${hvCx}" y="${hvMid}" text-anchor="middle" dominant-baseline="middle" font-size="${aFs}" font-weight="bold" fill="${aColor}" font-family="Arial" transform="rotate(-90,${hvCx},${hvMid})">${h}</text>`;
 
-    const awY   = hvY2 + (hasPorch ? 12 : 3);  // после текста порога или просто ниже двери
+    const awY   = hvY2 + (hasPorch ? 4 : 3);  // ниже порога (текст уже внутри прямоугольника)
     const awX1  = boxX;
     const awX2  = boxX + totalBoxW;
     const awMid = (awX1 + awX2) / 2;
@@ -4555,7 +4560,7 @@ function buildDoorSvgMarkup(params) {
     o += `<text x="${awMid}" y="${awY+13}" text-anchor="middle" font-size="${aFs}" font-weight="bold" fill="${aColor}" font-family="Arial">${w}</text>`;
 
     const svgH = padT + doorH + padB;
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${CANVAS_W} ${svgH}" width="100%" style="display:block;">${o}</svg>`;
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${CANVAS_W} ${svgH}" width="100%" preserveAspectRatio="xMidYMid meet" style="display:block; height:auto;">${o}</svg>`;
 }
 
 window.printProductionSheet = function(rowIdx) {
@@ -4666,10 +4671,10 @@ html, body { height: auto !important; overflow: visible !important; }
 .nr-size-val { font-size: 12pt; font-weight: 900; color: #111; }
 .nr-client-row { border: 1.5px solid #222; border-top: none; padding: 1.5mm 3mm; font-size: 11pt; font-weight: 700; margin-bottom: 2mm; }
 
-.nr-main { display: flex; gap: 0; border: 1px solid #999; margin-bottom: 2mm; }
+.nr-main { display: flex; gap: 0; border: 1px solid #999; margin-bottom: 2mm; align-items: stretch; }
 
-.nr-door-col { flex: 0 0 50%; border-right: 1.5px solid #bbb; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2mm; background: #fafafa; }
-.nr-door-col svg { display: block; width: 100%; height: 100%; flex: 1; }
+.nr-door-col { flex: 0 0 50%; border-right: 1.5px solid #bbb; padding: 3mm 2mm; background: #fafafa; }
+.nr-door-col svg { display: block; width: 100%; max-width: 100%; }
 
 .nr-params-col { flex: 1; display: flex; flex-direction: column; }
 .nr-params-hdr { background: #2a2a2a; color: #fff; font-size: 7.5pt; font-weight: 700; letter-spacing: 0.08em; padding: 1.5mm 2.5mm; text-transform: uppercase; }
