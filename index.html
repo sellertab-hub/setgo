@@ -1356,6 +1356,7 @@ let groupedClientOrders = [];
 let selectedClient = "";
 let currentOrderId = null;
 let currentDoors = [];
+let signatureB64 = null;
 let currentTypeKey = "";
 let nextRequestNumber = 1;
 let usedExtraFields = new Set();
@@ -2088,52 +2089,55 @@ function tryCloseOverlay() {
     }
 }
 
-document.getElementById('umLeaveBtn').addEventListener('click', () => {
-    document.getElementById('unsavedModal').style.display = 'none';
-    closeOverlayForced();
-});
+document.addEventListener('DOMContentLoaded', () => {
+    const umLeave = document.getElementById('umLeaveBtn');
+    const umSave  = document.getElementById('umSaveBtn');
+    const delBtn  = document.getElementById('deleteOrderBtn');
+    const delCancel  = document.getElementById('delOrderCancelBtn');
+    const delConfirm = document.getElementById('delOrderConfirmBtn');
+    const closeBtn   = document.getElementById('closeOverlayBtn');
 
-document.getElementById('umSaveBtn').addEventListener('click', () => {
-    document.getElementById('unsavedModal').style.display = 'none';
-    document.getElementById('saveOrderBtn').click();
-});
+    if (umLeave) umLeave.addEventListener('click', () => {
+        document.getElementById('unsavedModal').style.display = 'none';
+        closeOverlayForced();
+    });
+    if (umSave) umSave.addEventListener('click', () => {
+        document.getElementById('unsavedModal').style.display = 'none';
+        document.getElementById('saveOrderBtn').click();
+    });
+    if (closeBtn) closeBtn.addEventListener('click', () => {
+        tryCloseOverlay();
+    });
 
-document.getElementById("closeOverlayBtn").addEventListener("click", () => {
-    tryCloseOverlay();
-});
-
-document.getElementById('deleteOrderBtn').addEventListener('click', () => {
-    if (!currentOrderId) return;
-    const modal = document.getElementById('deleteOrderModal');
-    modal.style.display = 'flex';
-});
-
-document.getElementById('delOrderCancelBtn').addEventListener('click', () => {
-    document.getElementById('deleteOrderModal').style.display = 'none';
-});
-
-document.getElementById('delOrderConfirmBtn').addEventListener('click', async () => {
-    const modal = document.getElementById('deleteOrderModal');
-    modal.style.display = 'none';
-    if (!currentOrderId) return;
-    showLoading('Удаление заказа...');
-    try {
-        const resp = await fetch(API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'deleteOrder', orderId: currentOrderId })
-        });
-        const data = await resp.json();
-        hideLoading();
-        if (data.error) { showToast('Ошибка: ' + data.error, true); return; }
-        showToast('Заказ удалён');
-        markClean();
-        document.getElementById('configOverlay').classList.add('hidden');
-        await loadDataFromAPI();
-    } catch (err) {
-        hideLoading();
-        showToast('Ошибка удаления: ' + err.message, true);
-    }
+    if (delBtn) delBtn.addEventListener('click', () => {
+        if (!currentOrderId) return;
+        document.getElementById('deleteOrderModal').style.display = 'flex';
+    });
+    if (delCancel) delCancel.addEventListener('click', () => {
+        document.getElementById('deleteOrderModal').style.display = 'none';
+    });
+    if (delConfirm) delConfirm.addEventListener('click', async () => {
+        document.getElementById('deleteOrderModal').style.display = 'none';
+        if (!currentOrderId) return;
+        showLoading('Удаление заказа...');
+        try {
+            const resp = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'deleteOrder', orderId: currentOrderId })
+            });
+            const data = await resp.json();
+            hideLoading();
+            if (data.error) { showToast('Ошибка: ' + data.error, true); return; }
+            showToast('Заказ удалён');
+            markClean();
+            document.getElementById('configOverlay').classList.add('hidden');
+            await loadDataFromAPI();
+        } catch (err) {
+            hideLoading();
+            showToast('Ошибка удаления: ' + err.message, true);
+        }
+    });
 });
 
 document.getElementById("orderStatusSelect").addEventListener("change", () => {
@@ -3802,8 +3806,6 @@ window.generatePDF = function() {
     closePdfModal();
     showToast("ПДФ успешно скачан!");
 };
-
-let signatureB64 = null;  // храним base64 здесь
 
 window.toggleSignatureFields = function() {
     const on = document.getElementById('m_includeSignature').checked;
