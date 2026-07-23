@@ -362,10 +362,47 @@
             cursor: pointer;
             border-radius: 6px;
             font-family: 'Play', sans-serif;
+            transition: background 0.2s, box-shadow 0.2s;
+        }
+        .btn-save:hover { background: #15803d; }
+
+
+        #saveOrderBtn.save-idle {
+            background: #9ca3af;
+            cursor: default;
+            box-shadow: none;
+        }
+        #saveOrderBtn.save-idle:hover { background: #9ca3af; }
+
+
+        #saveOrderBtn.save-dirty {
+            background: #16a34a;
+            box-shadow: 0 0 0 3px rgba(22,163,74,0.25);
+            animation: pulseSave 1.8s ease-in-out infinite;
+        }
+        @keyframes pulseSave {
+            0%,100% { box-shadow: 0 0 0 3px rgba(22,163,74,0.25); }
+            50%      { box-shadow: 0 0 0 6px rgba(22,163,74,0.08); }
         }
 
-        .btn-save:hover {
-            background: #15803d;
+
+        #unsavedModal {
+            position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:9999;
+            display:flex;align-items:center;justify-content:center;
+        }
+        #unsavedModal .um-box {
+            background:#fff;border-radius:10px;padding:28px 32px;
+            max-width:340px;width:90%;box-shadow:0 8px 40px rgba(0,0,0,0.18);
+            font-family:'Play',sans-serif;
+        }
+        #unsavedModal .um-title {
+            font-size:1rem;font-weight:700;color:#1e3a5f;margin-bottom:10px;
+        }
+        #unsavedModal .um-text {
+            font-size:0.875rem;color:#4a5568;margin-bottom:20px;line-height:1.5;
+        }
+        #unsavedModal .um-btns {
+            display:flex;gap:10px;justify-content:flex-end;
         }
 
         .table-wrapper {
@@ -1108,18 +1145,18 @@
                 <h3 style="margin-bottom:12px; color:#1e3a5f;">ПАРАМЕТРЫ ДВЕРИ</h3>
                 <div id="doorSvgPreview" style="margin-bottom:10px;">
                     <svg id="doorSvg" style="width:100%;max-width:240px;display:block;margin:0 auto;" viewBox="0 0 240 260"></svg>
-                    <div id="doorVisChecks" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:6px;padding:0 4px;">
-                        <label style="display:flex;align-items:center;gap:4px;font-size:0.75rem;color:#4a5568;cursor:pointer;">
+                    <div id="doorVisChecks" style="display:flex;gap:16px;justify-content:center;margin-top:6px;flex-wrap:wrap;">
+                        <label style="display:flex;align-items:center;gap:5px;font-size:0.75rem;color:#4a5568;cursor:pointer;user-select:none;">
                             <input type="checkbox" id="visGlazing" onchange="renderDoorSvg()">
-                            Остекление
+                            <span>Остекление</span>
                         </label>
-                        <label style="display:flex;align-items:center;gap:4px;font-size:0.75rem;color:#4a5568;cursor:pointer;">
+                        <label style="display:flex;align-items:center;gap:5px;font-size:0.75rem;color:#4a5568;cursor:pointer;user-select:none;">
                             <input type="checkbox" id="visVent" onchange="renderDoorSvg()">
-                            Вент. решётка
+                            <span>Вент. решётка</span>
                         </label>
-                        <label style="display:flex;align-items:center;gap:4px;font-size:0.75rem;color:#4a5568;cursor:pointer;">
+                        <label style="display:flex;align-items:center;gap:5px;font-size:0.75rem;color:#4a5568;cursor:pointer;user-select:none;">
                             <input type="checkbox" id="visCloser" onchange="renderDoorSvg()">
-                            Доводчик
+                            <span>Доводчик</span>
                         </label>
                     </div>
                 </div>
@@ -1901,6 +1938,7 @@ document.getElementById("startNewOrderBtn").addEventListener("click", () => {
     columnOrder = [];
     nextRequestNumber = 1;
     document.getElementById("configHeaderTitle").innerText = `НОВЫЙ ЗАКАЗ: ${selectedClient}`;
+    markClean();
     openConfigurator();
 });
 
@@ -2013,15 +2051,57 @@ function openConfigurator() {
     renderExtraParams();
     renderRightTable();
     refreshOrderMetaUI();
+    markClean();  // При открытии — кнопка серая
 }
 
+let orderDirty = false;
+
+function markDirty() {
+    if (orderDirty) return;
+    orderDirty = true;
+    const btn = document.getElementById('saveOrderBtn');
+    if (btn) { btn.classList.remove('save-idle'); btn.classList.add('save-dirty'); }
+}
+
+function markClean() {
+    orderDirty = false;
+    const btn = document.getElementById('saveOrderBtn');
+    if (btn) { btn.classList.remove('save-dirty'); btn.classList.add('save-idle'); }
+}
+
+document.addEventListener('DOMContentLoaded', () => markClean());
+
+function closeOverlayForced() {
+    document.getElementById('configOverlay').classList.add('hidden');
+    markClean();
+}
+
+function tryCloseOverlay() {
+    if (orderDirty) {
+        document.getElementById('unsavedModal').classList.remove('hidden');
+    } else {
+        closeOverlayForced();
+    }
+}
+
+document.getElementById('umLeaveBtn').addEventListener('click', () => {
+    document.getElementById('unsavedModal').classList.add('hidden');
+    closeOverlayForced();
+});
+
+document.getElementById('umSaveBtn').addEventListener('click', () => {
+    document.getElementById('unsavedModal').classList.add('hidden');
+    document.getElementById('saveOrderBtn').click();
+});
+
 document.getElementById("closeOverlayBtn").addEventListener("click", () => {
-    document.getElementById("configOverlay").classList.add("hidden");
+    tryCloseOverlay();
 });
 
 document.getElementById("orderStatusSelect").addEventListener("change", () => {
     currentOrderStatus = document.getElementById("orderStatusSelect").value;
     refreshOrderMetaUI();
+    markDirty();
 });
 
 document.getElementById("openFinanceBtn").addEventListener("click", () => {
@@ -2060,6 +2140,7 @@ document.getElementById("saveOrderBtn").addEventListener("click", async () => {
         currentOrderTotal = parseFloat(result.orderTotal) || currentOrderTotal;
 
         showToast("Заказ успешно сохранен!");
+        markClean();
         document.getElementById("configOverlay").classList.add("hidden");
         await loadDataFromAPI();
     } catch (err) {
@@ -2427,11 +2508,16 @@ document.getElementById("addDoorBtn").addEventListener("click", () => {
 
     cfg.naimenovanie = buildDoorName(cfg);
 
+    cfg._visGlazing = document.getElementById('visGlazing')?.checked || false;
+    cfg._visVent    = document.getElementById('visVent')?.checked    || false;
+    cfg._visCloser  = document.getElementById('visCloser')?.checked  || false;
+
     currentDoors.push({ id: Date.now() + Math.random(), ...cfg });
 
     currentDoors.forEach((d, i) => { d.requestNumber = i + 1; });
     nextRequestNumber = currentDoors.length + 1;
 
+    markDirty();
     renderRightTable();
     showToast("Дверь добавлена");
 });
@@ -2454,6 +2540,7 @@ function makeCellEditable(td, doorIdx, colName) {
 
     const door = currentDoors[doorIdx];
     const currentVal = door[colName] !== undefined ? String(door[colName]) : '—';
+    markDirty();  // Любое редактирование = изменение
 
     if (colName === 'naimenovanie') {
         const input = document.createElement('input');
@@ -2854,6 +2941,7 @@ window.rowDrop = function(e, idx) {
     if (_rowDragSrc === null || _rowDragSrc === idx) return;
     const moved = currentDoors.splice(_rowDragSrc, 1)[0];
     currentDoors.splice(idx, 0, moved);
+    markDirty();
     _rowDragSrc = null;
     renderRightTable();
 };
@@ -2883,6 +2971,7 @@ window.delRow = function(idx) {
     currentDoors.splice(idx, 1);
     currentDoors.forEach((d, i) => { d.requestNumber = i + 1; });
     nextRequestNumber = currentDoors.length + 1;
+    markDirty();
     renderRightTable();
 };
 
@@ -4178,6 +4267,146 @@ return QRCode;
 })();
 })();
 
+function buildDoorSvgMarkup(params) {
+    const { h = 2050, w = 900, is2P = false, hingeRight = false,
+            hasPorch = false, porchLabel = '',
+            hasGlazing = false, isVent = false, hasCloser = false,
+            nalichnik = '' } = params;
+
+    const nalichnikParsed = (() => {
+        if (!nalichnik || nalichnik.trim() === '' || nalichnik.trim() === '\u2014') return null;
+        const parts = nalichnik.split(/[хxX\*,;]+/).map(s => parseInt(s.trim())).filter(n => !isNaN(n));
+        if (parts.length >= 3) return { L: parts[0], T: parts[1], R: parts[2], B: parts.length >= 4 ? parts[3] : null };
+        return null;
+    })();
+
+    const CANVAS_W = 180;
+    const NW = 13;
+    const hasNalich  = !!nalichnikParsed;
+    const hasNalichB = hasNalich && nalichnikParsed.B !== null;
+    const padL = hasNalich && nalichnikParsed.L > 0 ? NW + 5 : 8;
+    const padR = hasNalich && nalichnikParsed.R > 0 ? NW + 5 : 8;
+    const padT = 8 + (hasNalich ? NW + 5 : 0);
+    const padB = 8 + (hasNalichB ? NW + 3 : 0) + 20;
+
+    const availW  = CANVAS_W - padL - padR;
+    const maxH    = 140;
+    const aspect  = w / h;
+    let doorW, doorH;
+    if (aspect > availW / maxH) { doorW = availW; doorH = doorW / aspect; }
+    else                        { doorH = maxH;   doorW = doorH * aspect; }
+    doorW = Math.max(doorW, 35); doorH = Math.max(doorH, 45);
+
+    const stubW   = is2P ? Math.round(doorW * 0.40) : 0;
+    const totalW  = is2P ? doorW + stubW : doorW;
+    const stubOnLeft = hingeRight;
+    const boxX = padL, boxY = padT, boxH = doorH;
+    const FW = 4;
+
+    const C = { stroke:'#1c2d45', fill:'#f0f4f8', fill2:'#e4eaf2',
+                glass:'rgba(150,200,250,0.35)', nalich:'#1c2d45',
+                hinge:'#7090b0', handle:'#4a6a8a', thresh:'#6b8ca8',
+                text:'#1e3a5f', vent:'#7090b0' };
+    const SW = 1.3;
+
+    const mainX   = stubOnLeft ? (boxX + FW + stubW) : boxX;
+    const mainLeafX = mainX + FW;
+    const mainLeafW = doorW - FW * 2;
+    const mainLeafH = doorH - FW * 2;
+    const totalBoxW = is2P ? totalW + FW : doorW;
+
+    let o = '';
+
+    if (hasNalich) {
+        const n = nalichnikParsed;
+        const nL = n.L > 0 ? NW : 0, nR = n.R > 0 ? NW : 0;
+        const nx = boxX - nL, ny = boxY - NW, nw = totalBoxW + nL + nR;
+        o += `<rect x="${nx}" y="${ny}" width="${nw}" height="${NW}" fill="none" stroke="${C.nalich}" stroke-width="${SW}"/>`;
+        if (n.T > 0) o += `<text x="${nx+nw/2}" y="${ny+NW-2}" text-anchor="middle" font-size="6.5" font-weight="bold" fill="${C.text}" font-family="Arial">${n.T}</text>`;
+        if (n.L > 0) {
+            o += `<rect x="${boxX-NW}" y="${boxY}" width="${NW}" height="${boxH}" fill="none" stroke="${C.nalich}" stroke-width="${SW}"/>`;
+            o += `<text x="${boxX-NW/2}" y="${boxY+boxH/2}" text-anchor="middle" dominant-baseline="middle" font-size="6.5" font-weight="bold" fill="${C.text}" font-family="Arial" transform="rotate(-90,${boxX-NW/2},${boxY+boxH/2})">${n.L}</text>`;
+        }
+        if (n.R > 0) {
+            const rx = boxX + totalBoxW;
+            o += `<rect x="${rx}" y="${boxY}" width="${NW}" height="${boxH}" fill="none" stroke="${C.nalich}" stroke-width="${SW}"/>`;
+            o += `<text x="${rx+NW/2}" y="${boxY+boxH/2}" text-anchor="middle" dominant-baseline="middle" font-size="6.5" font-weight="bold" fill="${C.text}" font-family="Arial" transform="rotate(90,${rx+NW/2},${boxY+boxH/2})">${n.R}</text>`;
+        }
+        if (hasNalichB && n.B > 0) {
+            o += `<rect x="${boxX-nL}" y="${boxY+boxH}" width="${nw}" height="${NW}" fill="none" stroke="${C.nalich}" stroke-width="${SW}"/>`;
+            o += `<text x="${boxX-nL+nw/2}" y="${boxY+boxH+NW-2}" text-anchor="middle" font-size="6.5" font-weight="bold" fill="${C.text}" font-family="Arial">${n.B}</text>`;
+        }
+    }
+
+    if (is2P) {
+        o += `<rect x="${boxX}" y="${boxY}" width="${totalBoxW}" height="${boxH}" fill="${C.fill}" stroke="${C.stroke}" stroke-width="${SW+0.4}"/>`;
+        const seamX = stubOnLeft ? boxX + stubW + FW : boxX + doorW;
+        o += `<line x1="${seamX}" y1="${boxY}" x2="${seamX}" y2="${boxY+boxH}" stroke="${C.stroke}" stroke-width="${SW}"/>`;
+        const sx = stubOnLeft ? boxX+FW : boxX+doorW+FW;
+        o += `<rect x="${sx}" y="${boxY+FW}" width="${stubW-FW}" height="${boxH-FW*2}" fill="${C.fill2}" stroke="none"/>`;
+    } else {
+        o += `<rect x="${boxX}" y="${boxY}" width="${doorW}" height="${boxH}" fill="${C.fill}" stroke="${C.stroke}" stroke-width="${SW+0.4}"/>`;
+    }
+    o += `<rect x="${mainLeafX}" y="${boxY+FW}" width="${mainLeafW}" height="${mainLeafH}" fill="none" stroke="${C.stroke}" stroke-width="0.6" opacity="0.4"/>`;
+
+    if (hasGlazing) {
+        const gx = mainLeafX+mainLeafW*0.12, gy = boxY+FW+mainLeafH*0.08;
+        const gw = mainLeafW*0.76, gh = mainLeafH*0.20;
+        o += `<rect x="${gx}" y="${gy}" width="${gw}" height="${gh}" fill="${C.glass}" stroke="${C.stroke}" stroke-width="${SW}"/>`;
+        for (let i=0;i<=4;i++) { const t=i/4;
+            o += `<line x1="${gx+gw*t}" y1="${gy}" x2="${gx}" y2="${gy+gh*t}" stroke="${C.stroke}" stroke-width="0.35" opacity="0.3"/>`;
+            o += `<line x1="${gx+gw}" y1="${gy+gh*t}" x2="${gx+gw*(1-t)}" y2="${gy+gh}" stroke="${C.stroke}" stroke-width="0.35" opacity="0.3"/>`;
+        }
+    }
+
+    if (isVent) {
+        const vx=mainLeafX+mainLeafW*0.12, vy=boxY+FW+mainLeafH*0.72;
+        const vw=mainLeafW*0.76, vh=mainLeafH*0.14;
+        o += `<rect x="${vx}" y="${vy}" width="${vw}" height="${vh}" fill="none" stroke="${C.stroke}" stroke-width="${SW}"/>`;
+        for (let s=0;s<5;s++) {
+            const sy=vy+1.5+s*(vh-3)/5;
+            o += `<rect x="${vx+1.5}" y="${sy}" width="${vw-3}" height="${(vh-3)/5*0.5}" fill="${C.vent}" opacity="0.4"/>`;
+        }
+    }
+
+    const hingeEdgeX = hingeRight ? mainLeafX+mainLeafW : mainLeafX;
+    [0.18,0.50,0.82].forEach(t => {
+        const hy = boxY+FW+mainLeafH*t;
+        const hrx = hingeRight ? hingeEdgeX-4 : hingeEdgeX;
+        o += `<rect x="${hrx}" y="${hy-3.5}" width="4.5" height="7" rx="0" fill="${C.hinge}" stroke="${C.stroke}" stroke-width="0.5"/>`;
+    });
+
+    const hside = hingeRight;
+    const hx = hside ? mainLeafX+mainLeafW*0.12 : mainLeafX+mainLeafW*0.88;
+    const hyc = boxY+FW+mainLeafH*0.52, hl = mainLeafH*0.11;
+    o += `<line x1="${hx}" y1="${hyc-hl/2}" x2="${hx}" y2="${hyc+hl/2}" stroke="${C.handle}" stroke-width="2" stroke-linecap="square"/>`;
+    const hd = hside ? 3.5 : -3.5;
+    o += `<line x1="${hx}" y1="${hyc-hl/4}" x2="${hx+hd}" y2="${hyc-hl/4}" stroke="${C.handle}" stroke-width="2" stroke-linecap="square"/>`;
+    o += `<ellipse cx="${hx}" cy="${hyc+hl/2+4}" rx="1.8" ry="2.2" fill="none" stroke="${C.handle}" stroke-width="0.8"/>`;
+
+    if (hasCloser) {
+        const cx = mainLeafX+mainLeafW*0.5, cy = boxY+FW+2.5;
+        o += `<rect x="${cx-mainLeafW*0.2}" y="${cy}" width="${mainLeafW*0.4}" height="4.5" rx="0.8" fill="none" stroke="${C.stroke}" stroke-width="0.7"/>`;
+        o += `<text x="${cx}" y="${cy+3.5}" text-anchor="middle" font-size="3.5" fill="${C.text}" font-family="Arial">ДЦ</text>`;
+    }
+
+    const bottomY = boxY+boxH;
+    let extraH = 0;
+    if (hasPorch) {
+        o += `<rect x="${boxX}" y="${bottomY}" width="${totalBoxW}" height="4.5" fill="${C.thresh}" stroke="${C.stroke}" stroke-width="0.7"/>`;
+        extraH = 4.5;
+        const pl = (porchLabel.length>14) ? porchLabel.substring(0,14)+'\u2026' : porchLabel;
+        o += `<text x="${boxX+totalBoxW/2}" y="${bottomY+extraH+7}" text-anchor="middle" font-size="5.5" fill="${C.text}" font-family="Arial">${pl}</text>`;
+    }
+
+    const labelY = bottomY+extraH+(hasPorch?9:3)+8;
+    o += `<text x="${boxX+totalBoxW/2}" y="${labelY}" text-anchor="middle" font-size="8" font-weight="bold" fill="${C.text}" font-family="Arial">${w} × ${h}</text>`;
+    o += `<text x="${boxX+totalBoxW/2}" y="${labelY+9}" text-anchor="middle" font-size="5.5" fill="#6b8ca8" font-family="Arial">мм</text>`;
+
+    const svgH = labelY + 12;
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${CANVAS_W} ${svgH}" width="${CANVAS_W}" height="${svgH}" style="display:block;">${o}</svg>`;
+}
+
 window.printProductionSheet = function(rowIdx) {
     const door = prodFiltered[rowIdx];
     if (!door) return;
@@ -4227,6 +4456,25 @@ window.printProductionSheet = function(rowIdx) {
         return `<tr${hl}><td style="width:50%">${label}</td><td class="ps-val">${escapeHtml(val)}</td></tr>`;
     }).join('');
 
+    const porchVal  = get('Порог');
+    const glazVal   = get('Остекление');
+    const closerVal = get('Доводчик');
+    const nalichVal = get('Наличник');
+    const ventFromField  = glazVal.toLowerCase().includes('вент');
+    const glazFromField  = glazVal && glazVal !== 'Нет' && glazVal !== '—' && !ventFromField;
+    const doorSvgMarkup = buildDoorSvgMarkup({
+        h:          door.height || 2050,
+        w:          door.width  || 900,
+        is2P:       (door.openingFull || door.opening || '').includes('2') || (door.naimenovanie || '').includes('-Д '),
+        hingeRight: (door.openingFull || door.opening || '').includes('Прав'),
+        hasPorch:   porchVal && porchVal !== 'Без порога' && porchVal !== '—',
+        porchLabel: porchVal,
+        hasGlazing: glazFromField || !!(door._visGlazing),
+        isVent:     ventFromField || !!(door._visVent),
+        hasCloser:  (closerVal && closerVal !== 'Подготовка' && closerVal !== '—') || !!(door._visCloser),
+        nalichnik:  nalichVal
+    });
+
     const html = `
     <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:3mm;">
         <div>
@@ -4255,7 +4503,12 @@ window.printProductionSheet = function(rowIdx) {
     </table>
 
     <table class="ps-table">
-        <tr><td colspan="2" class="ps-section">ПАРАМЕТРЫ ДВЕРИ</td></tr>
+        <tr>
+            <td colspan="2" class="ps-section">ПАРАМЕТРЫ ДВЕРИ</td>
+            <td rowspan="99" style="width:200px;vertical-align:top;padding:2mm;border-left:1px solid #000;text-align:center;">
+                ${doorSvgMarkup}
+            </td>
+        </tr>
         ${paramHtml}
         <tr><td>Цвет RAL</td><td class="ps-val">${escapeHtml(get("Цвет"))}</td></tr>
     </table>
@@ -4355,6 +4608,17 @@ window.doPrintSheet = function() {
 .ps-qr-wrap { display:flex; justify-content:flex-end; align-items:flex-start; }
 #qrCodeImg { border:1px solid #ddd; display:block; }
 </style>
+
+<div id="unsavedModal" class="hidden">
+    <div class="um-box">
+        <div class="um-title">Есть несохранённые изменения</div>
+        <div class="um-text">Вы внесли изменения в заказ, но не сохранили его. Что хотите сделать?</div>
+        <div class="um-btns">
+            <button id="umLeaveBtn" style="padding:8px 16px;border:1px solid #cbd5e0;background:#fff;border-radius:6px;cursor:pointer;font-family:'Play',sans-serif;font-size:0.85rem;color:#4a5568;">&#x1F6AA; Выйти без сохранения</button>
+            <button id="umSaveBtn" style="padding:8px 16px;border:none;background:#16a34a;color:#fff;border-radius:6px;cursor:pointer;font-family:'Play',sans-serif;font-weight:700;font-size:0.85rem;">&#x1F4BE; Сохранить</button>
+        </div>
+    </div>
+</div>
 
 </body>
 </html>
