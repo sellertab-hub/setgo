@@ -4416,10 +4416,10 @@ function buildDoorSvgMarkup(params) {
     const NW = 13;
     const hasNalich  = !!nalichnikParsed;
     const hasNalichB = hasNalich && nalichnikParsed.B !== null;
-    const padL = hasNalich && nalichnikParsed.L > 0 ? NW + 5 : 8;
-    const padR = hasNalich && nalichnikParsed.R > 0 ? NW + 5 : 8;
-    const padT = 8 + (hasNalich ? NW + 5 : 0);
-    const padB = 8 + (hasNalichB ? NW + 3 : 0) + 20;
+    const padL = hasNalich && nalichnikParsed.L > 0 ? NW + 18 : 18;
+    const padR = hasNalich && nalichnikParsed.R > 0 ? NW + 5 : 5;
+    const padT = 6 + (hasNalich ? NW + 4 : 0);
+    const padB = 6 + (hasNalichB ? NW + 3 : 0) + 18;
 
     const availW  = CANVAS_W - padL - padR;
     const maxH    = 140;
@@ -4529,29 +4529,31 @@ function buildDoorSvgMarkup(params) {
         o += `<text x="${boxX+totalBoxW/2}" y="${bottomY+extraH+7}" text-anchor="middle" font-size="5.5" fill="${C.text}" font-family="Arial">${pl}</text>`;
     }
 
-    const arrowY = bottomY + extraH + 3;
-    const arrowX1 = boxX;
-    const arrowX2 = boxX + totalBoxW;
-    const arrowMid = (arrowX1 + arrowX2) / 2;
     const aColor = '#4a6a8a';
-    const aSize = 3.5;
-    o += `<line x1="${arrowX1}" y1="${arrowY+4}" x2="${arrowX2}" y2="${arrowY+4}" stroke="${aColor}" stroke-width="0.8"/>`;
-    o += `<line x1="${arrowX1}" y1="${arrowY+1}" x2="${arrowX1}" y2="${arrowY+7}" stroke="${aColor}" stroke-width="0.8"/>`;
-    o += `<line x1="${arrowX2}" y1="${arrowY+1}" x2="${arrowX2}" y2="${arrowY+7}" stroke="${aColor}" stroke-width="0.8"/>`;
-    o += `<text x="${arrowMid}" y="${arrowY+13}" text-anchor="middle" font-size="${aSize+2}" font-weight="bold" fill="${aColor}" font-family="Arial">${w}</text>`;
+    const aFs = 5.5; // font-size
 
-    const hvX = arrowX2 + 4;
+    const hvX = boxX - 10; // X центра линии
     const hvY1 = boxY;
     const hvY2 = bottomY + extraH;
     const hvMid = (hvY1 + hvY2) / 2;
-    o += `<line x1="${hvX+4}" y1="${hvY1}" x2="${hvX+4}" y2="${hvY2}" stroke="${aColor}" stroke-width="0.8"/>`;
-    o += `<line x1="${hvX+1}" y1="${hvY1}" x2="${hvX+7}" y2="${hvY1}" stroke="${aColor}" stroke-width="0.8"/>`;
-    o += `<line x1="${hvX+1}" y1="${hvY2}" x2="${hvX+7}" y2="${hvY2}" stroke="${aColor}" stroke-width="0.8"/>`;
-    o += `<text x="${hvX+12}" y="${hvMid}" text-anchor="middle" dominant-baseline="middle" font-size="${aSize+2}" font-weight="bold" fill="${aColor}" font-family="Arial" transform="rotate(90,${hvX+12},${hvMid})">${h}</text>`;
+    o += `<line x1="${hvX}" y1="${hvY1}" x2="${hvX}" y2="${hvY2}" stroke="${aColor}" stroke-width="0.8"/>`;
+    o += `<line x1="${hvX-3}" y1="${hvY1}" x2="${hvX+3}" y2="${hvY1}" stroke="${aColor}" stroke-width="0.8"/>`;
+    o += `<line x1="${hvX-3}" y1="${hvY2}" x2="${hvX+3}" y2="${hvY2}" stroke="${aColor}" stroke-width="0.8"/>`;
+    o += `<text x="${hvX-2}" y="${hvMid}" text-anchor="middle" dominant-baseline="middle" font-size="${aFs}" font-weight="bold" fill="${aColor}" font-family="Arial" transform="rotate(-90,${hvX-2},${hvMid})">${h}</text>`;
 
-    const svgW = hvX + 20;
-    const svgH = arrowY + 18;
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${svgW} ${svgH}" width="100%" height="100%" style="display:block;">${o}</svg>`;
+    const arrowY = bottomY + extraH + (hasPorch ? 10 : 3);
+    const arrowX1 = boxX;
+    const arrowX2 = boxX + totalBoxW;
+    const arrowMid = (arrowX1 + arrowX2) / 2;
+    o += `<line x1="${arrowX1}" y1="${arrowY+3}" x2="${arrowX2}" y2="${arrowY+3}" stroke="${aColor}" stroke-width="0.8"/>`;
+    o += `<line x1="${arrowX1}" y1="${arrowY}" x2="${arrowX1}" y2="${arrowY+6}" stroke="${aColor}" stroke-width="0.8"/>`;
+    o += `<line x1="${arrowX2}" y1="${arrowY}" x2="${arrowX2}" y2="${arrowY+6}" stroke="${aColor}" stroke-width="0.8"/>`;
+    o += `<text x="${arrowMid}" y="${arrowY+12}" text-anchor="middle" font-size="${aFs}" font-weight="bold" fill="${aColor}" font-family="Arial">${w}</text>`;
+
+    const vbX = hvX - 8;
+    const vbW = (boxX + totalBoxW) - vbX + 4; // до правого края двери
+    const vbH = arrowY + 16;
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vbX} 0 ${vbW} ${vbH}" width="100%" style="display:block;">${o}</svg>`;
 }
 
 window.printProductionSheet = function(rowIdx) {
