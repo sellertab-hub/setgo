@@ -3028,8 +3028,14 @@ function renderDoorSvg() {
         drawLeaf(boxX + FW, boxY + FW, boxW - FW*2, boxH - FW*2, true, hasGlazing, isVent);
     }
 
+    const mainLeafX = is2P
+        ? (stubOnLeft ? (boxX + FW + stubW + FW) : (boxX + FW))
+        : (boxX + FW);
+    const mainLeafW = is2P ? (mainW - FW) : (boxW - FW*2);
+    const mainLeafH = boxH - FW*2;
+
     const hingeEdgeX = hingeRight
-        ? (mainLeafX + mainLeafW - 1)   // правый край основного
+        ? (mainLeafX + mainLeafW - 1)   // правый край
         : (mainLeafX);                   // левый край
     [0.18, 0.50, 0.82].forEach(t => {
         const hy = boxY + FW + mainLeafH * t;
@@ -3037,11 +3043,6 @@ function renderDoorSvg() {
         o += `<rect x="${hrx}" y="${hy - 4}" width="5" height="8" rx="0.5" fill="${C_HINGE}" stroke="${C_FRAME}" stroke-width="0.5"/>`;
     });
 
-    const mainLeafX = is2P
-        ? (stubOnLeft ? (boxX + FW + stubW + FW) : (boxX + FW))
-        : (boxX + FW);
-    const mainLeafW = is2P ? (mainW - FW) : (boxW - FW*2);
-    const mainLeafH = boxH - FW*2;
     const handleSide = hingeRight;  // ручка слева если петли справа
     const hx = handleSide ? (mainLeafX + mainLeafW * 0.18) : (mainLeafX + mainLeafW * 0.82);
     const hy_center = boxY + FW + mainLeafH * 0.52;  // ~52% высоты
