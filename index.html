@@ -4412,22 +4412,26 @@ function buildDoorSvgMarkup(params) {
         return null;
     })();
 
-    const CANVAS_W = 130;
+    const CANVAS_W = 160;
+    const CANVAS_H_MAX = 200;
     const NW = 13;
     const hasNalich  = !!nalichnikParsed;
     const hasNalichB = hasNalich && nalichnikParsed.B !== null;
-    const padL = hasNalich && nalichnikParsed.L > 0 ? NW + 18 : 18;
-    const padR = hasNalich && nalichnikParsed.R > 0 ? NW + 5 : 5;
-    const padT = 6 + (hasNalich ? NW + 4 : 0);
-    const padB = 6 + (hasNalichB ? NW + 3 : 0) + 18;
+
+    const ARROW_LEFT  = 14; // место для стрелки высоты
+    const ARROW_BOT   = 20; // место для стрелки ширины + наличника снизу
+    const padL = ARROW_LEFT + (hasNalich && nalichnikParsed.L > 0 ? NW + 2 : 2);
+    const padR = hasNalich && nalichnikParsed.R > 0 ? NW + 4 : 4;
+    const padT = 4 + (hasNalich ? NW + 2 : 0);
+    const padB = ARROW_BOT + (hasNalichB ? NW + 2 : 0);
 
     const availW  = CANVAS_W - padL - padR;
-    const maxH    = 140;
+    const availH  = CANVAS_H_MAX - padT - padB;
     const aspect  = w / h;
     let doorW, doorH;
-    if (aspect > availW / maxH) { doorW = availW; doorH = doorW / aspect; }
-    else                        { doorH = maxH;   doorW = doorH * aspect; }
-    doorW = Math.max(doorW, 35); doorH = Math.max(doorH, 45);
+    if (aspect > availW / availH) { doorW = availW; doorH = doorW / aspect; }
+    else                          { doorH = availH; doorW = doorH * aspect; }
+    doorW = Math.max(doorW, 30); doorH = Math.max(doorH, 40);
 
     const stubW   = is2P ? Math.round(doorW * 0.40) : 0;
     const totalW  = is2P ? doorW + stubW : doorW;
@@ -4530,30 +4534,28 @@ function buildDoorSvgMarkup(params) {
     }
 
     const aColor = '#4a6a8a';
-    const aFs = 5.5; // font-size
+    const aFs = 5.5;
 
-    const hvX = boxX - 10; // X центра линии
-    const hvY1 = boxY;
-    const hvY2 = bottomY + extraH;
+    const hvCx  = ARROW_LEFT / 2 - 1;          // центр стрелки по X
+    const hvY1  = boxY;
+    const hvY2  = bottomY + extraH;
     const hvMid = (hvY1 + hvY2) / 2;
-    o += `<line x1="${hvX}" y1="${hvY1}" x2="${hvX}" y2="${hvY2}" stroke="${aColor}" stroke-width="0.8"/>`;
-    o += `<line x1="${hvX-3}" y1="${hvY1}" x2="${hvX+3}" y2="${hvY1}" stroke="${aColor}" stroke-width="0.8"/>`;
-    o += `<line x1="${hvX-3}" y1="${hvY2}" x2="${hvX+3}" y2="${hvY2}" stroke="${aColor}" stroke-width="0.8"/>`;
-    o += `<text x="${hvX-2}" y="${hvMid}" text-anchor="middle" dominant-baseline="middle" font-size="${aFs}" font-weight="bold" fill="${aColor}" font-family="Arial" transform="rotate(-90,${hvX-2},${hvMid})">${h}</text>`;
+    o += `<line x1="${hvCx}" y1="${hvY1}" x2="${hvCx}" y2="${hvY2}" stroke="${aColor}" stroke-width="0.8"/>`;
+    o += `<line x1="${hvCx-3}" y1="${hvY1}" x2="${hvCx+3}" y2="${hvY1}" stroke="${aColor}" stroke-width="0.8"/>`;
+    o += `<line x1="${hvCx-3}" y1="${hvY2}" x2="${hvCx+3}" y2="${hvY2}" stroke="${aColor}" stroke-width="0.8"/>`;
+    o += `<text x="${hvCx}" y="${hvMid}" text-anchor="middle" dominant-baseline="middle" font-size="${aFs}" font-weight="bold" fill="${aColor}" font-family="Arial" transform="rotate(-90,${hvCx},${hvMid})">${h}</text>`;
 
-    const arrowY = bottomY + extraH + (hasPorch ? 10 : 3);
-    const arrowX1 = boxX;
-    const arrowX2 = boxX + totalBoxW;
-    const arrowMid = (arrowX1 + arrowX2) / 2;
-    o += `<line x1="${arrowX1}" y1="${arrowY+3}" x2="${arrowX2}" y2="${arrowY+3}" stroke="${aColor}" stroke-width="0.8"/>`;
-    o += `<line x1="${arrowX1}" y1="${arrowY}" x2="${arrowX1}" y2="${arrowY+6}" stroke="${aColor}" stroke-width="0.8"/>`;
-    o += `<line x1="${arrowX2}" y1="${arrowY}" x2="${arrowX2}" y2="${arrowY+6}" stroke="${aColor}" stroke-width="0.8"/>`;
-    o += `<text x="${arrowMid}" y="${arrowY+12}" text-anchor="middle" font-size="${aFs}" font-weight="bold" fill="${aColor}" font-family="Arial">${w}</text>`;
+    const awY   = hvY2 + (hasPorch ? 12 : 3);  // после текста порога или просто ниже двери
+    const awX1  = boxX;
+    const awX2  = boxX + totalBoxW;
+    const awMid = (awX1 + awX2) / 2;
+    o += `<line x1="${awX1}" y1="${awY+3}" x2="${awX2}" y2="${awY+3}" stroke="${aColor}" stroke-width="0.8"/>`;
+    o += `<line x1="${awX1}" y1="${awY}" x2="${awX1}" y2="${awY+6}" stroke="${aColor}" stroke-width="0.8"/>`;
+    o += `<line x1="${awX2}" y1="${awY}" x2="${awX2}" y2="${awY+6}" stroke="${aColor}" stroke-width="0.8"/>`;
+    o += `<text x="${awMid}" y="${awY+13}" text-anchor="middle" font-size="${aFs}" font-weight="bold" fill="${aColor}" font-family="Arial">${w}</text>`;
 
-    const vbX = hvX - 8;
-    const vbW = (boxX + totalBoxW) - vbX + 4; // до правого края двери
-    const vbH = arrowY + 16;
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vbX} 0 ${vbW} ${vbH}" width="100%" style="display:block;">${o}</svg>`;
+    const svgH = padT + doorH + padB;
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${CANVAS_W} ${svgH}" width="100%" style="display:block;">${o}</svg>`;
 }
 
 window.printProductionSheet = function(rowIdx) {
