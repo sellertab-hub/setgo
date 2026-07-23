@@ -4412,7 +4412,7 @@ function buildDoorSvgMarkup(params) {
         return null;
     })();
 
-    const CANVAS_W = 180;
+    const CANVAS_W = 210;
     const NW = 13;
     const hasNalich  = !!nalichnikParsed;
     const hasNalichB = hasNalich && nalichnikParsed.B !== null;
@@ -4534,7 +4534,7 @@ function buildDoorSvgMarkup(params) {
     o += `<text x="${boxX+totalBoxW/2}" y="${labelY+9}" text-anchor="middle" font-size="5.5" fill="#6b8ca8" font-family="Arial">мм</text>`;
 
     const svgH = labelY + 12;
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${CANVAS_W} ${svgH}" width="${CANVAS_W}" height="${svgH}" style="display:block;">${o}</svg>`;
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${CANVAS_W} ${svgH}" width="100%" style="display:block;max-width:${CANVAS_W}px;">${o}</svg>`;
 }
 
 window.printProductionSheet = function(rowIdx) {
@@ -4582,9 +4582,11 @@ window.printProductionSheet = function(rowIdx) {
 
     const highlightFields = new Set(["Петли","Ручка","Замок","Антипаника","Цвет"]);
     const paramHtml = paramRows.map(([label, val]) => {
-        const hl = highlightFields.has(label) ? ' class="ps-highlight"' : '';
-        const valClass = hl ? 'ps-param-val ps-highlight' : 'ps-param-val';
-        return `<tr><td style="width:50%">${label}</td><td class="${valClass}">${escapeHtml(val)}</td></tr>`;
+        const isEmpty = !val || val === '—' || val === '-';
+        const isHL = highlightFields.has(label);
+        const rowClass = isEmpty ? ' class="nr-empty"' : (isHL ? ' class="nr-ph"' : '');
+        const displayVal = isEmpty ? '—' : escapeHtml(val);
+        return `<tr${rowClass}><td>${label}</td><td>${displayVal}</td></tr>`;
     }).join('');
 
     const porchVal  = get('Порог');
@@ -4609,143 +4611,178 @@ window.printProductionSheet = function(rowIdx) {
     const doorPositionLabel = (door.doorPosition || '').toString().trim();
 
     const html = `
-    <style>
-        .ps-wrap { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; color: #000; }
-        .ps-header-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:2mm; }
-        .ps-header-date { font-size:8pt; color:#555; margin-bottom:1mm; }
-        .ps-header-title { font-size:16pt; font-weight:bold; color:#000; line-height:1.1; }
-        .ps-header-qr { flex-shrink:0; margin-left:8mm; text-align:center; }
-        .ps-info-table { width:100%; border-collapse:collapse; margin-bottom:3mm; }
-        .ps-info-table td, .ps-info-table th { border:1px solid #000; padding:2mm 3mm; vertical-align:middle; }
-        .ps-info-table .bold { font-weight:bold; }
-        .ps-info-table .large { font-size:13pt; font-weight:bold; }
-        .ps-client-row td { font-size:14pt; font-weight:bold; border:1px solid #000; padding:2mm 4mm; }
-        .ps-split { display:flex; gap:4mm; margin-bottom:3mm; }
-        .ps-params { flex:1; min-width:0; }
-        .ps-params table { width:100%; border-collapse:collapse; }
-        .ps-params td { border:1px solid #999; padding:1.5mm 2.5mm; font-size:9pt; vertical-align:middle; }
-        .ps-params td.ps-section-hdr { background:#d0d0d0; font-weight:bold; font-size:9pt; text-align:left; padding:2mm 3mm; }
-        .ps-params td.ps-param-val { font-weight:bold; }
-        .ps-params td.ps-highlight { background:#fff9c4; }
-        .ps-svg-col { flex:0 0 auto; width:56mm; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; padding-top:1mm; }
-        .ps-svg-col svg { display:block; max-width:54mm; }
-        .ps-bottom { margin-top:2mm; }
-        .ps-bottom table { width:100%; border-collapse:collapse; }
-        .ps-bottom td { border:1px solid #999; padding:1.5mm 2.5mm; }
-        .ps-bottom td.ps-bold { font-weight:bold; }
-        .ps-bottom td.ps-note { background:#fff3cd; font-weight:bold; }
-        .ps-cut { border-top:1px dashed #888; margin:6mm 0 4mm; text-align:center; font-size:8pt; color:#888; letter-spacing:2px; }
-        .ps-tag { border-collapse:collapse; width:100%; }
-        .ps-tag td, .ps-tag th { border:1px solid #000; padding:2mm 3mm; text-align:center; }
-        .ps-tag .tag-header-left { text-align:left; font-size:13pt; font-weight:bold; }
-        .ps-tag .tag-num { font-size:16pt; font-weight:bold; text-align:right; }
-        .ps-tag .tag-lbl { font-size:8pt; font-weight:bold; background:#e0e0e0; }
-        .ps-tag .tag-val { font-size:12pt; font-weight:bold; }
-    </style>
+<style>
 
-    <div class="ps-wrap">
+.nr { font-family: Arial, Helvetica, sans-serif; font-size: 9.5pt; color: #111; line-height: 1.35; }
 
+.nr-top { margin-bottom: 3mm; }
+.nr-order-row { display: flex; align-items: stretch; border: 1.5px solid #222; margin-bottom: 0; }
+.nr-order-cell { padding: 2.5mm 3.5mm; border-right: 1px solid #999; }
+.nr-order-cell:last-child { border-right: none; }
+.nr-order-cell .lbl { font-size: 7.5pt; color: #555; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1mm; }
+.nr-order-cell .val { font-size: 13pt; font-weight: 900; color: #111; }
+.nr-order-cell .val-md { font-size: 11pt; font-weight: 700; color: #111; }
+.nr-order-cell .val-sm { font-size: 9pt; font-weight: 700; color: #111; }
+.nr-cell-narad  { flex: 0 0 90px; background: #ececec; }
+.nr-cell-num    { flex: 0 0 80px; background: #fff; }
+.nr-cell-name   { flex: 1; background: #fff; }
+.nr-cell-open   { flex: 0 0 120px; background: #fff; }
+.nr-size-row { display: flex; align-items: stretch; border: 1px solid #999; border-top: none; margin-bottom: 3mm; }
+.nr-size-cell { padding: 1.5mm 3.5mm; border-right: 1px solid #ddd; display: flex; align-items: center; gap: 6px; }
+.nr-size-cell:last-child { border-right: none; }
+.nr-size-label { font-size: 7.5pt; color: #777; }
+.nr-size-val { font-size: 15pt; font-weight: 900; color: #111; }
+.nr-client-row { border: 1.5px solid #222; border-top: none; padding: 2.5mm 4mm; font-size: 13pt; font-weight: 700; margin-bottom: 3mm; }
 
-    <div class="ps-header-top">
-        <div>
-            <div class="ps-header-date">${door.invoiceDate || door.launchDate || ''}</div>
-            <div class="ps-header-title">${escapeHtml(door.naimenovanie)}</div>
-        </div>
-        <div class="ps-header-qr">
-            <canvas id="qrCodeCanvas" width="110" height="110" style="border:1px solid #ccc;display:block;"></canvas>
-        </div>
+.nr-main { display: flex; gap: 0; border: 1px solid #999; margin-bottom: 3mm; }
+
+.nr-door-col { flex: 0 0 52%; border-right: 1.5px solid #bbb; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4mm 3mm; background: #fafafa; }
+.nr-door-col svg { display: block; max-width: 100%; }
+.nr-door-size-label { font-size: 8pt; color: #444; margin-top: 2mm; text-align: center; }
+
+.nr-params-col { flex: 1; display: flex; flex-direction: column; }
+.nr-params-hdr { background: #2a2a2a; color: #fff; font-size: 8pt; font-weight: 700; letter-spacing: 0.08em; padding: 2mm 3mm; text-transform: uppercase; }
+.nr-params-table { width: 100%; border-collapse: collapse; flex: 1; }
+.nr-params-table tr { border-bottom: 1px solid #e8e8e8; }
+.nr-params-table tr:last-child { border-bottom: none; }
+.nr-params-table td { padding: 1.2mm 3mm; vertical-align: middle; }
+.nr-params-table td:first-child { font-size: 8.5pt; color: #555; width: 52%; border-right: 1px solid #e8e8e8; }
+.nr-params-table td:last-child { font-size: 9pt; font-weight: 700; color: #111; }
+.nr-params-table .nr-ph { background: #f5f5f5; }
+.nr-params-table .nr-empty td:last-child { color: #aaa; font-weight: 400; }
+
+.nr-footer { display: flex; gap: 0; border: 1px solid #999; border-top: none; }
+.nr-footer-cell { flex: 1; padding: 2mm 3mm; border-right: 1px solid #ddd; }
+.nr-footer-cell:last-child { border-right: none; }
+.nr-footer-cell .lbl { font-size: 7.5pt; color: #666; text-transform: uppercase; }
+.nr-footer-cell .val { font-size: 11pt; font-weight: 900; }
+.nr-note { border: 1px solid #999; border-top: none; padding: 2mm 3.5mm; background: #fffbe6; }
+.nr-note .lbl { font-size: 7.5pt; color: #888; text-transform: uppercase; }
+.nr-note .val { font-size: 9.5pt; font-weight: 700; }
+
+.nr-cut { display: flex; align-items: center; gap: 3mm; margin: 5mm 0 4mm; color: #aaa; font-size: 7.5pt; letter-spacing: 2px; }
+.nr-cut-line { flex: 1; border-top: 1px dashed #bbb; }
+
+.nr-stub { border: 1.5px solid #222; }
+.nr-stub-top { display: flex; align-items: stretch; border-bottom: 1.5px solid #222; }
+.nr-stub-client { flex: 1; padding: 2.5mm 4mm; font-size: 12pt; font-weight: 700; border-right: 1.5px solid #222; }
+.nr-stub-num { padding: 2.5mm 5mm; font-size: 18pt; font-weight: 900; display: flex; align-items: center; }
+.nr-stub-grid { display: grid; grid-template-columns: repeat(4,1fr); border-top: none; }
+.nr-stub-cell { padding: 1.5mm 2.5mm; border-right: 1px solid #ccc; text-align: center; }
+.nr-stub-cell:last-child { border-right: none; }
+.nr-stub-cell:nth-child(n+5) { border-top: 1px solid #ccc; }
+.nr-stub-cell .lbl { font-size: 7pt; color: #888; text-transform: uppercase; letter-spacing: 0.05em; }
+.nr-stub-cell .val { font-size: 12pt; font-weight: 900; margin-top: 0.5mm; }
+</style>
+
+<div class="nr">
+
+<div class="nr-top">
+
+  <div class="nr-order-row">
+    <div class="nr-order-cell nr-cell-narad">
+      <div class="lbl">Заказ-наряд</div>
+      <div class="val-sm">НАРЯД</div>
     </div>
-
-
-    <table class="ps-info-table" style="margin-bottom:2mm;">
-        <tr>
-            <td style="width:22%"><b>ЗАКАЗ-НАРЯД</b></td>
-            <td style="width:13%" class="bold">${door.prodNum}</td>
-            <td style="width:35%" class="large">${escapeHtml(door.naimenovanie)}</td>
-            <td style="width:30%" class="large" style="text-align:right">${escapeHtml(door.openingFull || door.opening)}</td>
-        </tr>
-        <tr>
-            <td>Размеры (по коробке)</td>
-            <td>высота</td>
-            <td class="bold" style="text-align:center;font-size:13pt;">${door.height}</td>
-            <td>ширина <span class="bold" style="font-size:13pt;">${door.width}</span></td>
-        </tr>
-    </table>
-
-
-    <table class="ps-info-table" style="margin-bottom:3mm;">
-        <tr class="ps-client-row">
-            <td>${escapeHtml(door.client)}</td>
-        </tr>
-    </table>
-
-
-    <div class="ps-split">
-        <div class="ps-params">
-            <table>
-                <tr><td colspan="2" class="ps-section-hdr">ПАРАМЕТРЫ ДВЕРИ</td></tr>
-                ${paramHtml}
-                <tr><td>Цвет RAL</td><td class="ps-param-val">${escapeHtml(get("Цвет"))}</td></tr>
-            </table>
-        </div>
-        <div class="ps-svg-col">
-            ${doorSvgMarkup}
-            <div style="font-size:7pt;color:#555;margin-top:2mm;text-align:center;">${door.width} × ${door.height} мм</div>
-        </div>
+    <div class="nr-order-cell nr-cell-num">
+      <div class="lbl">Номер</div>
+      <div class="val">${door.prodNum}</div>
     </div>
-
-
-    <div class="ps-bottom">
-        <table>
-            <tr>
-                <td style="width:50%"><b>Площадь, м²</b></td>
-                <td class="ps-bold">${door.area ? door.area.toFixed(4) : '—'}</td>
-            </tr>
-            <tr>
-                <td><b>Кол-во</b></td>
-                <td class="ps-bold">${door.qty || 1}</td>
-            </tr>
-            ${door.invoiceDate ? `<tr><td><b>Дата по счёту</b></td><td class="ps-bold">${escapeHtml(door.invoiceDate)}</td></tr>` : ''}
-            ${door.note ? `<tr><td><b>Примечание</b></td><td class="ps-note">${escapeHtml(door.note)}</td></tr>` : ''}
-        </table>
+    <div class="nr-order-cell nr-cell-name">
+      <div class="lbl">Наименование</div>
+      <div class="val-md">${escapeHtml(door.naimenovanie)}</div>
     </div>
+    <div class="nr-order-cell nr-cell-open">
+      <div class="lbl">Открывание</div>
+      <div class="val-md">${escapeHtml(door.openingFull || door.opening)}</div>
+    </div>
+  </div>
 
 
-    <div class="ps-cut">✂ &nbsp;&nbsp; отрывной корешок &nbsp;&nbsp; ✂</div>
+  <div class="nr-size-row">
+    <div class="nr-size-cell" style="flex:1; background:#f5f5f5;">
+      <span class="nr-size-label">Размеры (по коробке)</span>
+    </div>
+    <div class="nr-size-cell" style="flex:0 0 70px; background:#f5f5f5;">
+      <span class="nr-size-label">Высота</span>
+    </div>
+    <div class="nr-size-cell" style="flex:0 0 100px; justify-content:center;">
+      <span class="nr-size-val">${door.height}</span>
+    </div>
+    <div class="nr-size-cell" style="flex:0 0 80px; background:#f5f5f5;">
+      <span class="nr-size-label">Ширина</span>
+    </div>
+    <div class="nr-size-cell" style="flex:0 0 100px; justify-content:center;">
+      <span class="nr-size-val">${door.width}</span>
+    </div>
+    ${door.invoiceDate ? `<div class="nr-size-cell" style="flex:0 0 auto; background:#fff8e1; border-left:1px solid #ddd;"><span class="nr-size-label">Дата по счёту&nbsp;</span><b>${escapeHtml(door.invoiceDate)}</b></div>` : ''}
+  </div>
+</div>
+
+<div class="nr-client-row">${escapeHtml(door.client)}</div>
+
+<div class="nr-main">
 
 
-    <table class="ps-tag">
-        <tr>
-            <td colspan="3" class="tag-header-left">${escapeHtml(door.client)}${doorPositionLabel ? ' &nbsp;|&nbsp; ' + escapeHtml(doorPositionLabel) : ''}</td>
-            <td class="tag-num">${door.prodNum}</td>
-        </tr>
-        <tr>
-            <th class="tag-lbl">ОТКРЫВАНИЕ</th>
-            <th class="tag-lbl">ЗАВ. НОМЕР</th>
-            <th class="tag-lbl">ЦВЕТ RAL</th>
-            <th class="tag-lbl">МАРКИРОВКА</th>
-        </tr>
-        <tr>
-            <td class="tag-val">${escapeHtml(door.openingFull || door.opening)}</td>
-            <td class="tag-val">${escapeHtml(get("Заводской номер") || door.prodNum)}</td>
-            <td class="tag-val">${escapeHtml(get("Цвет"))}</td>
-            <td class="tag-val">${escapeHtml(door.naimenovanie)}</td>
-        </tr>
-        <tr>
-            <th class="tag-lbl">В</th>
-            <th class="tag-lbl">Ш</th>
-            <th class="tag-lbl">ПОЗИЦИЯ</th>
-            <th class="tag-lbl">КОЛ-ВО</th>
-        </tr>
-        <tr>
-            <td class="tag-val">${door.height}</td>
-            <td class="tag-val">${door.width}</td>
-            <td class="tag-val">${escapeHtml(doorPositionLabel || String(door.prodNum))}</td>
-            <td class="tag-val">${door.qty || 1}</td>
-        </tr>
+  <div class="nr-door-col">
+    ${doorSvgMarkup}
+    <div class="nr-door-size-label">${door.width} × ${door.height} мм</div>
+  </div>
+
+
+  <div class="nr-params-col">
+    <div class="nr-params-hdr">Параметры двери</div>
+    <table class="nr-params-table">
+      ${paramHtml}
+      ${get("Цвет") ? `<tr><td>Цвет RAL</td><td>${escapeHtml(get("Цвет"))}</td></tr>` : ''}
     </table>
+  </div>
+</div>
 
-    </div>`
+<div class="nr-footer">
+  <div class="nr-footer-cell">
+    <div class="lbl">Площадь</div>
+    <div class="val">${door.area ? door.area.toFixed(4) : '—'} <span style="font-size:8pt;font-weight:400;">м²</span></div>
+  </div>
+  <div class="nr-footer-cell">
+    <div class="lbl">Кол-во</div>
+    <div class="val">${door.qty || 1} <span style="font-size:8pt;font-weight:400;">шт.</span></div>
+  </div>
+  <div class="nr-footer-cell">
+    <div class="lbl">Позиция</div>
+    <div class="val">${escapeHtml(doorPositionLabel || '—')}</div>
+  </div>
+  <div class="nr-footer-cell">
+    <div class="lbl">Заводской №</div>
+    <div class="val">${escapeHtml(get("Заводской номер") || door.prodNum)}</div>
+  </div>
+</div>
+${door.note ? `<div class="nr-note"><div class="lbl">Примечание</div><div class="val">${escapeHtml(door.note)}</div></div>` : ''}
+
+<div class="nr-cut">
+  <div class="nr-cut-line"></div>
+  <span>✂ &nbsp; отрывной корешок</span>
+  <div class="nr-cut-line"></div>
+</div>
+
+<div class="nr-stub">
+  <div class="nr-stub-top">
+    <div class="nr-stub-client">${escapeHtml(door.client)}</div>
+    <div class="nr-stub-num">${door.prodNum}</div>
+  </div>
+  <div class="nr-stub-grid">
+    <div class="nr-stub-cell"><div class="lbl">Открывание</div><div class="val">${escapeHtml(door.openingFull || door.opening)}</div></div>
+    <div class="nr-stub-cell"><div class="lbl">Зав. номер</div><div class="val">${escapeHtml(get("Заводской номер") || door.prodNum)}</div></div>
+    <div class="nr-stub-cell"><div class="lbl">Цвет RAL</div><div class="val">${escapeHtml(get("Цвет") || '—')}</div></div>
+    <div class="nr-stub-cell"><div class="lbl">Маркировка</div><div class="val" style="font-size:9pt;">${escapeHtml(door.naimenovanie)}</div></div>
+    <div class="nr-stub-cell"><div class="lbl">В</div><div class="val">${door.height}</div></div>
+    <div class="nr-stub-cell"><div class="lbl">Ш</div><div class="val">${door.width}</div></div>
+    <div class="nr-stub-cell"><div class="lbl">Позиция</div><div class="val">${escapeHtml(doorPositionLabel || String(door.prodNum))}</div></div>
+    <div class="nr-stub-cell"><div class="lbl">Кол-во</div><div class="val">${door.qty || 1}</div></div>
+  </div>
+</div>
+
+</div>`
 
     document.getElementById('printSheetContent').innerHTML = html;
     document.getElementById('printSheetModal').classList.remove('hidden');
