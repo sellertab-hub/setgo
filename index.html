@@ -4454,32 +4454,40 @@ function buildDoorSvgMarkup(params) {
 
     let o = '';
 
-    const NSW = SW * 2.2; // наличники в 2 раза толще
+    const NSW = SW * 0.55; // наличники тоньше коробки
     if (hasNalich) {
         const n = nalichnikParsed;
         const hasL = n.L > 0, hasR = n.R > 0, hasT = n.T > 0;
         const hasB = hasNalichB && n.B > 0;
+        const nFs = 5.5;
 
         if (hasT) {
             const ny = boxY - NW;
             o += `<rect x="${boxX}" y="${ny}" width="${totalBoxW}" height="${NW}" fill="none" stroke="${C.nalich}" stroke-width="${NSW}"/>`;
+            o += `<text x="${boxX+totalBoxW/2}" y="${ny+NW*0.72}" text-anchor="middle" dominant-baseline="middle" font-size="${nFs}" font-weight="bold" fill="${C.text}" font-family="Arial">${n.T}</text>`;
         }
 
         if (hasL) {
             const nyL = hasT ? boxY - NW : boxY;
             const nhL = hasT ? boxH + NW : boxH;
+            const midL = nyL + nhL / 2;
             o += `<rect x="${boxX - NW}" y="${nyL}" width="${NW}" height="${nhL}" fill="none" stroke="${C.nalich}" stroke-width="${NSW}"/>`;
+            o += `<text x="${boxX - NW/2}" y="${midL}" text-anchor="middle" dominant-baseline="middle" font-size="${nFs}" font-weight="bold" fill="${C.text}" font-family="Arial" transform="rotate(-90,${boxX - NW/2},${midL})">${n.L}</text>`;
         }
 
         if (hasR) {
             const rx  = boxX + totalBoxW;
             const nyR = hasT ? boxY - NW : boxY;
             const nhR = hasT ? boxH + NW : boxH;
+            const midR = nyR + nhR / 2;
             o += `<rect x="${rx}" y="${nyR}" width="${NW}" height="${nhR}" fill="none" stroke="${C.nalich}" stroke-width="${NSW}"/>`;
+            o += `<text x="${rx + NW/2}" y="${midR}" text-anchor="middle" dominant-baseline="middle" font-size="${nFs}" font-weight="bold" fill="${C.text}" font-family="Arial" transform="rotate(90,${rx + NW/2},${midR})">${n.R}</text>`;
         }
 
         if (hasB) {
-            o += `<rect x="${boxX}" y="${boxY+boxH}" width="${totalBoxW}" height="${NW}" fill="none" stroke="${C.nalich}" stroke-width="${NSW}"/>`;
+            const nyB = boxY + boxH;
+            o += `<rect x="${boxX}" y="${nyB}" width="${totalBoxW}" height="${NW}" fill="none" stroke="${C.nalich}" stroke-width="${NSW}"/>`;
+            o += `<text x="${boxX+totalBoxW/2}" y="${nyB+NW*0.72}" text-anchor="middle" dominant-baseline="middle" font-size="${nFs}" font-weight="bold" fill="${C.text}" font-family="Arial">${n.B}</text>`;
         }
     }
 
@@ -4869,7 +4877,7 @@ window.doPrintSheet = function() {
         <div style="display:flex;gap:10px;justify-content:flex-end;">
             <button id="delOrderCancelBtn" style="padding:8px 16px;border:1px solid #cbd5e0;background:#fff;border-radius:6px;cursor:pointer;font-family: 'Inter', system-ui, sans-serif;font-size:0.85rem;color:#4a5568;">Отмена</button>
             <button id="delOrderConfirmBtn" style="padding:8px 16px;border:none;background:#dc2626;color:#fff;border-radius:6px;cursor:pointer;font-family: 'Inter', system-ui, sans-serif;font-weight:700;font-size:0.85rem;">Да, удалить</button>
-        </div> 
+        </div>
     </div>
 </div>
 
