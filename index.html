@@ -4,17 +4,38 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title>Конфигуратор дверей | CRM</title>
-    <link href="https://fonts.googleapis.com/css2?family=Play:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --brand: #494949;
+            --brand-dark: #2e2e2e;
+            --bg: #F2F2F2;
+            --surface: #FFFFFF;
+            --surface-low: #f5f5f5;
+            --border: #DFE3E5;
+            --text: #151416;
+            --text-2: #6B7280;
+            --text-3: #9CA3AF;
+            --accent: #1e6db5;
+            --accent-hover: #1557a0;
+            --danger: #EF4444;
+            --success: #10B981;
+            --radius: 8px;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+            --shadow-md: 0 4px 12px rgba(0,0,0,.08), 0 2px 4px rgba(0,0,0,.04);
+        }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            background: #f0f2f5;
-            font-family: 'Play', sans-serif;
-            color: #1a202c;
+            background: var(--bg);
+            font-family: 'Inter', system-ui, sans-serif;
+            color: var(--text);
             height: 100vh;
             overflow: hidden;
             display: flex;
             flex-direction: column;
+            font-size: 13px;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
         }
 
         #loginScreen {
@@ -37,7 +58,7 @@
         .login-box h2 {
             margin-bottom: 25px;
             text-align: center;
-            color: #1e3a5f;
+            color: var(--text);
         }
 
         .login-box label {
@@ -54,7 +75,7 @@
             border: 1px solid #cbd5e0;
             color: #1a202c;
             font-size: 1rem;
-            font-family: 'Play';
+            font-family: 'Inter', system-ui, sans-serif;
             margin-bottom: 20px;
             border-radius: 4px;
         }
@@ -71,7 +92,7 @@
         .btn-save,
         .btn-small,
         .close-btn {
-            font-family: 'Play', sans-serif;
+            font-family: 'Inter', system-ui, sans-serif;
         }
 
         .btn-login {
@@ -97,13 +118,13 @@
         }
 
         .start-screen {
-            padding: 40px;
+            padding: 24px 32px;
             display: flex;
             flex-direction: column;
             align-items: center;
             overflow-y: auto;
             flex: 1;
-            background: #f0f2f5;
+            background: var(--bg);
         }
 
         .panel-box {
@@ -120,7 +141,7 @@
         .panel-box h2 {
             margin-bottom: 20px;
             font-size: 1.4rem;
-            color: #1e3a5f;
+            color: var(--text);
             text-align: center;
         }
 
@@ -131,7 +152,7 @@
             border: 1px solid #cbd5e0;
             color: #1a202c;
             font-size: 1.1rem;
-            font-family: 'Play', sans-serif;
+            font-family: 'Inter', system-ui, sans-serif;
             margin-bottom: 20px;
             border-radius: 4px;
         }
@@ -143,7 +164,7 @@
         }
 
         .btn-main {
-            background: #1e3a5f;
+            background: var(--brand);
             color: #ffffff;
             border: none;
             padding: 14px 28px;
@@ -166,7 +187,7 @@
         }
 
         .orders-table th {
-            background: #f7f9fc;
+            background: var(--surface-low);
             padding: 12px;
             text-align: left;
             border-bottom: 1px solid #e2e8f0;
@@ -198,7 +219,7 @@
             background: #ffffff;
             border: 1px solid #cbd5e0;
             color: #1a202c;
-            font-family: 'Play', sans-serif;
+            font-family: 'Inter', system-ui, sans-serif;
             border-radius: 4px;
         }
 
@@ -209,20 +230,25 @@
         }
 
         .btn-small {
-            background: #f0f4f8;
-            border: 1px solid #cbd5e0;
-            color: #1e3a5f;
-            padding: 6px 12px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 5px 10px;
             cursor: pointer;
-            font-weight: 700;
-            font-size: 0.8rem;
-            margin-right: 5px;
-            border-radius: 4px;
+            font-weight: 500;
+            font-size: 0.75rem;
+            margin-right: 4px;
+            border-radius: 6px;
+            font-family: 'Inter', system-ui, sans-serif;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: 0.12s;
         }
 
         .btn-small:hover {
-            background: #e2e8f0;
-            color: #1e3a5f;
+            background: var(--surface-low);
+            border-color: #c4c9ce;
         }
 
         .overlay {
@@ -271,7 +297,7 @@
             background: transparent;
             border: none;
             color: #94b8d8;
-            font-family: 'Play', sans-serif;
+            font-family: 'Inter', system-ui, sans-serif;
             font-size: 0.8rem;
             font-weight: 600;
             letter-spacing: 0.05em;
@@ -298,7 +324,7 @@
             border: 1px solid #cbd5e0;
             color: #1a202c;
             padding: 0 10px;
-            font-family: 'Play', sans-serif;
+            font-family: 'Inter', system-ui, sans-serif;
             border-radius: 4px;
         }
 
@@ -325,7 +351,7 @@
             cursor: pointer;
             font-weight: 700;
             border-radius: 4px;
-            font-family: 'Play', sans-serif;
+            font-family: 'Inter', system-ui, sans-serif;
         }
 
         .close-btn:hover {
@@ -343,22 +369,22 @@
 
         .config-panel {
             flex: 2;
-            background: #ffffff;
-            padding: 20px;
+            background: var(--surface);
+            padding: 16px;
             overflow-y: auto;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            min-width: 320px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            min-width: 300px;
         }
 
         .list-panel {
             flex: 8;
-            background: #ffffff;
+            background: var(--surface);
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
             min-width: 0;
         }
 
@@ -375,7 +401,7 @@
         .list-header h3 {
             font-weight: 700;
             font-size: 1.1rem;
-            color: #1e3a5f;
+            color: var(--text);
         }
 
         .header-actions {
@@ -387,12 +413,17 @@
             background: #16a34a;
             color: white;
             border: none;
-            padding: 8px 16px;
-            font-weight: bold;
+            padding: 6px 14px;
+            font-weight: 600;
             cursor: pointer;
             border-radius: 6px;
-            font-family: 'Play', sans-serif;
-            transition: background 0.2s, box-shadow 0.2s;
+            font-family: 'Inter', system-ui, sans-serif;
+            font-size: 0.75rem;
+            letter-spacing: 0.02em;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: background 0.15s, box-shadow 0.15s;
         }
         .btn-save:hover { background: #15803d; }
 
@@ -424,10 +455,10 @@
         #unsavedModal .um-box {
             background:#fff;border-radius:10px;padding:28px 32px;
             max-width:340px;width:90%;box-shadow:0 8px 40px rgba(0,0,0,0.18);
-            font-family:'Play',sans-serif;
+            font-family: 'Inter', system-ui, sans-serif;
         }
         #unsavedModal .um-title {
-            font-size:1rem;font-weight:700;color:#1e3a5f;margin-bottom:10px;
+            font-size:1rem;font-weight:700;color:var(--text);margin-bottom:10px;
         }
         #unsavedModal .um-text {
             font-size:0.875rem;color:#4a5568;margin-bottom:20px;line-height:1.5;
@@ -495,7 +526,7 @@
             cursor: pointer;
             margin: 0 4px;
             opacity: 0.7;
-            color: #1e3a5f;
+            color: var(--text);
         }
 
         .door-actions button:hover {
@@ -526,7 +557,7 @@
             border: 1px solid #cbd5e0;
             color: #1a202c;
             font-size: 0.85rem;
-            font-family: 'Play', monospace;
+            font-family: 'Inter', system-ui, sans-serif, monospace;
             border-radius: 4px;
         }
 
@@ -545,7 +576,7 @@
             position: fixed;
             bottom: 24px;
             right: 24px;
-            background: #1e3a5f;
+            background: var(--brand);
             color: #ffffff;
             padding: 12px 24px;
             font-size: 14px;
@@ -573,7 +604,7 @@
         .details-summary summary {
             font-weight: 700;
             outline: none;
-            color: #1e3a5f;
+            color: var(--text);
         }
 
         #loadingOverlay {
@@ -587,7 +618,7 @@
             flex-direction: column;
             font-size: 1.5rem;
             font-weight: bold;
-            color: #1e3a5f;
+            color: var(--text);
         }
 
         .loader {
@@ -731,17 +762,17 @@
         .modal-backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 30000; display: flex; justify-content: center; align-items: center; }
         .modal-backdrop.hidden { display: none; }
         .modal-box { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; width: 580px; max-height: 90vh; overflow-y: auto; padding: 30px; box-shadow: 0 8px 32px rgba(0,0,0,0.15); }
-        .modal-box h2 { margin-bottom: 20px; color: #1e3a5f; font-size: 1.2rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; }
+        .modal-box h2 { margin-bottom: 20px; color: var(--text); font-size: 1.2rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; }
         .modal-box .form-group { margin-bottom: 13px; }
         .modal-box label { font-size: 0.78rem; color: #4a5568; margin-bottom: 4px; display: block; font-weight: 700; text-transform: uppercase; }
-        .modal-box input[type="text"] { width: 100%; padding: 8px 10px; background: #ffffff; border: 1px solid #cbd5e0; color: #1a202c; font-size: 0.88rem; font-family: 'Play', monospace; border-radius: 4px; }
+        .modal-box input[type="text"] { width: 100%; padding: 8px 10px; background: #ffffff; border: 1px solid #cbd5e0; color: #1a202c; font-size: 0.88rem; font-family: 'Inter', system-ui, sans-serif, monospace; border-radius: 4px; }
         .modal-actions { display: flex; gap: 12px; margin-top: 20px; }
-        .modal-actions button { flex: 1; padding: 12px; font-weight: 700; font-family: 'Play'; text-transform: uppercase; cursor: pointer; font-size: 0.9rem; border: none; border-radius: 6px; }
+        .modal-actions button { flex: 1; padding: 12px; font-weight: 700; font-family: 'Inter', system-ui, sans-serif; text-transform: uppercase; cursor: pointer; font-size: 0.9rem; border: none; border-radius: 6px; }
         .btn-cancel-modal { background: #f0f4f8; color: #4a5568; border: 1px solid #cbd5e0 !important; }
         .btn-cancel-modal:hover { background: #e2e8f0; }
         .btn-download-pdf { background: #1e6db5; color: white; }
         .btn-download-pdf:hover { background: #1a5fa0; }
-        .btn-pdf { background: #1e6db5; color: white; border: none; padding: 8px 16px; font-weight: bold; cursor: pointer; font-family: 'Play'; border-radius: 4px; }
+        .btn-pdf { background: #1e6db5; color: white; border: none; padding: 8px 16px; font-weight: bold; cursor: pointer; font-family: 'Inter', system-ui, sans-serif; border-radius: 4px; }
         .btn-pdf:hover { background: #1a5fa0; }
         .modal-section-title { font-size: 0.72rem; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.1em; margin: 14px 0 8px; border-top: 1px solid #e2e8f0; padding-top: 12px; }
 
@@ -753,7 +784,7 @@
             background: #ffffff;
             border: 1px solid #cbd5e0;
             color: #1a202c;
-            font-family: 'Play', sans-serif;
+            font-family: 'Inter', system-ui, sans-serif;
             border-radius: 4px;
         }
         #globalOrdersPanel {
@@ -773,7 +804,7 @@
 
 
         .combo-wrap { position: relative; }
-        .combo-input { width: 100%; padding: 8px 30px 8px 10px; background: #fff; border: 1px solid #cbd5e0; color: #1a202c; font-size: 0.85rem; font-family: 'Play', monospace; border-radius: 4px; cursor: text; }
+        .combo-input { width: 100%; padding: 8px 30px 8px 10px; background: #fff; border: 1px solid #cbd5e0; color: #1a202c; font-size: 0.85rem; font-family: 'Inter', system-ui, sans-serif, monospace; border-radius: 4px; cursor: text; }
         .combo-input:focus { border-color: #1e6db5; outline: none; box-shadow: 0 0 0 3px rgba(30,109,181,0.12); }
         .combo-arrow { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); pointer-events: all; color: #4a5568; font-size: 12px; cursor: pointer; }
 
@@ -816,7 +847,7 @@
         .pg-btn {
             background: #f0f4f8;
             border: 1px solid #e2e8f0;
-            color: #1e3a5f;
+            color: var(--text);
             padding: 5px 11px;
             cursor: pointer;
             font-weight: 700;
@@ -827,60 +858,61 @@
         }
         .pg-btn:hover:not(:disabled) {
             background: #e2e8f0;
-            color: #1e3a5f;
+            color: var(--text);
         }
         .pg-btn:disabled {
             opacity: 0.4;
             cursor: default;
         }
         .pg-btn.pg-active {
-            background: #1e3a5f;
+            background: var(--accent);
             color: #fff;
-            border-color: #1e3a5f;
+            border-color: var(--accent);
         }
         .pg-btn.pg-active:hover {
-            background: #1e6db5;
-            border-color: #1e6db5;
+            background: var(--accent-hover);
+            border-color: var(--accent-hover);
         }
 
 
         #appNav {
-            background: #1e3a5f;
+            background: var(--surface);
             display: flex;
             gap: 0;
-            border-bottom: 3px solid #1e6db5;
+            border-bottom: 1px solid var(--border);
             flex-shrink: 0;
+            box-shadow: var(--shadow-sm);
         }
         .app-tab {
-            padding: 14px 32px;
+            padding: 12px 24px;
             background: none;
             border: none;
-            color: rgba(255,255,255,0.65);
-            font-size: 13px;
-            font-weight: 700;
-            letter-spacing: 1px;
+            color: var(--text-3);
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.06em;
             cursor: pointer;
-            border-bottom: 3px solid transparent;
-            margin-bottom: -3px;
-            transition: all 0.2s;
-            font-family: 'Play', sans-serif;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -1px;
+            transition: all 0.15s;
+            font-family: 'Inter', system-ui, sans-serif;
         }
-        .app-tab:hover { color: #fff; background: rgba(255,255,255,0.07); }
-        .app-tab.active { color: #fff; border-bottom-color: #4a9ede; background: rgba(255,255,255,0.1); }
+        .app-tab:hover { color: var(--text-2); background: var(--surface-low); }
+        .app-tab.active { color: var(--accent); border-bottom-color: var(--accent); background: transparent; }
         #salesView { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
         #productionView { flex: 1; overflow-y: auto; }
         .prod-filter-chip {
-            padding: 6px 12px;
-            border-radius: 20px;
-            border: 1px solid #e2e8f0;
-            background: #f8fafc;
-            color: #475569;
-            font-size: 12px;
-            font-weight: 600;
+            padding: 5px 10px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text-2);
+            font-size: 11px;
+            font-weight: 500;
             cursor: pointer;
             transition: all 0.2s;
             white-space: nowrap;
-            font-family: 'Play', sans-serif;
+            font-family: 'Inter', system-ui, sans-serif;
         }
         .prod-filter-chip.active {
             background: #1e6db5;
@@ -1186,15 +1218,15 @@
                 <div id="doorSvgPreview" style="margin-bottom:10px;">
                     <svg id="doorSvg" style="width:100%;max-width:240px;display:block;margin:0 auto;" viewBox="0 0 240 260"></svg>
                     <div id="doorVisChecks" style="display:flex;gap:16px;justify-content:center;margin-top:6px;flex-wrap:wrap;">
-                        <label style="display:flex;align-items:center;gap:5px;font-size:0.75rem;color:#4a5568;cursor:pointer;user-select:none;">
+                        <label style="display:flex;align-items:center;gap:5px;font-size:0.75rem;color:var(--text-2);cursor:pointer;user-select:none;">
                             <input type="checkbox" id="visGlazing" onchange="renderDoorSvg()">
                             <span>Остекление</span>
                         </label>
-                        <label style="display:flex;align-items:center;gap:5px;font-size:0.75rem;color:#4a5568;cursor:pointer;user-select:none;">
+                        <label style="display:flex;align-items:center;gap:5px;font-size:0.75rem;color:var(--text-2);cursor:pointer;user-select:none;">
                             <input type="checkbox" id="visVent" onchange="renderDoorSvg()">
                             <span>Вент. решётка</span>
                         </label>
-                        <label style="display:flex;align-items:center;gap:5px;font-size:0.75rem;color:#4a5568;cursor:pointer;user-select:none;">
+                        <label style="display:flex;align-items:center;gap:5px;font-size:0.75rem;color:var(--text-2);cursor:pointer;user-select:none;">
                             <input type="checkbox" id="visCloser" onchange="renderDoorSvg()">
                             <span>Доводчик</span>
                         </label>
@@ -2427,7 +2459,7 @@ function renderConfigForm() {
 
     let html = `<div class="form-group">
         <label>ТИП ДВЕРИ</label>
-        <select id="baseTypeSelect" style="width:100%;padding:8px 10px;background:#fff;border:1px solid #cbd5e0;color:#1a202c;font-size:0.85rem;font-family:'Play',monospace;border-radius:4px;">`;
+        <select id="baseTypeSelect" style="width:100%;padding:8px 10px;background:#fff;border:1px solid #cbd5e0;color:#1a202c;font-size:0.85rem;font-family: 'Inter', system-ui, sans-serif,monospace;border-radius:4px;">`;
     baseTypes.forEach(base => {
         html += `<option value="${escapeAttr(base)}" ${base === initBase ? 'selected' : ''}>${escapeHtml(base)}</option>`;
     });
@@ -3239,19 +3271,22 @@ function renderDoorSvg() {
         o += `<text x="${vx + vw/2}" y="${vy + vh + 7}" text-anchor="middle" font-size="5.5" fill="${C_TEXT}" font-family="Play" opacity="0.7">ВЕНТ</text>`;
     }
 
-    const hingeEdgeX = hingeRight ? (mainLeafX + mainLeafW) : mainLeafX;
     [0.18, 0.50, 0.82].forEach(t => {
         const hy = boxY + FW + mainLeafH * t;
-        const hrx = hingeRight ? (hingeEdgeX - 1) : (hingeEdgeX - 4);
+        let hrx;
+        if (hingeRight) {
+            hrx = mainLeafX + mainLeafW - 1;
+        } else {
+            hrx = mainLeafX + 1;
+        }
         o += `<rect x="${hrx}" y="${hy - 4}" width="5" height="8" rx="0" fill="${C_HINGE}" stroke="${C_STROKE}" stroke-width="0.6"/>`;
     });
 
-    const handleSide = hingeRight; // ручка слева если петли справа
-    const hx = handleSide ? (mainLeafX + mainLeafW * 0.12) : (mainLeafX + mainLeafW * 0.88);
+    const hx = hingeRight ? (mainLeafX + mainLeafW * 0.12) : (mainLeafX + mainLeafW * 0.88);
     const hy_center = boxY + FW + mainLeafH * 0.52;
     const hl = mainLeafH * 0.12;
     o += `<line x1="${hx}" y1="${hy_center - hl/2}" x2="${hx}" y2="${hy_center + hl/2}" stroke="${C_HANDLE}" stroke-width="${SWH}" stroke-linecap="square"/>`;
-    const hdir = handleSide ? 4 : -4;
+    const hdir = hingeRight ? 5 : -5;
     o += `<line x1="${hx}" y1="${hy_center - hl/4}" x2="${hx + hdir}" y2="${hy_center - hl/4}" stroke="${C_HANDLE}" stroke-width="${SWH}" stroke-linecap="square"/>`;
     const kyH = hy_center + hl/2 + 5;
     o += `<ellipse cx="${hx}" cy="${kyH}" rx="2" ry="2.5" fill="none" stroke="${C_HANDLE}" stroke-width="1"/>`;
@@ -4466,18 +4501,16 @@ function buildDoorSvgMarkup(params) {
         }
     }
 
-    const hingeEdgeX = hingeRight ? mainLeafX+mainLeafW : mainLeafX;
     [0.18,0.50,0.82].forEach(t => {
         const hy = boxY+FW+mainLeafH*t;
-        const hrx = hingeRight ? hingeEdgeX-4 : hingeEdgeX;
+        const hrx = hingeRight ? (mainLeafX+mainLeafW-1) : (mainLeafX+1);
         o += `<rect x="${hrx}" y="${hy-3.5}" width="4.5" height="7" rx="0" fill="${C.hinge}" stroke="${C.stroke}" stroke-width="0.5"/>`;
     });
 
-    const hside = hingeRight;
-    const hx = hside ? mainLeafX+mainLeafW*0.12 : mainLeafX+mainLeafW*0.88;
+    const hx = hingeRight ? mainLeafX+mainLeafW*0.12 : mainLeafX+mainLeafW*0.88;
     const hyc = boxY+FW+mainLeafH*0.52, hl = mainLeafH*0.11;
     o += `<line x1="${hx}" y1="${hyc-hl/2}" x2="${hx}" y2="${hyc+hl/2}" stroke="${C.handle}" stroke-width="2" stroke-linecap="square"/>`;
-    const hd = hside ? 3.5 : -3.5;
+    const hd = hingeRight ? 4 : -4;
     o += `<line x1="${hx}" y1="${hyc-hl/4}" x2="${hx+hd}" y2="${hyc-hl/4}" stroke="${C.handle}" stroke-width="2" stroke-linecap="square"/>`;
     o += `<ellipse cx="${hx}" cy="${hyc+hl/2+4}" rx="1.8" ry="2.2" fill="none" stroke="${C.handle}" stroke-width="0.8"/>`;
 
@@ -4550,7 +4583,8 @@ window.printProductionSheet = function(rowIdx) {
     const highlightFields = new Set(["Петли","Ручка","Замок","Антипаника","Цвет"]);
     const paramHtml = paramRows.map(([label, val]) => {
         const hl = highlightFields.has(label) ? ' class="ps-highlight"' : '';
-        return `<tr${hl}><td style="width:50%">${label}</td><td class="ps-val">${escapeHtml(val)}</td></tr>`;
+        const valClass = hl ? 'ps-param-val ps-highlight' : 'ps-param-val';
+        return `<tr><td style="width:50%">${label}</td><td class="${valClass}">${escapeHtml(val)}</td></tr>`;
     }).join('');
 
     const porchVal  = get('Порог');
@@ -4572,89 +4606,146 @@ window.printProductionSheet = function(rowIdx) {
         nalichnik:  nalichVal
     });
 
+    const doorPositionLabel = (door.doorPosition || '').toString().trim();
+
     const html = `
-    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:3mm;">
+    <style>
+        .ps-wrap { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; color: #000; }
+        .ps-header-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:2mm; }
+        .ps-header-date { font-size:8pt; color:#555; margin-bottom:1mm; }
+        .ps-header-title { font-size:16pt; font-weight:bold; color:#000; line-height:1.1; }
+        .ps-header-qr { flex-shrink:0; margin-left:8mm; text-align:center; }
+        .ps-info-table { width:100%; border-collapse:collapse; margin-bottom:3mm; }
+        .ps-info-table td, .ps-info-table th { border:1px solid #000; padding:2mm 3mm; vertical-align:middle; }
+        .ps-info-table .bold { font-weight:bold; }
+        .ps-info-table .large { font-size:13pt; font-weight:bold; }
+        .ps-client-row td { font-size:14pt; font-weight:bold; border:1px solid #000; padding:2mm 4mm; }
+        .ps-split { display:flex; gap:4mm; margin-bottom:3mm; }
+        .ps-params { flex:1; min-width:0; }
+        .ps-params table { width:100%; border-collapse:collapse; }
+        .ps-params td { border:1px solid #999; padding:1.5mm 2.5mm; font-size:9pt; vertical-align:middle; }
+        .ps-params td.ps-section-hdr { background:#d0d0d0; font-weight:bold; font-size:9pt; text-align:left; padding:2mm 3mm; }
+        .ps-params td.ps-param-val { font-weight:bold; }
+        .ps-params td.ps-highlight { background:#fff9c4; }
+        .ps-svg-col { flex:0 0 auto; width:56mm; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; padding-top:1mm; }
+        .ps-svg-col svg { display:block; max-width:54mm; }
+        .ps-bottom { margin-top:2mm; }
+        .ps-bottom table { width:100%; border-collapse:collapse; }
+        .ps-bottom td { border:1px solid #999; padding:1.5mm 2.5mm; }
+        .ps-bottom td.ps-bold { font-weight:bold; }
+        .ps-bottom td.ps-note { background:#fff3cd; font-weight:bold; }
+        .ps-cut { border-top:1px dashed #888; margin:6mm 0 4mm; text-align:center; font-size:8pt; color:#888; letter-spacing:2px; }
+        .ps-tag { border-collapse:collapse; width:100%; }
+        .ps-tag td, .ps-tag th { border:1px solid #000; padding:2mm 3mm; text-align:center; }
+        .ps-tag .tag-header-left { text-align:left; font-size:13pt; font-weight:bold; }
+        .ps-tag .tag-num { font-size:16pt; font-weight:bold; text-align:right; }
+        .ps-tag .tag-lbl { font-size:8pt; font-weight:bold; background:#e0e0e0; }
+        .ps-tag .tag-val { font-size:12pt; font-weight:bold; }
+    </style>
+
+    <div class="ps-wrap">
+
+
+    <div class="ps-header-top">
         <div>
-            <div style="font-size:9pt; color:#555; margin-bottom:1mm;">${door.launchDate || '________'}</div>
-            <div class="ps-big">${escapeHtml(door.naimenovanie)}</div>
+            <div class="ps-header-date">${door.invoiceDate || door.launchDate || ''}</div>
+            <div class="ps-header-title">${escapeHtml(door.naimenovanie)}</div>
         </div>
-        <div class="ps-qr-wrap"><canvas id="qrCodeCanvas" width="130" height="130" style="border:1px solid #ddd;display:block;"></canvas></div>
+        <div class="ps-header-qr">
+            <canvas id="qrCodeCanvas" width="110" height="110" style="border:1px solid #ccc;display:block;"></canvas>
+        </div>
     </div>
 
-    <table class="ps-table">
+
+    <table class="ps-info-table" style="margin-bottom:2mm;">
         <tr>
-            <td style="width:25%"><b>ЗАКАЗ-НАРЯД</b></td>
-            <td class="ps-val" style="width:15%">${door.prodNum}</td>
-            <td style="width:30%" class="ps-big">${escapeHtml(door.naimenovanie)}</td>
-            <td style="width:30%" class="ps-big" style="text-align:right">${escapeHtml(door.openingFull || door.opening)}</td>
+            <td style="width:22%"><b>ЗАКАЗ-НАРЯД</b></td>
+            <td style="width:13%" class="bold">${door.prodNum}</td>
+            <td style="width:35%" class="large">${escapeHtml(door.naimenovanie)}</td>
+            <td style="width:30%" class="large" style="text-align:right">${escapeHtml(door.openingFull || door.opening)}</td>
         </tr>
         <tr>
             <td>Размеры (по коробке)</td>
             <td>высота</td>
-            <td class="ps-val" style="text-align:center">${door.height}</td>
-            <td>ширина <span class="ps-val">${door.width}</span></td>
-        </tr>
-        <tr>
-            <td colspan="4" class="ps-big">${escapeHtml(door.client)}</td>
+            <td class="bold" style="text-align:center;font-size:13pt;">${door.height}</td>
+            <td>ширина <span class="bold" style="font-size:13pt;">${door.width}</span></td>
         </tr>
     </table>
 
-    <table class="ps-table">
-        <tr>
-            <td colspan="2" class="ps-section">ПАРАМЕТРЫ ДВЕРИ</td>
-            <td rowspan="99" style="width:200px;vertical-align:top;padding:2mm;border-left:1px solid #000;text-align:center;">
-                ${doorSvgMarkup}
-            </td>
+
+    <table class="ps-info-table" style="margin-bottom:3mm;">
+        <tr class="ps-client-row">
+            <td>${escapeHtml(door.client)}</td>
         </tr>
-        ${paramHtml}
-        <tr><td>Цвет RAL</td><td class="ps-val">${escapeHtml(get("Цвет"))}</td></tr>
     </table>
 
-    <table class="ps-table" style="margin-top:3mm;">
+
+    <div class="ps-split">
+        <div class="ps-params">
+            <table>
+                <tr><td colspan="2" class="ps-section-hdr">ПАРАМЕТРЫ ДВЕРИ</td></tr>
+                ${paramHtml}
+                <tr><td>Цвет RAL</td><td class="ps-param-val">${escapeHtml(get("Цвет"))}</td></tr>
+            </table>
+        </div>
+        <div class="ps-svg-col">
+            ${doorSvgMarkup}
+            <div style="font-size:7pt;color:#555;margin-top:2mm;text-align:center;">${door.width} × ${door.height} мм</div>
+        </div>
+    </div>
+
+
+    <div class="ps-bottom">
+        <table>
+            <tr>
+                <td style="width:50%"><b>Площадь, м²</b></td>
+                <td class="ps-bold">${door.area ? door.area.toFixed(4) : '—'}</td>
+            </tr>
+            <tr>
+                <td><b>Кол-во</b></td>
+                <td class="ps-bold">${door.qty || 1}</td>
+            </tr>
+            ${door.invoiceDate ? `<tr><td><b>Дата по счёту</b></td><td class="ps-bold">${escapeHtml(door.invoiceDate)}</td></tr>` : ''}
+            ${door.note ? `<tr><td><b>Примечание</b></td><td class="ps-note">${escapeHtml(door.note)}</td></tr>` : ''}
+        </table>
+    </div>
+
+
+    <div class="ps-cut">✂ &nbsp;&nbsp; отрывной корешок &nbsp;&nbsp; ✂</div>
+
+
+    <table class="ps-tag">
         <tr>
-            <td style="width:50%"><b>Площадь, м²</b></td>
-            <td class="ps-val">${door.area ? door.area.toFixed(4) : "—"}</td>
+            <td colspan="3" class="tag-header-left">${escapeHtml(door.client)}${doorPositionLabel ? ' &nbsp;|&nbsp; ' + escapeHtml(doorPositionLabel) : ''}</td>
+            <td class="tag-num">${door.prodNum}</td>
         </tr>
         <tr>
-            <td><b>Кол-во</b></td>
-            <td class="ps-val">${door.qty || 1}</td>
+            <th class="tag-lbl">ОТКРЫВАНИЕ</th>
+            <th class="tag-lbl">ЗАВ. НОМЕР</th>
+            <th class="tag-lbl">ЦВЕТ RAL</th>
+            <th class="tag-lbl">МАРКИРОВКА</th>
         </tr>
-        ${door.invoiceDate ? `<tr><td><b>Дата по счёту</b></td><td class="ps-val">${escapeHtml(door.invoiceDate)}</td></tr>` : ''}
-        ${door.note ? `<tr><td><b>Примечание</b></td><td class="ps-val" style="background:#fff3cd">${escapeHtml(door.note)}</td></tr>` : ''}
+        <tr>
+            <td class="tag-val">${escapeHtml(door.openingFull || door.opening)}</td>
+            <td class="tag-val">${escapeHtml(get("Заводской номер") || door.prodNum)}</td>
+            <td class="tag-val">${escapeHtml(get("Цвет"))}</td>
+            <td class="tag-val">${escapeHtml(door.naimenovanie)}</td>
+        </tr>
+        <tr>
+            <th class="tag-lbl">В</th>
+            <th class="tag-lbl">Ш</th>
+            <th class="tag-lbl">ПОЗИЦИЯ</th>
+            <th class="tag-lbl">КОЛ-ВО</th>
+        </tr>
+        <tr>
+            <td class="tag-val">${door.height}</td>
+            <td class="tag-val">${door.width}</td>
+            <td class="tag-val">${escapeHtml(doorPositionLabel || String(door.prodNum))}</td>
+            <td class="tag-val">${door.qty || 1}</td>
+        </tr>
     </table>
 
-    <div class="ps-cut">- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -</div>
-
-    <table class="ps-tag-table">
-        <tr>
-            <th colspan="3" style="font-size:14pt; text-align:left; padding:2mm 3mm;">${escapeHtml(door.client)}</th>
-            <th style="font-size:14pt;">${door.prodNum}</th>
-        </tr>
-        <tr>
-            <th>ПОЗИЦИЯ</th>
-            <th>ЗАВ. НОМЕР</th>
-            <th>ЦВЕТ RAL</th>
-            <th>МАРКИРОВКА</th>
-        </tr>
-        <tr>
-            <td class="ps-val">${door.prodNum}</td>
-            <td class="ps-val">${escapeHtml(get("Заводской номер") || door.prodNum)}</td>
-            <td class="ps-val">${escapeHtml(get("Цвет"))}</td>
-            <td class="ps-val">${escapeHtml(door.naimenovanie)}</td>
-        </tr>
-        <tr>
-            <th>В</th>
-            <th>Ш</th>
-            <th>ОТКРЫВАНИЕ</th>
-            <th>КОЛ-ВО</th>
-        </tr>
-        <tr>
-            <td class="ps-val">${door.height}</td>
-            <td class="ps-val">${door.width}</td>
-            <td class="ps-val">${escapeHtml(door.openingFull || door.opening)}</td>
-            <td class="ps-val">${door.qty || 1}</td>
-        </tr>
-    </table>`;
+    </div>`
 
     document.getElementById('printSheetContent').innerHTML = html;
     document.getElementById('printSheetModal').classList.remove('hidden');
@@ -4691,31 +4782,20 @@ window.doPrintSheet = function() {
     #printSheetModal .overlay-header { display:none !important; }
     #printSheetContent { box-shadow:none !important; padding:0 !important; width:100% !important; }
 }
-.ps-table { width:100%; border-collapse:collapse; margin-bottom:3mm; }
-.ps-table td, .ps-table th { border:1px solid #000; padding:2mm 3mm; vertical-align:middle; }
-.ps-table th { background:#e8e8e8; font-weight:700; }
-.ps-val { font-size:14pt; font-weight:700; }
-.ps-big { font-size:16pt; font-weight:900; }
-.ps-section { font-size:11pt; font-weight:700; background:#d0d0d0; }
-.ps-highlight { background:#ffe0e0; }
-.ps-cut { border-top:2px dashed #555; margin:5mm 0; padding-top:3mm; font-size:9pt; color:#555; text-align:center; letter-spacing:2px; }
-.ps-tag-table { width:100%; border-collapse:collapse; margin-top:3mm; }
-.ps-tag-table td, .ps-tag-table th { border:1px solid #000; padding:2mm 3mm; font-size:10pt; text-align:center; }
-.ps-tag-table th { background:#e8e8e8; font-size:9pt; }
-.ps-qr-wrap { display:flex; justify-content:flex-end; align-items:flex-start; }
+
 #qrCodeImg { border:1px solid #ddd; display:block; }
 </style>
 
 <div id="deleteOrderModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:10000;display:none;align-items:center;justify-content:center;">
-    <div style="background:#fff;border-radius:10px;padding:28px 32px;max-width:360px;width:90%;box-shadow:0 8px 40px rgba(0,0,0,0.2);font-family:'Play',sans-serif;">
+    <div style="background:#fff;border-radius:10px;padding:28px 32px;max-width:360px;width:90%;box-shadow:0 8px 40px rgba(0,0,0,0.2);font-family: 'Inter', system-ui, sans-serif;">
         <div style="font-size:1rem;font-weight:700;color:#dc2626;margin-bottom:10px;">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:6px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
             Удаление заказа
         </div>
         <div style="font-size:0.875rem;color:#4a5568;margin-bottom:20px;line-height:1.5;">Вы уверены, что хотите <b>полностью удалить</b> этот заказ? Действие нельзя отменить.</div>
         <div style="display:flex;gap:10px;justify-content:flex-end;">
-            <button id="delOrderCancelBtn" style="padding:8px 16px;border:1px solid #cbd5e0;background:#fff;border-radius:6px;cursor:pointer;font-family:'Play',sans-serif;font-size:0.85rem;color:#4a5568;">Отмена</button>
-            <button id="delOrderConfirmBtn" style="padding:8px 16px;border:none;background:#dc2626;color:#fff;border-radius:6px;cursor:pointer;font-family:'Play',sans-serif;font-weight:700;font-size:0.85rem;">Да, удалить</button>
+            <button id="delOrderCancelBtn" style="padding:8px 16px;border:1px solid #cbd5e0;background:#fff;border-radius:6px;cursor:pointer;font-family: 'Inter', system-ui, sans-serif;font-size:0.85rem;color:#4a5568;">Отмена</button>
+            <button id="delOrderConfirmBtn" style="padding:8px 16px;border:none;background:#dc2626;color:#fff;border-radius:6px;cursor:pointer;font-family: 'Inter', system-ui, sans-serif;font-weight:700;font-size:0.85rem;">Да, удалить</button>
         </div>
     </div>
 </div>
