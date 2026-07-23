@@ -427,7 +427,7 @@
         }
         .btn-save:hover { background: #15803d; }
 
-        /* Кнопка СОХРАНИТЬ — серая (нет изменений) */
+
         #saveOrderBtn.save-idle {
             background: #9ca3af;
             cursor: default;
@@ -435,7 +435,7 @@
         }
         #saveOrderBtn.save-idle:hover { background: #9ca3af; }
 
-        /* Кнопка СОХРАНИТЬ — зелёная (есть изменения) */
+
         #saveOrderBtn.save-dirty {
             background: #16a34a;
             box-shadow: 0 0 0 3px rgba(22,163,74,0.25);
@@ -446,8 +446,8 @@
             50%      { box-shadow: 0 0 0 6px rgba(22,163,74,0.08); }
         }
 
-        /* Попап подтверждения выхода без сохранения */
-        /* position:absolute — попап внутри #configOverlay (position:fixed), поэтому перекрывает только его */
+
+
         #unsavedModal {
             position:absolute;inset:0;background:rgba(0,0,0,0.45);z-index:200;
             display:none;align-items:center;justify-content:center;
@@ -513,7 +513,7 @@
         .doors-table tr.row-dragging {
             opacity: 0.4;
         }
-        /* Переключатель по проёму/по коробу */
+
         .size-mode-toggle { display:flex; align-items:center; gap:0; border:1px solid #cbd5e0; border-radius:6px; overflow:hidden; margin-bottom:10px; }
         .size-mode-toggle button { flex:1; padding:6px 10px; border:none; background:#f7f9fc; color:#4a5568; font-size:11px; font-weight:700; font-family:Play,sans-serif; cursor:pointer; transition:all 0.15s; }
         .size-mode-toggle button.active { background:#1e6db5; color:#fff; }
@@ -758,7 +758,7 @@
             }
         }
 
-        /* PDF Spec Modal */
+
         .modal-backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 30000; display: flex; justify-content: center; align-items: center; }
         .modal-backdrop.hidden { display: none; }
         .modal-box { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; width: 580px; max-height: 90vh; overflow-y: auto; padding: 30px; box-shadow: 0 8px 32px rgba(0,0,0,0.15); }
@@ -802,24 +802,24 @@
             transition: background 0.15s;
         }
 
-        /* ===== COMBOBOX ===== */
+
         .combo-wrap { position: relative; }
         .combo-input { width: 100%; padding: 8px 30px 8px 10px; background: #fff; border: 1px solid #cbd5e0; color: #1a202c; font-size: 0.85rem; font-family: 'Inter', system-ui, sans-serif, monospace; border-radius: 4px; cursor: text; }
         .combo-input:focus { border-color: #1e6db5; outline: none; box-shadow: 0 0 0 3px rgba(30,109,181,0.12); }
         .combo-arrow { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); pointer-events: all; color: #4a5568; font-size: 12px; cursor: pointer; }
-        /* Дропдаун через position:fixed — не обрезается overflow родителя */
+
         .combo-dropdown { position: fixed; background: #fff; border: 1px solid #cbd5e0; max-height: 220px; overflow-y: auto; z-index: 50000; border-radius: 4px; box-shadow: 0 4px 16px rgba(0,0,0,0.15); display: none; min-width: 180px; }
         .combo-dropdown.open { display: block; }
         .combo-option { padding: 8px 12px; cursor: pointer; font-size: 0.85rem; color: #1a202c; white-space: nowrap; }
         .combo-option:hover, .combo-option.selected { background: #e8f0fa; color: #1e6db5; }
 
-        /* ===== LEAF TOGGLE ===== */
+
         .leaf-toggle { display: flex; gap: 8px; margin-top: 4px; }
         .leaf-btn { background: #f0f4f8; border: 2px solid #cbd5e0; border-radius: 6px; padding: 5px 8px; cursor: pointer; color: #4a5568; transition: all 0.15s; line-height: 0; }
         .leaf-btn.active { background: #e8f0fa; border-color: #1e6db5; color: #1e6db5; }
         .leaf-btn:hover { border-color: #1e6db5; }
 
-        /* ===== COLUMN MANAGER ===== */
+
         .col-manager { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 16px; background: #f7f9fc; border-bottom: 1px solid #e2e8f0; align-items: center; }
         .col-chip { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; cursor: grab; border: 1px solid #cbd5e0; background: #fff; color: #4a5568; user-select: none; transition: background 0.15s, border-color 0.15s, color 0.15s; }
         .col-chip.hidden-col { background: #f0f2f5; color: #9ca3af; border-color: #e2e8f0; }
@@ -830,9 +830,9 @@
         .col-chip.dragging { opacity: 0.4; cursor: grabbing; }
         .col-chip.drag-over { border-color: #1e6db5; background: #e8f0fa; }
 
-        /* ===== SVG PREVIEW ===== */
+
         #doorSvgPreview { margin: 16px 0; display: flex; flex-direction: column; align-items: center; }
-        /* ===== PAGINATION ===== */
+
         .pg-info {
             font-size: 0.85rem;
             color: #4a5568;
@@ -874,7 +874,7 @@
             border-color: var(--accent-hover);
         }
 
-        /* ===== PRODUCTION TAB STYLES ===== */
+
         #appNav {
             background: var(--surface);
             display: flex;
@@ -1095,10 +1095,10 @@
             <div id="ordersPagination" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; padding:12px 4px; border-top:1px solid #e2e8f0; margin-top:4px; background:#fff;"></div>
         </div>
     </div>
-    </div><!-- /#salesView -->
+    </div>
 
     <div id="productionView" style="display:none; padding:20px; flex:1; overflow-y:auto;">
-        <!-- Фильтры -->
+
         <div class="panel-box" style="margin-bottom:16px; max-width:none;">
             <div class="prod-filters-grid">
                 <div class="form-group" style="min-width:180px;">
@@ -1146,7 +1146,7 @@
             </div>
         </div>
 
-        <!-- Легенда -->
+
         <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:12px; font-size:12px; color:#64748b;">
             <span style="display:flex;align-items:center;gap:5px;"><span style="width:14px;height:14px;background:#fee2e2;border:1px solid #fca5a5;display:inline-block;border-radius:2px;"></span> Просрочена готовность</span>
             <span style="display:flex;align-items:center;gap:5px;"><span style="width:14px;height:14px;background:#fef3c7;border:1px solid #fcd34d;display:inline-block;border-radius:2px;"></span> Готовность ≤ 3 дня</span>
@@ -1154,7 +1154,7 @@
             <span style="display:flex;align-items:center;gap:5px;"><span style="width:14px;height:14px;background:#dbeafe;border:1px solid #93c5fd;display:inline-block;border-radius:2px;"></span> Готово</span>
         </div>
 
-        <!-- Таблица -->
+
         <div class="table-wrapper" style="overflow-x:auto;">
             <table class="orders-table" id="productionTable">
                 <thead>
@@ -1179,7 +1179,7 @@
             </table>
         </div>
         <div id="prodStats" style="padding:10px 0; font-size:13px; color:#64748b;"></div>
-    </div><!-- /#productionView -->
+    </div>
 
     <div id="configOverlay" class="overlay hidden">
         <div class="overlay-header">
@@ -1287,7 +1287,7 @@
         </div>
     </div>
 
-    <!-- ПОПАП НЕСОХРАНЁННЫЕ ИЗМЕНЕНИЯ — внутри overlay, position:absolute -->
+
     <div id="unsavedModal" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,0.45);z-index:200;align-items:center;justify-content:center;">
         <div class="um-box">
             <div class="um-title">Есть несохранённые изменения</div>
@@ -1338,7 +1338,6 @@
     </div>
 </div>
 
-<!-- МОДАЛКА СКАЧАТЬ СПЕЦИФИКАЦИЮ -->
 <div id="pdfModal" class="modal-backdrop hidden">
     <div class="modal-box">
         <h2>ПАРАМЕТРЫ СПЕЦИФИКАЦИИ</h2>
@@ -1394,7 +1393,6 @@
 
 <div class="toast" id="toast"></div>
 
-<!-- ПОПАП ПОДПИСИ -->
 <div id="signaturePadModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:60000;justify-content:center;align-items:center;">
     <div style="background:#fff;border-radius:10px;padding:24px;width:520px;box-shadow:0 8px 32px rgba(0,0,0,0.18);">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
@@ -1411,7 +1409,6 @@
     </div>
 </div>
 
-<!-- jsPDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
@@ -1425,7 +1422,6 @@ const ALL_POSSIBLE_FIELDS = [
     "Тип пакета", "Отбойник", "Замок", "Ручка", "Антипаника", "СКУД", "Петли",
     "Вент решетка", "Вент решетка 2 точка привязки", "Тип отгрузки"
 ];
-// Специальные столбцы — свободный ввод, всегда доступны для добавления
 const SPECIAL_FIELDS = ["Примечание", "Цена", "Заводской номер"];
 
 let doorTypes = [];
@@ -1457,7 +1453,6 @@ let currentOrderTotal = 0;
 let currentInvoiceDate = '';
 let currentInvoiceNum = '';
 
-// ===== LOGIN =====
 const loginScreen = document.getElementById('loginScreen');
 const mainApp = document.getElementById('mainApp');
 const loginError = document.getElementById('loginError');
@@ -1489,7 +1484,6 @@ document.getElementById('loginBtn').addEventListener('click', async () => {
             currentUserRole  = data.role  || "user";
             currentUserName  = data.name  || "";
             currentUserPhone = data.phone || "";
-            // Запоминаем сессию
             if (document.getElementById('rememberMe').checked) {
                 localStorage.setItem('st_login', login);
                 localStorage.setItem('st_pass', password);
@@ -1521,7 +1515,6 @@ document.getElementById('loginInput').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') document.getElementById('passwordInput').focus();
 });
 
-// ── АВТОЛОГИН — проверяем сохранённую сессию ──────────────────
 async function tryAutoLogin() {
     const login    = localStorage.getItem('st_login') || sessionStorage.getItem('st_login');
     const password = localStorage.getItem('st_pass')  || sessionStorage.getItem('st_pass');
@@ -1546,7 +1539,6 @@ async function tryAutoLogin() {
             applyRoleAccess();
             return true;
         } else {
-            // Сессия устарела — чистим
             localStorage.removeItem('st_login');
             localStorage.removeItem('st_pass');
             sessionStorage.removeItem('st_login');
@@ -1560,7 +1552,6 @@ async function tryAutoLogin() {
     }
 }
 
-// ── УПРАВЛЕНИЕ ДОСТУПОМ ПО РОЛЯМ ────────────────────────────────
 function applyRoleAccess() {
     const role = currentUserRole;
     const tabSales      = document.querySelector('.app-tab[data-tab="sales"]');
@@ -1569,33 +1560,26 @@ function applyRoleAccess() {
     const productionView= document.getElementById('productionView');
 
     if (role === 'manager') {
-        // Только продажи
         if (tabProduction) tabProduction.style.display = 'none';
         if (tabSales)      tabSales.style.display = '';
-        // Активируем продажи
         if (tabSales) { tabSales.classList.add('active'); }
         if (tabProduction) tabProduction.classList.remove('active');
         if (salesView)      salesView.style.display = '';
         if (productionView) productionView.style.display = 'none';
     } else if (role === 'prod') {
-        // Только производство
         if (tabSales)      tabSales.style.display = 'none';
         if (tabProduction) tabProduction.style.display = '';
-        // Активируем производство
         if (tabProduction) { tabProduction.classList.add('active'); }
         if (tabSales) tabSales.classList.remove('active');
         if (productionView) productionView.style.display = '';
         if (salesView)      salesView.style.display = 'none';
-        // Загружаем данные производства
         loadProductionData();
     } else {
-        // admin — всё доступно
         if (tabSales)      tabSales.style.display = '';
         if (tabProduction) tabProduction.style.display = '';
     }
 }
 
-// Добавляем кнопку выхода в шапку при необходимости
 function addLogoutButton() {
     const nav = document.getElementById('appNav');
     if (!nav || document.getElementById('logoutBtn')) return;
@@ -1616,7 +1600,6 @@ function addLogoutButton() {
         currentUserRole  = '';
         currentUserName  = '';
         currentUserPhone = '';
-        // Сбрасываем скрытие вкладок перед выходом
         const tSales = document.querySelector('.app-tab[data-tab="sales"]');
         const tProd  = document.querySelector('.app-tab[data-tab="production"]');
         if (tSales) tSales.style.display = '';
@@ -1628,15 +1611,10 @@ function addLogoutButton() {
     nav.appendChild(btn);
 }
 
-// Запуск при загрузке
 tryAutoLogin().then(ok => {
     if (ok) addLogoutButton();
 });
 
-// addLogoutButton вызывается теперь напрямую в блоке успешного логина
-
-
-// ===== DATA LOAD =====
 async function loadDataFromAPI() {
     showLoading("Загрузка базы данных...");
     try {
@@ -1649,7 +1627,6 @@ async function loadDataFromAPI() {
         allClientsFull = data.clientsFull || [];
         allOrders = data.orders || [];
 
-        // New GAS: data.orders is already unique order summaries with _doorCount
         allOrderGroups = allOrders.map(o => ({
             id:           o["Order ID"],
             client:       o["Имя клиента"] || "",
@@ -1665,7 +1642,6 @@ async function loadDataFromAPI() {
             'Подпись клиента': o["Подпись клиента"] || ""
         })).sort((a, b) => parseDateTime(b.date) - parseDateTime(a.date));
 
-        // Обновляем кастомный комбобокс поиска клиента
         rebuildClientCombo();
 
         if (doorTypes.length) currentTypeKey = doorTypes[0].key;
@@ -1700,7 +1676,6 @@ function parseDoorTypes(rows) {
         const hMatch = (findVal(row, "Высота") || "").match(/(\d+)\s*-\s*(\d+)/);
         if (hMatch) { heightMin = +hMatch[1]; heightMax = +hMatch[2]; }
 
-        // Опции разделены " -|- ", внутри могут быть \n — нормализуем
         const parseOpts = (raw) => (raw || '').split(' -|- ')
             .map(s => s.replace(/\n|\r/g, ' ').replace(/\s+/g, ' ').trim())
             .filter(s => s && s !== '-' && s !== '—');
@@ -1719,9 +1694,6 @@ function parseDoorTypes(rows) {
     }
 }
 
-// ===== CLIENT SEARCH =====
-// clientSearch — обновляется через rebuildClientCombo() + selectClient()
-// слушатель ввода для фильтрации выпадашки
 document.getElementById("clientSearch").addEventListener("input", function() {
     const q = this.value.trim().toLowerCase();
     const dd = document.getElementById("clientSearch_dd");
@@ -1729,13 +1701,11 @@ document.getElementById("clientSearch").addEventListener("input", function() {
     dd.querySelectorAll(".combo-option").forEach(opt => {
         opt.style.display = opt.dataset.val.toLowerCase().includes(q) ? "" : "none";
     });
-    // Открываем если что-то введено
     if (q) {
         dd.classList.add("open");
         positionComboDropdown(this, dd);
     } else {
         dd.classList.remove("open");
-        // Сброс выбора если поле очищено
         selectedClient = "";
         document.getElementById("startNewOrderBtn").style.display = "none";
         document.getElementById("ordersPanel").style.display = "none";
@@ -1766,7 +1736,6 @@ document.getElementById("clientSearchArrow").addEventListener("click", function(
 });
 
 function positionComboDropdown(input, dd) {
-    // Алиас для openComboDropdown — позиционирует и открывает
     if (dd.parentElement !== document.body) document.body.appendChild(dd);
     const rect = input.getBoundingClientRect();
     const ddH = 220;
@@ -1794,7 +1763,6 @@ function rebuildClientCombo() {
     });
 }
 
-// Слушаем change на clientSearch — срабатывает когда выбрана опция из выпадашки
 document.addEventListener('change', function(e) {
     if (e.target.id === 'clientSearch') {
         selectClient(e.target.value.trim());
@@ -1833,7 +1801,6 @@ function renderClientOrders() {
     const tbody = document.getElementById("ordersTbody");
     panel.style.display = "block";
 
-    // Filter allOrderGroups (already built from order summaries) by client
     groupedClientOrders = allOrderGroups.filter(g => g.client === selectedClient);
 
     if (groupedClientOrders.length === 0) {
@@ -1901,7 +1868,6 @@ function applyOrderFilters() {
     });
 }
 
-// ===== GLOBAL ORDERS =====
 function parseDateToISO(dateStr) {
     if (!dateStr) return "";
     const s = String(dateStr).trim();
@@ -1972,7 +1938,6 @@ function renderPaginationControls() {
         return;
     }
 
-    // Page number buttons: up to 5 visible, centered on current page
     let pageButtons = "";
     if (totalPages > 1) {
         let pageStart = Math.max(0, currentOrderPage - 2);
@@ -1999,7 +1964,6 @@ window.goToOrderPage = function(page) {
     if (page < 0 || page >= totalPages) return;
     currentOrderPage = page;
     renderOrderPage();
-    // Scroll to top of orders table
     const panel = document.getElementById("globalOrdersPanel");
     if (panel) panel.scrollTop = 0;
 };
@@ -2040,12 +2004,9 @@ function applyGlobalFilters() {
 
 window.openGlobalOrder = function(clientName, orderId) {
     selectedClient = clientName;
-    // НЕ вставляем в поиск и НЕ вызываем renderClientOrders —
-    // сразу открываем за  аз в конфигураторе
     editOrder(orderId);
 };
 
-// ===== ORDER MANAGEMENT =====
 document.getElementById("startNewOrderBtn").addEventListener("click", () => {
     currentOrderId = null;
     currentDoors = [];
@@ -2074,7 +2035,6 @@ window.editOrder = async function(orderId) {
     currentInvoiceDate = group.invoiceDate || '';
     currentInvoiceNum  = group.invoiceNum  || '';
 
-    // Восстанавливаем подпись покупателя из заказа
     signatureB64 = group['Подпись клиента'] || null;
 
     try {
@@ -2127,7 +2087,6 @@ function loadDoorsIntoConfig(doorsArr) {
 
     currentDoors = doorsArr.map((d, i) => {
         const newDoor = { ...d };
-        // Удаляем все служебные поля заказа — они не должны попасть в двери
         const ORDER_META_FIELDS = [
             "Дата", "Имя клиента", "Order ID", "Статус заказа",
             "Оплаты JSON", "Итого заказа", "Итого оплат", "Долг",
@@ -2138,13 +2097,11 @@ function loadDoorsIntoConfig(doorsArr) {
 
         const row = { ...newDoor, id: Date.now() + Math.random(), requestNumber: i + 1, doorPosition: newDoor.doorPosition || '' };
 
-        // Стандартные дополнительные поля
         const knownExtra = new Set([...ALL_POSSIBLE_FIELDS, ...SPECIAL_FIELDS]);
         [...ALL_POSSIBLE_FIELDS, ...SPECIAL_FIELDS].forEach(f => {
             if (row[f] && row[f] !== '—' && !['_visGlazing','_visVent','_visCloser','_manualName','_fromProem'].includes(f)) usedExtraFields.add(f);
         });
 
-        // Пользовательские (нестандартные) столбцы: проверяем все ключи двери
         const baseKnown = new Set([
             'id', 'requestNumber', 'doorPosition', 'naimenovanie', 'doorKey', '_manualName', '_fromProem', 'Тип размера',
             'Высота', 'Ширина', 'Кол-во', 'Толщина стены, мм',
@@ -2161,7 +2118,6 @@ function loadDoorsIntoConfig(doorsArr) {
             }
         });
 
-        // Auto-generate naimenovanie from loaded data
         row.naimenovanie = buildDoorName(row);
 
         return row;
@@ -2177,9 +2133,7 @@ function openConfigurator() {
         const _ev = new Event('change');
         _ev._programmatic = true;
         _sel.value = currentOrderStatus || "В РАБОТЕ";
-        // Не диспатчим — просто устанавливаем значение без события
     }
-    // Кнопка УДАЛИТЬ — только для существующих заказов
     const delBtn = document.getElementById('deleteOrderBtn');
     if (delBtn) delBtn.style.display = currentOrderId ? '' : 'none';
     renderConfigForm();
@@ -2187,14 +2141,10 @@ function openConfigurator() {
     renderRightTable();
     refreshOrderMetaUI();
     markClean();
-    // Гарантируем что попап скрыт при открытии заказа
     const _um2 = document.getElementById('unsavedModal');
     if (_um2) _um2.style.display = 'none';
 }
 
-// ─────────────────────────────────────────────────────────────────
-// ЛОГИКА НЕСОХРАНЁННЫХ ИЗМЕНЕНИЙ
-// ─────────────────────────────────────────────────────────────────
 let orderDirty = false;
 
 function markDirty() {
@@ -2225,7 +2175,6 @@ function tryCloseOverlay() {
     }
 }
 
-// Вешаем обработчики на попапы после загрузки DOM
 document.addEventListener('DOMContentLoaded', () => {
     const umLeave = document.getElementById('umLeaveBtn');
     const umSave  = document.getElementById('umSaveBtn');
@@ -2280,7 +2229,6 @@ document.addEventListener('DOMContentLoaded', () => {
 document.getElementById("orderStatusSelect").addEventListener("change", (e) => {
     currentOrderStatus = document.getElementById("orderStatusSelect").value;
     refreshOrderMetaUI();
-    // Не помечаем dirty если изменение программное (при открытии заказа)
     if (!e._programmatic) markDirty();
 });
 
@@ -2330,8 +2278,6 @@ document.getElementById("saveOrderBtn").addEventListener("click", async () => {
     }
 });
 
-// ===== DOOR NAME GENERATION =====
-// dm() — точное воспроизведение VBA: делит на 100, округляет 0.5+ вверх
 function dm(mm) {
     const sh = mm / 100;
     const fix = Math.floor(sh);
@@ -2350,21 +2296,17 @@ function buildDoorName(door) {
     const glazed = isGlazed(door['Остекление']);
 
     if (base === 'МАЯ') {
-        // ДМ-Г-О или ДМ-О-Д (глухая/остеклённая, одно/двупольная)
         name = 'ДМ-' + (glazed ? 'О-' : 'Г-') + (is2P ? 'Д ' : 'О ');
         if (h > 0 && w > 0) name += dm(h) + '-' + dm(w);
     } else if (base === 'ДП1' || base === 'ДП2') {
-        // ДВСГ/ДВСЧ + размеры через пробел
         name = 'ДВС' + (glazed ? 'Ч' : 'Г');
         if (h > 0 && w > 0) name += ' ' + dm(h) + '-' + dm(w);
     } else {
-        // ДН, ДВ, ОБЛ, ЛП и прочие: ДНСГ/ДВСЧ и т.д.
         const prefix = base.length >= 2 ? base : 'ДВ';
         name = prefix + 'С' + (glazed ? 'Ч' : 'Г');
         if (h > 0 && w > 0) name += ' ' + dm(h) + '-' + dm(w);
     }
 
-    // Направление открывания
     const opening = door['Открывание'] || '';
     if (is2P) {
         if (opening.includes('Лев')) name += ' 2Л';
@@ -2372,21 +2314,17 @@ function buildDoorName(door) {
         else name += ' 2П';
     } else {
         if (opening.includes('Лев')) name += ' Л';
-        // правое — суффикса нет (по VBA)
     }
 
-    // Порог → П
     const por = door['Порог'] || '';
     if (por && por !== 'Без порога' && por !== '—' && String(por).trim() !== '') name += ' П';
 
-    // Фрамуга → Фр
     const fram = door['Фрамуга'] || '';
     if (fram && fram !== 'Без фрамуги' && fram !== '—' && String(fram).trim() !== '') name += ' Фр';
 
     return name.trim().replace(/\s+/g, ' ').replace(/--/g, '-');
 }
 
-// ===== COMBOBOX =====
 function makeCombo(id, options, currentVal) {
     const safeVal = currentVal !== undefined && currentVal !== null ? String(currentVal) : (options.length > 0 ? options[0] : '');
     const optionsHtml = options.map(o =>
@@ -2399,20 +2337,16 @@ function makeCombo(id, options, currentVal) {
     </div>`;
 }
 
-// ===== COMBO HELPERS =====
 function openComboDropdown(input) {
     let dd = document.getElementById(input.id + '_dd');
     if (!dd) return;
 
-    // Закрыть все другие
     document.querySelectorAll('.combo-dropdown.open').forEach(d => { if (d !== dd) d.classList.remove('open'); });
 
-    // Перенести dropdown в body если ещё не там — чтобы overflow родителя не обрезал
     if (dd.parentElement !== document.body) {
         document.body.appendChild(dd);
     }
 
-    // Позиционировать через getBoundingClientRect (position:fixed — viewport coords)
     const rect = input.getBoundingClientRect();
     const ddH = 220;
     const spaceBelow = window.innerHeight - rect.bottom;
@@ -2438,7 +2372,6 @@ document.addEventListener('input', function(e) {
     dd.querySelectorAll('.combo-option').forEach(opt => {
         opt.style.display = opt.dataset.val.toLowerCase().includes(q) ? '' : 'none';
     });
-    // Если уже открыт — просто фильтруем, иначе открываем
     if (!dd.classList.contains('open')) openComboDropdown(e.target);
 });
 
@@ -2447,7 +2380,6 @@ document.addEventListener('focus', function(e) {
     openComboDropdown(e.target);
 }, true);
 
-// Предотвращаем blur при клике на опцию или стрелку
 document.addEventListener('mousedown', function(e) {
     if (e.target.classList.contains('combo-option') || e.target.classList.contains('combo-arrow')) {
         e.preventDefault();
@@ -2466,7 +2398,6 @@ document.addEventListener('click', function(e) {
         return;
     }
     if (e.target.classList.contains('combo-arrow')) {
-        // Стрелка работает и в .combo-wrap и в .cell-combo-wrap
         const wrap = e.target.closest('.combo-wrap, .cell-combo-wrap');
         const input = wrap ? wrap.querySelector('.combo-input') : null;
         if (input) {
@@ -2485,7 +2416,6 @@ document.addEventListener('click', function(e) {
     }
 });
 
-// При скролле — перепозиционируем открытый дропдаун
 document.addEventListener('scroll', function() {
     document.querySelectorAll('.combo-dropdown.open').forEach(dd => {
         const input = document.getElementById(dd.id.replace('_dd',''));
@@ -2498,7 +2428,6 @@ document.addEventListener('scroll', function() {
     });
 }, true);
 
-// ===== CONFIG FORM =====
 function renderConfigForm() {
     currentSizeMode = 'korobka';  // сбрасываем при перерендере формы
     const formContainer = document.getElementById("configForm");
@@ -2517,12 +2446,10 @@ function renderConfigForm() {
         type = doorTypes[0];
     }
 
-    // Parse current base type and leaf
     const keyMatch = currentTypeKey.match(/^(.+) \((одн|двуп)\)$/);
     const initBase = keyMatch ? keyMatch[1] : currentTypeKey.replace(/ \((одн|двуп)\)$/, '').trim();
     const initLeaf = keyMatch ? keyMatch[2] : 'одн';
 
-    // Collect unique base types
     const baseTypeNames = {};
     doorTypes.forEach(t => {
         const base = t.key.replace(/ \((одн|двуп)\)$/, '').trim();
@@ -2588,16 +2515,13 @@ function renderConfigForm() {
 
     formContainer.innerHTML = html;
 
-    // Wire up base type select
     document.getElementById('baseTypeSelect').addEventListener('change', function() {
         const leaf = document.querySelector('.leaf-btn.active')?.dataset.val || 'одн';
         const newKey = this.value + ' (' + leaf + ')';
-        // Check if this key exists, if not try without suffix
         const found = doorTypes.find(t => t.key === newKey);
         if (found) {
             currentTypeKey = newKey;
         } else {
-            // Try to find any key with this base
             const anyMatch = doorTypes.find(t => t.key.startsWith(this.value));
             if (anyMatch) currentTypeKey = anyMatch.key;
         }
@@ -2605,7 +2529,6 @@ function renderConfigForm() {
         renderExtraParams();
     });
 
-    // Wire up leaf buttons
     document.querySelectorAll('.leaf-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             document.querySelectorAll('.leaf-btn').forEach(b => b.classList.remove('active'));
@@ -2624,7 +2547,6 @@ function renderConfigForm() {
         });
     });
 
-    // Wire change/input on configForm for SVG
     document.getElementById('configForm').addEventListener('change', renderDoorSvg);
     document.getElementById('configForm').addEventListener('input', renderDoorSvg);
 
@@ -2666,8 +2588,6 @@ function renderExtraParams() {
     renderDoorSvg();
 }
 
-// ===== ADD DOOR =====
-// ── ПЕРЕКЛЮЧАТЕЛЬ ПО ПРОЁМУ / ПО КОРОБУ ─────────────────────
 let currentSizeMode = 'korobka';  // 'korobka' | 'proem'
 const PROEM_DEDUCT_H = 80;   // Высота: из проёма отнимаем 80мм
 const PROEM_DEDUCT_W = 60;   // Ширина: из проёма отнимаем 60мм
@@ -2691,7 +2611,6 @@ document.getElementById("addDoorBtn").addEventListener("click", () => {
     const rawH = parseInt(document.getElementById("cfg_Высота").value) || type.heightMin;
     const rawW = parseInt(document.getElementById("cfg_Ширина").value) || type.widthMin;
     const fromProem = currentSizeMode === 'proem';
-    // Размеры сохраняются КАК ВВЕДЕНЫ — без вычитания
     let cfg = {
         doorKey: currentTypeKey,
         doorName: type.name,
@@ -2717,14 +2636,12 @@ document.getElementById("addDoorBtn").addEventListener("click", () => {
 
     cfg.naimenovanie = buildDoorName(cfg);
 
-    // Сохраняем визуальные флаги для наряда (галочки под SVG)
     cfg._visGlazing = document.getElementById('visGlazing')?.checked || false;
     cfg._visVent    = document.getElementById('visVent')?.checked    || false;
     cfg._visCloser  = document.getElementById('visCloser')?.checked  || false;
 
     currentDoors.push({ id: Date.now() + Math.random(), ...cfg });
 
-    // Renumber ALL doors sequentially
     currentDoors.forEach((d, i) => { d.requestNumber = i + 1; });
     nextRequestNumber = currentDoors.length + 1;
 
@@ -2733,7 +2650,6 @@ document.getElementById("addDoorBtn").addEventListener("click", () => {
     showToast("Дверь добавлена");
 });
 
-// ===== INLINE EDIT =====
 const NUMBER_COLS = new Set(["Высота", "Ширина", "Толщина стены, мм", "Кол-во"]);
 const PRICE_COL = "Цена"; // Числовой, но не NUMBER_COLS (не dblclick, показывается как строка)
 
@@ -2752,7 +2668,6 @@ function makeCellEditable(td, doorIdx, colName) {
 
     const door = currentDoors[doorIdx];
     const currentVal = door[colName] !== undefined ? String(door[colName]) : '—';
-    // ── Редактирование наименования вручную ──
     if (colName === 'naimenovanie') {
         const input = document.createElement('input');
         input.type = 'text';
@@ -2781,10 +2696,8 @@ function makeCellEditable(td, doorIdx, colName) {
         return;
     }
 
-    // ── N (порядковый) — нередактируемый ──
     if (colName === 'requestNumber') return;
 
-    // ── Редактирование ПОЗИЦИИ ──
     if (colName === 'doorPosition') {
         const input = document.createElement('input');
         input.type = 'text';
@@ -2803,7 +2716,6 @@ function makeCellEditable(td, doorIdx, colName) {
         return;
     }
 
-    // ── Числовые поля — текстовый input (принимаем любые символы) ──
     if (NUMBER_COLS.has(colName)) {
         const input = document.createElement('input');
         input.type = 'text';
@@ -2826,11 +2738,9 @@ function makeCellEditable(td, doorIdx, colName) {
         return;
     }
 
-    // Текстовые / списочные поля — кастомный комбобокс (= как в конфигураторе)
     const opts = getColOptions(door['doorKey'] || door['Ключ'], colName) || [];
     const safeCurrentVal = currentVal === '—' ? '' : currentVal;
 
-    // Строим комбо HTML вручную (не через makeCombo чтобы не пересоздавать всю таблицу)
     const comboId = 'cellcmb_' + doorIdx + '_' + colName.replace(/\s+/g,'_') + '_' + Date.now();
     const allOpts = opts.length > 0 ? ['—', ...opts] : [];
 
@@ -2872,7 +2782,6 @@ function makeCellEditable(td, doorIdx, colName) {
     td.appendChild(wrap);
     inp.focus(); inp.select();
 
-    // Открыть дропдаун сразу
     if (allOpts.length > 0) openComboDropdown(inp);
 
     let _saved = false;
@@ -2889,9 +2798,7 @@ function makeCellEditable(td, doorIdx, colName) {
         renderRightTable();
     };
 
-    // change срабатывает при выборе опции (диспатч из глобального click хендлера)
     inp.addEventListener('change', e => save(e.target.value));
-    // blur — если не успел сохраниться через change
     inp.addEventListener('blur', () => { setTimeout(save, 200); });
     inp.addEventListener('keydown', e => {
         if (e.key === 'Enter') { e.preventDefault(); save(); }
@@ -2899,12 +2806,10 @@ function makeCellEditable(td, doorIdx, colName) {
     });
 }
 
-// ===== COLUMN MANAGER =====
 function renderColManager(allColumns) {
     const mgr = document.getElementById('colManager');
     if (!mgr) return;
 
-    // Столбцы которые никогда не скрываются автоматически — всегда в чипах
     const neverAutoHide = new Set(['requestNumber', 'doorKey', 'naimenovanie', 'Высота', 'Ширина', 'Кол-во', ...CORE_FIELDS]);
     const autoEmpty = new Set();
     allColumns.forEach(col => {
@@ -2913,11 +2818,8 @@ function renderColManager(allColumns) {
         if (allEmpty) autoEmpty.add(col);
     });
 
-
-    // Строим чипы через DOM (не innerHTML — чтобы навесить live-обработчики)
     mgr.innerHTML = '';
 
-    // Поддерживаем columnOrder
     if (columnOrder.length === 0) columnOrder = [...allColumns];
     allColumns.forEach(c => { if (!columnOrder.includes(c)) columnOrder.push(c); });
     columnOrder = columnOrder.filter(c => allColumns.includes(c));
@@ -2951,7 +2853,6 @@ function renderColManager(allColumns) {
         chip.appendChild(labelEl);
         chip.appendChild(delEl);
 
-        // Клик на метку — переключаем видимость
         labelEl.addEventListener('click', e => {
             e.stopPropagation();
             if (hiddenColumns.has(col)) hiddenColumns.delete(col);
@@ -2959,21 +2860,17 @@ function renderColManager(allColumns) {
             renderRightTable();
         });
 
-        // Клик на × — удаляем полностью
         delEl.addEventListener('click', e => {
             e.stopPropagation();
-            // Удаляем из usedExtraFields и customUserColumns
             usedExtraFields.delete(col);
             const ci = customUserColumns.indexOf(col);
             if (ci > -1) customUserColumns.splice(ci, 1);
             const oi = columnOrder.indexOf(col);
             if (oi > -1) columnOrder.splice(oi, 1);
-            // Базовые столбцы скрываем через hiddenColumns
             hiddenColumns.add(col);
             renderRightTable();
         });
 
-        // Drag-and-drop
         chip.addEventListener('dragstart', e => {
             dragSrc = col;
             setTimeout(() => chip.classList.add('dragging'), 0);
@@ -2998,7 +2895,6 @@ function renderColManager(allColumns) {
         mgr.appendChild(chip);
     });
 
-    // Кнопка "+ Столбец"
     const addWrap = document.createElement('div');
     addWrap.style.cssText = 'position:relative;display:inline-block;';
 
@@ -3012,7 +2908,6 @@ function renderColManager(allColumns) {
     menu.id = 'addColMenu';
     menu.style.cssText = 'display:none;position:fixed;background:#fff;border:1px solid #cbd5e0;border-radius:6px;z-index:9999;min-width:240px;box-shadow:0 4px 16px rgba(0,0,0,0.12);padding:8px 0;max-height:320px;overflow-y:auto;';
 
-    // Стандартные поля
     const stdLabel = document.createElement('div');
     stdLabel.style.cssText = 'padding:6px 12px 4px;font-size:10px;font-weight:700;color:#9ca3af;letter-spacing:0.05em;';
     stdLabel.textContent = 'СТАНДАРТНЫЕ';
@@ -3032,7 +2927,6 @@ function renderColManager(allColumns) {
         menu.appendChild(item);
     });
 
-    // Свой столбец
     const customLabel = document.createElement('div');
     customLabel.style.cssText = 'padding:6px 12px 4px;margin-top:4px;font-size:10px;font-weight:700;color:#9ca3af;letter-spacing:0.05em;border-top:1px solid #f0f2f5;';
     customLabel.textContent = 'СВОЙ СТОЛБЕЦ';
@@ -3093,9 +2987,6 @@ window.addExtraColumn = function(field) {
     renderRightTable();
 };
 
-
-
-// ===== RENDER RIGHT TABLE =====
 function renderRightTable() {
     const tbody = document.getElementById("doorsTbody");
     const INTERNAL_COLS = new Set(['_visGlazing','_visVent','_visCloser','_manualName','_fromProem','_sigInited','doorName']);
@@ -3105,11 +2996,9 @@ function renderRightTable() {
 
     renderColManager(allColumns);
 
-    // Используем columnOrder для порядка столбцов в таблице
     const orderedAll = columnOrder.length > 0
         ? columnOrder.filter(c => allColumns.includes(c))
         : allColumns;
-    // Filter visible columns
     const visibleColumns = orderedAll.filter(col => !hiddenColumns.has(col));
 
     let headerHtml = `<tr><th>ДЕЙСТВИЯ</th>`;
@@ -3141,14 +3030,11 @@ function renderRightTable() {
             let value = d[col] !== undefined ? d[col] : "";
             const isNum = NUMBER_COLS.has(col);
             if (col === 'requestNumber') {
-                // Порядковый номер — нередактируемый, серый
                 bodyHtml += `<td style="cursor:default;font-weight:600;text-align:center;color:#9ca3af;background:#f8fafc;font-size:11px;">${d.requestNumber}</td>`;
             } else if (col === 'doorPosition') {
-                // Позиция — редактируемый, копируется
                 const pv = d.doorPosition || '';
                 bodyHtml += `<td onclick="makeCellEditable(this,${i},'doorPosition')" title="Клик для редактирования" style="cursor:pointer;text-align:center;" class="editable-cell">${pv ? escapeHtml(pv) : '<span style="color:#cbd5e0">—</span>'}</td>`;
             } else if (col === 'Тип размера') {
-                // Проём/Коробок — нередактируемый
                 const label = d._fromProem ? 'Проём' : 'Короб.';
                 const color = d._fromProem ? '#b45309' : '#64748b';
                 bodyHtml += `<td style="cursor:default;text-align:center;font-size:11px;color:${color};font-weight:600;">${label}</td>`;
@@ -3166,7 +3052,6 @@ function renderRightTable() {
     tbody.innerHTML = bodyHtml;
 }
 
-// ── DRAG-AND-DROP СТРОК ТАБЛИЦЫ ──────────────────────────────────
 let _rowDragSrc = null;
 window.rowDragStart = function(e, idx) {
     _rowDragSrc = idx;
@@ -3199,12 +3084,10 @@ window.rowDragEnd = function(e) {
 };
 
 window.copyRow = function(idx) {
-    // Форсируем завершение любого активного инпута чтобы сохранить изменения
     const activeEl = document.activeElement;
     if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
         activeEl.blur();
     }
-    // Копируем с короткой задержкой чтобы blur успел отработать
     setTimeout(() => {
         let copy = JSON.parse(JSON.stringify(currentDoors[idx]));
         copy.id = Date.now() + Math.random();
@@ -3223,17 +3106,14 @@ window.delRow = function(idx) {
     renderRightTable();
 };
 
-// ===== SVG DOOR VISUALIZATION =====
 function renderDoorSvg() {
     const svg = document.getElementById('doorSvg');
     if (!svg) return;
 
-    // ── Данные из полей конфигуратора ──────────────────────────────────
     const is2P   = document.querySelector('.leaf-btn.active')?.dataset.val === 'двуп';
     const h      = parseInt(document.getElementById('cfg_Высота')?.value)  || 2050;
     const w      = parseInt(document.getElementById('cfg_Ширина')?.value)  || 900;
     const opening = document.getElementById('cfg_Открывание')?.value || '';
-    // Лев. = петли слева, Прав. = петли справа
     const hingeRight = opening.includes('Прав') || opening.toLowerCase().includes('right');
 
     const porchVal  = document.getElementById('cfg_Порог')?.value || '';
@@ -3247,12 +3127,10 @@ function renderDoorSvg() {
     const closerVal = document.getElementById('cfg_Доводчик')?.value || '';
     const closerFromField = closerVal && closerVal !== 'Подготовка' && closerVal !== '—';
 
-    // Галочки визуального предпросмотра
     const hasGlazing = glazFromField || (document.getElementById('visGlazing')?.checked);
     const isVent     = ventFromField  || (document.getElementById('visVent')?.checked);
     const hasCloser  = closerFromField|| (document.getElementById('visCloser')?.checked);
 
-    // Синхронизируем галочки с полями если поле заполнено
     const visG = document.getElementById('visGlazing');
     const visV = document.getElementById('visVent');
     const visC = document.getElementById('visCloser');
@@ -3260,7 +3138,6 @@ function renderDoorSvg() {
     if (visV && ventFromField)  visV.checked = true;
     if (visC && closerFromField)visC.checked = true;
 
-    // Наличник: extra_Наличник (доп. параметры) или cfg_Наличник
     const nalichnikRaw = (document.getElementById('extra_Наличник') || document.getElementById('cfg_Наличник'))?.value || '';
     const nalichnikParsed = (() => {
         if (!nalichnikRaw || nalichnikRaw.trim() === '' || nalichnikRaw.trim() === '—' || nalichnikRaw.trim() === '-') return null;
@@ -3271,7 +3148,6 @@ function renderDoorSvg() {
         return null;
     })();
 
-    // ── Размеры viewport ──────────────────────────────────────────────
     const CANVAS_W = 240;
     const NW = 16;       // толщина наличника в SVG px
     const hasNalich  = !!nalichnikParsed;
@@ -3292,8 +3168,6 @@ function renderDoorSvg() {
     doorW = Math.max(doorW, 40);
     doorH = Math.max(doorH, 50);
 
-    // ── Двуполая: основное полотно = doorW, заглушка = 40% от doorW ──
-    // Наличники идут по ОБЩЕМУ периметру (обоих полотен вместе)
     const stubW  = is2P ? Math.round(doorW * 0.40) : 0;
     const totalW = is2P ? (doorW + stubW) : doorW;  // общая ширина блока
 
@@ -3302,7 +3176,6 @@ function renderDoorSvg() {
     const boxH = doorH;
     const FW   = 5;   // толщина коробки
 
-    // ── Цвета чертёжного стиля ────────────────────────────────────────
     const C_STROKE  = '#1c2d45';   // основной контур
     const C_FILL    = '#f0f4f8';   // заливка полотна (почти белая)
     const C_FILL2   = '#e4eaf2';   // заглушка чуть темнее
@@ -3316,21 +3189,17 @@ function renderDoorSvg() {
     const SW        = 1.5;         // stroke-width основной
     const SWH       = 2.5;         // stroke-width ручка
 
-    // Заглушка слева если петли справа (и наоборот)
     const stubOnLeft = hingeRight;
 
-    // Позиции
     const mainX = stubOnLeft ? (boxX + FW + stubW) : boxX;
     const stubX = stubOnLeft ? boxX : (boxX + doorW + FW);
 
-    // Позиция основного листа (внутри коробки)
     const mainLeafX = mainX + FW;
     const mainLeafW = doorW - FW * 2;
     const mainLeafH = boxH - FW * 2;
 
     let o = '';
 
-    // ── НАЛИЧНИКИ (по общему периметру) ──────────────────────────────
     if (hasNalich) {
         const n = nalichnikParsed;
         const totalBoxW = is2P ? (totalW + FW) : doorW;
@@ -3340,36 +3209,28 @@ function renderDoorSvg() {
         const ny = boxY - NW;
         const nw = totalBoxW + nL + nR;
 
-        // Верхний наличник — всегда (контур + подпись)
         o += `<rect x="${nx}" y="${ny}" width="${nw}" height="${NW}" fill="none" stroke="${C_NALICH}" stroke-width="${SW}"/>`;
         if (n.T > 0) o += `<text x="${nx + nw/2}" y="${ny + NW - 3}" text-anchor="middle" font-size="7.5" font-weight="bold" fill="${C_TEXT}" font-family="Play">${n.T}</text>`;
 
-        // Левый наличник
         if (n.L > 0) {
             o += `<rect x="${boxX - NW}" y="${boxY}" width="${NW}" height="${boxH}" fill="none" stroke="${C_NALICH}" stroke-width="${SW}"/>`;
             o += `<text x="${boxX - NW/2}" y="${boxY + boxH/2}" text-anchor="middle" dominant-baseline="middle" font-size="7.5" font-weight="bold" fill="${C_TEXT}" font-family="Play" transform="rotate(-90,${boxX - NW/2},${boxY + boxH/2})">${n.L}</text>`;
         }
-        // Правый наличник
         if (n.R > 0) {
             const rx = boxX + totalBoxW;
             o += `<rect x="${rx}" y="${boxY}" width="${NW}" height="${boxH}" fill="none" stroke="${C_NALICH}" stroke-width="${SW}"/>`;
             o += `<text x="${rx + NW/2}" y="${boxY + boxH/2}" text-anchor="middle" dominant-baseline="middle" font-size="7.5" font-weight="bold" fill="${C_TEXT}" font-family="Play" transform="rotate(90,${rx + NW/2},${boxY + boxH/2})">${n.R}</text>`;
         }
-        // Нижний наличник (только если 4 значения)
         if (hasNalichB && n.B > 0) {
             o += `<rect x="${nx}" y="${boxY + boxH}" width="${nw}" height="${NW}" fill="none" stroke="${C_NALICH}" stroke-width="${SW}"/>`;
             o += `<text x="${nx + nw/2}" y="${boxY + boxH + NW - 3}" text-anchor="middle" font-size="7.5" font-weight="bold" fill="${C_TEXT}" font-family="Play">${n.B}</text>`;
         }
     }
 
-    // ── КОРОБКА ────────────────────────────────────────────────────────
     if (is2P) {
-        // Общий контур коробки (основное + заглушка)
         o += `<rect x="${boxX}" y="${boxY}" width="${totalW + FW}" height="${boxH}" fill="${C_FILL}" stroke="${C_STROKE}" stroke-width="${SW + 0.5}"/>`;
-        // Вертикальная перегородка между полотнами
         const seamX = stubOnLeft ? (boxX + stubW + FW) : (boxX + doorW);
         o += `<line x1="${seamX}" y1="${boxY}" x2="${seamX}" y2="${boxY + boxH}" stroke="${C_STROKE}" stroke-width="${SW}"/>`;
-        // Заглушка — немного темнее
         if (stubOnLeft) {
             o += `<rect x="${boxX + FW}" y="${boxY + FW}" width="${stubW - FW}" height="${boxH - FW*2}" fill="${C_FILL2}" stroke="none"/>`;
         } else {
@@ -3379,17 +3240,14 @@ function renderDoorSvg() {
         o += `<rect x="${boxX}" y="${boxY}" width="${doorW}" height="${boxH}" fill="${C_FILL}" stroke="${C_STROKE}" stroke-width="${SW + 0.5}"/>`;
     }
 
-    // ── ПОЛОТНО (тонкая внутренняя рамка основного полотна) ──────────
     o += `<rect x="${mainLeafX}" y="${boxY + FW}" width="${mainLeafW}" height="${mainLeafH}" fill="none" stroke="${C_STROKE}" stroke-width="0.7" opacity="0.5"/>`;
 
-    // ── ОСТЕКЛЕНИЕ ────────────────────────────────────────────────────
     if (hasGlazing) {
         const gx = mainLeafX + mainLeafW * 0.12;
         const gy = boxY + FW + mainLeafH * 0.08;
         const gw = mainLeafW * 0.76;
         const gh = mainLeafH * 0.20;
         o += `<rect x="${gx}" y="${gy}" width="${gw}" height="${gh}" fill="${C_GLASS}" stroke="${C_STROKE}" stroke-width="${SW}"/>`;
-        // диагональные линии на стекле (чертёжный штриховки)
         const steps = 4;
         for (let i = 0; i <= steps; i++) {
             const t = i / steps;
@@ -3398,7 +3256,6 @@ function renderDoorSvg() {
         }
     }
 
-    // ── ВЕНТ. РЕШЁТКА ──────────────────────────────────   ──────────────
     if (isVent) {
         const vx = mainLeafX + mainLeafW * 0.12;
         const vy = boxY + FW + mainLeafH * 0.72;
@@ -3414,39 +3271,26 @@ function renderDoorSvg() {
         o += `<text x="${vx + vw/2}" y="${vy + vh + 7}" text-anchor="middle" font-size="5.5" fill="${C_TEXT}" font-family="Play" opacity="0.7">ВЕНТ</text>`;
     }
 
-    // ── ПЕТЛИ + РУЧКА ─────────────────────────────────────────────────
-    // Петли: 3 шт. на стойке петель основного полотна
-    // hingeRight=true: петли справа (ручка слева)
-    // hingeRight=false: петли слева (ручка справа)
     [0.18, 0.50, 0.82].forEach(t => {
         const hy = boxY + FW + mainLeafH * t;
         let hrx;
         if (hingeRight) {
-            // Петля на правом краю листа — торчит вправо от полотна в коробку
             hrx = mainLeafX + mainLeafW - 1;
         } else {
-            // Петля на левом краю листа — торчит влево, внутри коробки
             hrx = mainLeafX + 1;
         }
         o += `<rect x="${hrx}" y="${hy - 4}" width="5" height="8" rx="0" fill="${C_HINGE}" stroke="${C_STROKE}" stroke-width="0.6"/>`;
     });
 
-    // Ручка на противоположной от петель стороне
-    // hingeRight=true → петли справа → ручка слева (0.12 от левого края)
-    // hingeRight=false → петли слева → ручка справа (0.88 от левого края)
     const hx = hingeRight ? (mainLeafX + mainLeafW * 0.12) : (mainLeafX + mainLeafW * 0.88);
     const hy_center = boxY + FW + mainLeafH * 0.52;
     const hl = mainLeafH * 0.12;
-    // Вертикальная часть ручки
     o += `<line x1="${hx}" y1="${hy_center - hl/2}" x2="${hx}" y2="${hy_center + hl/2}" stroke="${C_HANDLE}" stroke-width="${SWH}" stroke-linecap="square"/>`;
-    // Горизонтальный отросток — направлен к центру двери
     const hdir = hingeRight ? 5 : -5;
     o += `<line x1="${hx}" y1="${hy_center - hl/4}" x2="${hx + hdir}" y2="${hy_center - hl/4}" stroke="${C_HANDLE}" stroke-width="${SWH}" stroke-linecap="square"/>`;
-    // Замочная скважина
     const kyH = hy_center + hl/2 + 5;
     o += `<ellipse cx="${hx}" cy="${kyH}" rx="2" ry="2.5" fill="none" stroke="${C_HANDLE}" stroke-width="1"/>`;
 
-    // ── ДОВОДЧИК ──────────────────────────────────────────────────────
     if (hasCloser) {
         const cx = mainLeafX + mainLeafW * 0.5;
         const cy = boxY + FW + 3;
@@ -3454,7 +3298,6 @@ function renderDoorSvg() {
         o += `<text x="${cx}" y="${cy + 4}" text-anchor="middle" font-size="4" fill="${C_TEXT}" font-family="Play">ДЦ</text>`;
     }
 
-    // ── ПОРОГ ───────────────────────────  ─────────────────────────────
     const totalBoxW = is2P ? (totalW + FW) : doorW;
     const bottomY   = boxY + boxH;
     let   extraH    = 0;
@@ -3466,12 +3309,10 @@ function renderDoorSvg() {
         o += `<text x="${boxX + totalBoxW/2}" y="${bottomY + thH + 8}" text-anchor="middle" font-size="6" fill="${C_TEXT}" font-family="Play">${pl}</text>`;
     }
 
-    // ── РАЗМЕРЫ ───────────────────────────────────────────────────────
     const labelY = bottomY + extraH + (hasPorch ? 10 : 4) + 9;
     o += `<text x="${boxX + totalBoxW/2}" y="${labelY}" text-anchor="middle" font-size="9" font-weight="bold" fill="${C_TEXT}" font-family="Play">${w} × ${h}</text>`;
     o += `<text x="${boxX + totalBoxW/2}" y="${labelY + 10}" text-anchor="middle" font-size="6" fill="#6b8ca8" font-family="Play">мм</text>`;
 
-    // ── Обновляем SVG ─────────────────────────────────────────────────
     const totalSvgH = labelY + 14;
     svg.setAttribute('viewBox', `0 0 ${CANVAS_W} ${totalSvgH}`);
     svg.setAttribute('width', '100%');
@@ -3480,7 +3321,6 @@ function renderDoorSvg() {
     svg.innerHTML = o;
 }
 
-// ===== ADD CLIENT =====
 function openAddClientModal() {
     document.getElementById("addClientModal").classList.remove("hidden");
     document.getElementById("newClient_ownerLogin").value = currentUserLogin || "";
@@ -3559,11 +3399,9 @@ document.getElementById("saveClientBtn").addEventListener("click", async () => {
     }
 });
 
-// ===== FINANCE =====
 function openFinanceModal() {
     document.getElementById("financeModal").classList.remove("hidden");
     document.getElementById("financeOrderTotalInput").value = currentOrderTotal || 0;
-    // Конвертируем DD.MM.YYYY → YYYY-MM-DD для input[type=date]
     const _inv = currentInvoiceDate || '';
     const _invM = _inv.match(/(\d{2})\.(\d{2})\.(\d{4})/);
     document.getElementById("financeInvoiceDateInput").value = _invM ? _invM[3]+"-"+_invM[2]+"-"+_invM[1] : _inv;
@@ -3759,11 +3597,9 @@ function hideLoading() {
 
 document.getElementById("refreshBtn").addEventListener("click", loadDataFromAPI);
 
-// ===== PDF MODAL =====
 document.getElementById("downloadSpecBtn").addEventListener("click", () => {
     if (currentDoors.length === 0) return alert("В заказе нет ни одной двери!");
     document.getElementById("m_clientInfo").value = selectedClient || "";
-    // Автозаполняем менеджера из данных текущего пользователя
     if (currentUserName || currentUserPhone) {
         const parts = [];
         if (currentUserName)  parts.push(currentUserName);
@@ -3815,7 +3651,6 @@ window.generatePDF = function() {
     const margin = 15;
     const cw = pageW - margin * 2;
 
-    // ── Палитра: чистый светлый дизайн
     const NAVY   = [30, 58, 95];     // акцент текста
     const BLUE   = [30, 109, 181];
     const DARK   = [26, 32, 44];
@@ -3827,7 +3662,6 @@ window.generatePDF = function() {
 
     let y = margin - 5;
 
-    // ── ЛОГОТИП + заголовок без фона
     const logoH = 10;
     const logoW = logoH * (827 / 301);
     try {
@@ -3838,31 +3672,26 @@ window.generatePDF = function() {
         doc.text("СЭТГОУ", margin, y + 7);
     }
 
-    // Заголовок документа — право от логотипа
     doc.setFont("PTSans", "bold"); doc.setFontSize(12);
     doc.setTextColor(...NAVY);
     doc.text("СПЕЦИФИКАЦИЯ", pageW / 2, y + 5, { align: 'center' });
 
-    // Счёт — справа
     doc.setFont("PTSans", "normal"); doc.setFontSize(8);
     doc.setTextColor(...MGRAY);
     doc.text("Счёт \u2116 " + schetNum + " от " + schetDate, pageW - margin, y + 5, { align: 'right' });
 
     y += logoH + 3;
 
-    // Синяя линия-разделитель
     doc.setDrawColor(...ACCENT_LINE);
     doc.setLineWidth(0.6);
     doc.line(margin, y, pageW - margin, y);
     y += 4;
 
-    // ── Приложение / договор
     doc.setFont("PTSans", "normal"); doc.setFontSize(7);
     doc.setTextColor(...MGRAY);
     doc.text("Приложение \u21161  \u00b7  К договору поставки \u2116 " + dogovorNum + " от " + dogovorDate + "г.", margin, y);
     y += 5;
 
-    // ── МЕТА-БЛОК: две колонки + реквизиты
     const metaY = y;
     const col2X = pageW * 0.42;
     const col3X = pageW * 0.68;
@@ -3894,7 +3723,6 @@ window.generatePDF = function() {
         doc.text(val, col2X + 30, rowY);
     });
 
-    // Реквизиты
     doc.setFontSize(5.8); doc.setTextColor(...MGRAY);
     ["УП «СЭТГОУ»  \u00b7  УНП 100072163",
      "220099 г. Минск, Казинца 11А\u201394, пом. 405а",
@@ -3907,14 +3735,10 @@ window.generatePDF = function() {
 
     y = metaY + 17;
 
-    // Тонкая линия-разделитель
     doc.setDrawColor(...LGRAY); doc.setLineWidth(0.3);
     doc.line(margin, y, pageW - margin, y);
     y += 4;
 
-    // ── ТАБЛИЦА
-    // В PDF: requestNumber идёт как '№', doorPosition как 'Позиция', Тип размера — как записано
-    // requestNumber — в PDF не выводится (заменяем на doorPosition если есть, иначе порядковый номер)
     const PDF_EXCLUDE = new Set(['requestNumber', 'doorKey', '_visGlazing', '_visVent', '_visCloser', '_manualName', '_fromProem', '_sigInited', 'doorName']);
     const baseColumns = ["doorPosition", "naimenovanie", "Тип размера", "Высота", "Ширина", ...CORE_FIELDS, "Толщина стены, мм", "Кол-во"];
     const extraColumns = Array.from(usedExtraFields);
@@ -4017,7 +3841,6 @@ window.generatePDF = function() {
     y = doc.lastAutoTable.finalY + 6;
     if (y + 30 > pageH - 10) { doc.addPage(); y = 20; }
 
-    // ── УСЛОВИЯ
     doc.setDrawColor(...LGRAY); doc.setLineWidth(0.3);
     doc.line(margin, y, pageW - margin, y);
     y += 4;
@@ -4027,12 +3850,10 @@ window.generatePDF = function() {
     doc.text("Поставщик имеет право изменить адрес отгрузки. Схемы проезда на сайте WWW.SETGOU.BY", margin, y);
     y += 9;
 
-    // ── ПОДПИСИ
     if (y + 22 > pageH - 10) { doc.addPage(); y = 20; }
 
     const sigW = (cw - 20) / 2;
 
-    // ПРОДАВЕЦ
     doc.setFont("PTSans", "bold"); doc.setFontSize(7); doc.setTextColor(...NAVY);
     doc.text("ПРОДАВЕЦ", margin, y);
     doc.setFont("PTSans", "normal"); doc.setFontSize(6.8); doc.setTextColor(...DARK);
@@ -4042,7 +3863,6 @@ window.generatePDF = function() {
     doc.setFontSize(6.5); doc.setTextColor(...MGRAY);
     doc.text("подпись  /  " + sellerName, margin + 2, y + 16);
 
-    // ПОКУПАТЕЛЬ
     const bx = margin + sigW + 20;
     doc.setFont("PTSans", "bold"); doc.setFontSize(7); doc.setTextColor(...NAVY);
     doc.text("ПОКУПАТЕЛЬ", bx, y);
@@ -4050,12 +3870,10 @@ window.generatePDF = function() {
     const buyerShort = clientInfo.length > 40 ? clientInfo.substring(0,40)+"\u2026" : clientInfo;
     doc.text(buyerShort, bx, y + 4.5);
 
-    // Подпись — над чертой
     if (includeSign && signatureB64) {
         try {
             const sigImgW = sigW * 0.65;
             const sigImgH = sigImgW * (160 / 472);
-            // Размещаем над линией: черта на y+16, подпись занимает sigImgH мм, старт = y+16-sigImgH
             const imgY = y + 16 - sigImgH;
             doc.addImage(signatureB64, 'PNG', bx, imgY, sigImgW, sigImgH);
         } catch(e) {}
@@ -4079,9 +3897,6 @@ window.generatePDF = function() {
     showToast("ПДФ успешно скачан!");
 };
 
-// ── ПОДПИСЬ: канвас + сохранение base64 ───────────────────────────
-// signatureB64 объявлен выше вместе с остальными переменными состояния
-
 window.toggleSignatureFields = function() {
     const on = document.getElementById('m_includeSignature').checked;
     document.getElementById('signatureFields').style.display = on ? 'block' : 'none';
@@ -4092,21 +3907,18 @@ window.openSignaturePad = function() {
     const c = document.getElementById('signatureCanvas');
     const ctx = c.getContext('2d');
 
-    // Сбрасываем канвас и настраиваем кисть
     ctx.clearRect(0, 0, c.width, c.height);
     ctx.strokeStyle = '#1a202c';
     ctx.lineWidth = 2.2;
     ctx.lineCap  = 'round';
     ctx.lineJoin = 'round';
 
-    // Восстанавливаем сохранённую подпись
     if (signatureB64) {
         const img = new Image();
         img.onload = () => ctx.drawImage(img, 0, 0);
         img.src = signatureB64;
     }
 
-    // Убираем старые обработчики через флаг в data-атрибуте
     if (c._sigInited) {
         c.removeEventListener('mousedown',  c._sigStart);
         c.removeEventListener('mousemove',  c._sigDraw);
@@ -4167,17 +3979,14 @@ window.closeSignaturePad = function() {
 
 window.saveSignature = function() {
     const c = document.getElementById('signatureCanvas');
-    // Проверяем что не пустой
     const ctx = c.getContext('2d');
     const data = ctx.getImageData(0, 0, c.width, c.height).data;
     const empty = data.every((v, i) => i % 4 !== 3 || v === 0);
     if (empty) { showToast('Нарисуйте подпись'); return; }
     signatureB64 = c.toDataURL('image/png');
-    // Обновляем превью в модале
     const prev = document.getElementById('sigPreviewCanvas');
     const msg  = document.getElementById('sigPreviewMsg');
     if (prev) {
-        // Сохраняем пропорции канваса 472×160
         const dispW = prev.offsetWidth || 400;
         const dispH = Math.round(dispW * (160 / 472));
         prev.width  = dispW;
@@ -4194,13 +4003,10 @@ window.saveSignature = function() {
     showToast('Подпись сохранена');
 };
 
-// ===== PRODUCTION TAB =====
-
 let productionDoors = [];     // все двери из API
 let prodFiltered = [];        // после фильтрации
 let activeHighlightFilter = 'all';
 
-// Переключение вкладок
 document.querySelectorAll('.app-tab').forEach(btn => {
     btn.addEventListener('click', () => {
         document.querySelectorAll('.app-tab').forEach(b => b.classList.remove('active'));
@@ -4212,12 +4018,10 @@ document.querySelectorAll('.app-tab').forEach(btn => {
     });
 });
 
-// Кнопка обновить
 document.getElementById('prod_refresh_btn').addEventListener('click', () => {
     loadProductionData();
 });
 
-// Чипы быстрых фильтров
 document.querySelectorAll('.prod-filter-chip').forEach(chip => {
     chip.addEventListener('click', () => {
         document.querySelectorAll('.prod-filter-chip').forEach(c => c.classList.remove('active'));
@@ -4227,7 +4031,6 @@ document.querySelectorAll('.prod-filter-chip').forEach(chip => {
     });
 });
 
-// Фильтры — live update
 ['pf_client', 'pf_type'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener('input', applyProductionFilters);
@@ -4253,21 +4056,17 @@ async function loadProductionData() {
 }
 
 function parseProdDate(str) {
-    // Ожидаем dd.MM.yyyy или yyyy-MM-dd
     if (!str) return null;
     str = str.trim();
     if (!str) return null;
-    // dd.MM.yyyy
     const m1 = str.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
     if (m1) return new Date(m1[3], m1[2] - 1, m1[1]);
-    // yyyy-MM-dd (из input type=date)
     const m2 = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
     if (m2) return new Date(m2[1], m2[2] - 1, m2[3]);
     return null;
 }
 
 function dateToDDMMYYYY(isoStr) {
-    // yyyy-MM-dd → dd.MM.yyyy
     if (!isoStr) return '';
     const m = isoStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
     if (m) return m[3] + '.' + m[2] + '.' + m[1];
@@ -4275,7 +4074,6 @@ function dateToDDMMYYYY(isoStr) {
 }
 
 function dateToISO(ddmmyyyy) {
-    // dd.MM.yyyy → yyyy-MM-dd
     if (!ddmmyyyy) return '';
     const m = ddmmyyyy.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
     if (m) return m[3] + '-' + m[2] + '-' + m[1];
@@ -4322,7 +4120,6 @@ function applyProductionFilters() {
         return true;
     });
 
-    // Применяем чип-фильтр подсветки
     if (activeHighlightFilter === 'today') {
         result = result.filter(d => {
             if (!d.launchDate) return false;
@@ -4424,7 +4221,6 @@ function renderProductionTable(doors) {
 }
 
 window.editProdDateCell = function(cell, orderId, doorRowIdx, fieldName, currentVal) {
-    // Если уже редактируется — не делаем ничего
     if (cell.querySelector('input')) return;
 
     const isoVal = dateToISO(currentVal);
@@ -4439,7 +4235,6 @@ window.editProdDateCell = function(cell, orderId, doorRowIdx, fieldName, current
         const newDisplayVal = dateToDDMMYYYY(newIsoVal);
         cell.innerHTML = newDisplayVal || '<span style="color:#cbd5e0">—</span>';
 
-        // Найдём дверь в productionDoors и обновим
         const door = productionDoors.find(d => d.orderId === orderId && d.doorRowIdx === doorRowIdx);
 
         const body = {
@@ -4451,7 +4246,6 @@ window.editProdDateCell = function(cell, orderId, doorRowIdx, fieldName, current
 
         if (door) {
             door[fieldName] = newDisplayVal;
-            // Обновим строку в prodFiltered тоже
             const pf = prodFiltered.find(d => d.orderId === orderId && d.doorRowIdx === doorRowIdx);
             if (pf) pf[fieldName] = newDisplayVal;
         }
@@ -4465,7 +4259,6 @@ window.editProdDateCell = function(cell, orderId, doorRowIdx, fieldName, current
             const result = await res.json();
             if (result.error) throw new Error(result.error);
             showToast('Дата сохранена');
-            // Перерисуем строку с новой подсветкой
             applyProductionFilters();
         } catch (err) {
             alert('Ошибка сохранения: ' + err.message);
@@ -4483,19 +4276,7 @@ window.editProdDateCell = function(cell, orderId, doorRowIdx, fieldName, current
     });
 };
 
-// ============================================================
-// НАРЯД НА ПРОИЗВОДСТВО — печать
-// ============================================================
-
-// qrcodejs уже подключён в <head>
-
-
-// ============================================================
-// Встроенный QR-генератор (без внешних зависимостей)
-// Использует qrcode-generator от kazuhikoarase (MIT)
-// ============================================================
 (function(){
-// Минимальный QR encoder — поддерживает байтовый режим, версии 1-10
 var QRGen=(function(){
 var _0=0,_1=1;
 function QRCode(typeNumber,errorCorrectionLevel){
@@ -4562,7 +4343,6 @@ QRRSBlock.getRsBlockTable=function(typeNumber,errorCorrectionLevel){switch(error
 function QRBitBuffer(){this.buffer=[];this.length=0;}
 QRBitBuffer.prototype={get:function(index){var bufIndex=Math.floor(index/8);return((this.buffer[bufIndex]>>>(7-index%8))&1)==1;},put:function(num,length){for(var i=0;i<length;i++)this.putBit(((num>>>(length-i-1))&1)==1);},getLengthInBits:function(){return this.length;},putBit:function(bit){var bufIndex=Math.floor(this.length/8);if(this.buffer.length<=bufIndex)this.buffer.push(0);if(bit)this.buffer[bufIndex]|=(0x80>>>(this.length%8));this.length++;}};
 window.drawQR = function(canvas, text, size) {
-    // Расчёт байтовой длины в UTF-8 (кириллица = 2 байта на символ)
     function utf8len(s) {
         var n = 0;
         for (var i = 0; i < s.length; i++) {
@@ -4573,16 +4353,13 @@ window.drawQR = function(canvas, text, size) {
         }
         return n;
     }
-    // Ёмкость QR версий 1-10 (байтовый режим, уровень ошибки M)
     var CAPS = [0,16,28,44,64,86,108,124,154,182,216,254];
     var byteLen = utf8len(text);
     var typeNum = 10;
     for (var v = 1; v <= 10; v++) {
         if (CAPS[v] >= byteLen) { typeNum = v; break; }
     }
-    // Если текст не влезает даже в v10 — обрезаем безопасно
     if (byteLen > CAPS[10]) {
-        // урезаем до 254 байт (последний символ не разрезаем)
         while (utf8len(text) > CAPS[10]) text = text.slice(0, -1);
         typeNum = 10;
     }
@@ -4599,7 +4376,6 @@ window.drawQR = function(canvas, text, size) {
                     ctx.fillRect(Math.floor(c * cell), Math.floor(r * cell),
                                  Math.ceil(cell + 0.5), Math.ceil(cell + 0.5));
     }
-    // Перебираем версии с typeNum до 10 пока не сработает
     var ok = false;
     for (var attempt = typeNum; attempt <= 10; attempt++) {
         try {
@@ -4609,10 +4385,9 @@ window.drawQR = function(canvas, text, size) {
             paintQR(qr);
             ok = true;
             break;
-        } catch(e) { /* пробуем следующую */ }
+        } catch(e) {  }
     }
     if (!ok) {
-        // крайний фоллбек: показываем номер наряда
         var ctx2 = canvas.getContext('2d');
         canvas.width = size; canvas.height = size;
         ctx2.fillStyle = '#fff'; ctx2.fillRect(0,0,size,size);
@@ -4624,7 +4399,6 @@ return QRCode;
 })();
 })();
 
-// Генерация SVG-визуализации для наряда (inline, без DOM)
 function buildDoorSvgMarkup(params) {
     const { h = 2050, w = 900, is2P = false, hingeRight = false,
             hasPorch = false, porchLabel = '',
@@ -4675,7 +4449,6 @@ function buildDoorSvgMarkup(params) {
 
     let o = '';
 
-    // Наличники
     if (hasNalich) {
         const n = nalichnikParsed;
         const nL = n.L > 0 ? NW : 0, nR = n.R > 0 ? NW : 0;
@@ -4697,7 +4470,6 @@ function buildDoorSvgMarkup(params) {
         }
     }
 
-    // Коробка
     if (is2P) {
         o += `<rect x="${boxX}" y="${boxY}" width="${totalBoxW}" height="${boxH}" fill="${C.fill}" stroke="${C.stroke}" stroke-width="${SW+0.4}"/>`;
         const seamX = stubOnLeft ? boxX + stubW + FW : boxX + doorW;
@@ -4709,7 +4481,6 @@ function buildDoorSvgMarkup(params) {
     }
     o += `<rect x="${mainLeafX}" y="${boxY+FW}" width="${mainLeafW}" height="${mainLeafH}" fill="none" stroke="${C.stroke}" stroke-width="0.6" opacity="0.4"/>`;
 
-    // Остекление
     if (hasGlazing) {
         const gx = mainLeafX+mainLeafW*0.12, gy = boxY+FW+mainLeafH*0.08;
         const gw = mainLeafW*0.76, gh = mainLeafH*0.20;
@@ -4720,7 +4491,6 @@ function buildDoorSvgMarkup(params) {
         }
     }
 
-    // Вент.
     if (isVent) {
         const vx=mainLeafX+mainLeafW*0.12, vy=boxY+FW+mainLeafH*0.72;
         const vw=mainLeafW*0.76, vh=mainLeafH*0.14;
@@ -4731,14 +4501,12 @@ function buildDoorSvgMarkup(params) {
         }
     }
 
-    // Петли: hingeRight=true→справа, hingeRight=false→слева
     [0.18,0.50,0.82].forEach(t => {
         const hy = boxY+FW+mainLeafH*t;
         const hrx = hingeRight ? (mainLeafX+mainLeafW-1) : (mainLeafX+1);
         o += `<rect x="${hrx}" y="${hy-3.5}" width="4.5" height="7" rx="0" fill="${C.hinge}" stroke="${C.stroke}" stroke-width="0.5"/>`;
     });
 
-    // Ручка на противоположной от петель стороне
     const hx = hingeRight ? mainLeafX+mainLeafW*0.12 : mainLeafX+mainLeafW*0.88;
     const hyc = boxY+FW+mainLeafH*0.52, hl = mainLeafH*0.11;
     o += `<line x1="${hx}" y1="${hyc-hl/2}" x2="${hx}" y2="${hyc+hl/2}" stroke="${C.handle}" stroke-width="2" stroke-linecap="square"/>`;
@@ -4746,14 +4514,12 @@ function buildDoorSvgMarkup(params) {
     o += `<line x1="${hx}" y1="${hyc-hl/4}" x2="${hx+hd}" y2="${hyc-hl/4}" stroke="${C.handle}" stroke-width="2" stroke-linecap="square"/>`;
     o += `<ellipse cx="${hx}" cy="${hyc+hl/2+4}" rx="1.8" ry="2.2" fill="none" stroke="${C.handle}" stroke-width="0.8"/>`;
 
-    // Доводчик
     if (hasCloser) {
         const cx = mainLeafX+mainLeafW*0.5, cy = boxY+FW+2.5;
         o += `<rect x="${cx-mainLeafW*0.2}" y="${cy}" width="${mainLeafW*0.4}" height="4.5" rx="0.8" fill="none" stroke="${C.stroke}" stroke-width="0.7"/>`;
         o += `<text x="${cx}" y="${cy+3.5}" text-anchor="middle" font-size="3.5" fill="${C.text}" font-family="Arial">ДЦ</text>`;
     }
 
-    // Порог
     const bottomY = boxY+boxH;
     let extraH = 0;
     if (hasPorch) {
@@ -4763,12 +4529,29 @@ function buildDoorSvgMarkup(params) {
         o += `<text x="${boxX+totalBoxW/2}" y="${bottomY+extraH+7}" text-anchor="middle" font-size="5.5" fill="${C.text}" font-family="Arial">${pl}</text>`;
     }
 
-    const labelY = bottomY+extraH+(hasPorch?9:3)+8;
-    o += `<text x="${boxX+totalBoxW/2}" y="${labelY}" text-anchor="middle" font-size="8" font-weight="bold" fill="${C.text}" font-family="Arial">${w} × ${h}</text>`;
-    o += `<text x="${boxX+totalBoxW/2}" y="${labelY+9}" text-anchor="middle" font-size="5.5" fill="#6b8ca8" font-family="Arial">мм</text>`;
+    const arrowY = bottomY + extraH + 3;
+    const arrowX1 = boxX;
+    const arrowX2 = boxX + totalBoxW;
+    const arrowMid = (arrowX1 + arrowX2) / 2;
+    const aColor = '#4a6a8a';
+    const aSize = 3.5;
+    o += `<line x1="${arrowX1}" y1="${arrowY+4}" x2="${arrowX2}" y2="${arrowY+4}" stroke="${aColor}" stroke-width="0.8"/>`;
+    o += `<line x1="${arrowX1}" y1="${arrowY+1}" x2="${arrowX1}" y2="${arrowY+7}" stroke="${aColor}" stroke-width="0.8"/>`;
+    o += `<line x1="${arrowX2}" y1="${arrowY+1}" x2="${arrowX2}" y2="${arrowY+7}" stroke="${aColor}" stroke-width="0.8"/>`;
+    o += `<text x="${arrowMid}" y="${arrowY+13}" text-anchor="middle" font-size="${aSize+2}" font-weight="bold" fill="${aColor}" font-family="Arial">${w}</text>`;
 
-    const svgH = labelY + 12;
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${CANVAS_W} ${svgH}" width="100%" style="display:block;max-width:${CANVAS_W}px;">${o}</svg>`;
+    const hvX = arrowX2 + 4;
+    const hvY1 = boxY;
+    const hvY2 = bottomY + extraH;
+    const hvMid = (hvY1 + hvY2) / 2;
+    o += `<line x1="${hvX+4}" y1="${hvY1}" x2="${hvX+4}" y2="${hvY2}" stroke="${aColor}" stroke-width="0.8"/>`;
+    o += `<line x1="${hvX+1}" y1="${hvY1}" x2="${hvX+7}" y2="${hvY1}" stroke="${aColor}" stroke-width="0.8"/>`;
+    o += `<line x1="${hvX+1}" y1="${hvY2}" x2="${hvX+7}" y2="${hvY2}" stroke="${aColor}" stroke-width="0.8"/>`;
+    o += `<text x="${hvX+12}" y="${hvMid}" text-anchor="middle" dominant-baseline="middle" font-size="${aSize+2}" font-weight="bold" fill="${aColor}" font-family="Arial" transform="rotate(90,${hvX+12},${hvMid})">${h}</text>`;
+
+    const svgW = hvX + 20;
+    const svgH = arrowY + 18;
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${svgW} ${svgH}" width="100%" height="100%" style="display:block;">${o}</svg>`;
 }
 
 window.printProductionSheet = function(rowIdx) {
@@ -4778,13 +4561,10 @@ window.printProductionSheet = function(rowIdx) {
     const f = door.fields || {};
     const get = (key) => {
         if (f[key] !== undefined && f[key] !== "") return f[key];
-        // fallback к прямым полям
         if (door[key] !== undefined && door[key] !== "") return String(door[key]);
         return "";
     };
 
-    // ── QR-данные ──
-    // QR — компактный формат, влезает в версию 5-7
     const qrText = [
         door.prodNum,
         door.client.substring(0, 20),
@@ -4797,7 +4577,6 @@ window.printProductionSheet = function(rowIdx) {
         currentUserLogin || ""
     ].filter(Boolean).join("|");
 
-    // ── HTML наряда ──
     const paramRows = [
         ["Коробка", get("Коробка")],
         ["Открывание", door.openingFull || door.opening],
@@ -4818,7 +4597,6 @@ window.printProductionSheet = function(rowIdx) {
         ["Примечание", get("Примечание")]
     ].filter(r => r[1] !== "");
 
-    // Строки параметров — чередуем важные (выделяем)
     const highlightFields = new Set(["Петли","Ручка","Замок","Антипаника","Цвет"]);
     const paramHtml = paramRows.map(([label, val]) => {
         const isEmpty = !val || val === '—' || val === '-';
@@ -4828,23 +4606,19 @@ window.printProductionSheet = function(rowIdx) {
         return `<tr${rowClass}><td>${label}</td><td>${displayVal}</td></tr>`;
     }).join('');
 
-    // SVG-визуализация двери для наряда
     const porchVal  = get('Порог');
     const glazVal   = get('Остекление');
     const closerVal = get('Доводчик');
     const nalichVal = get('Наличник');
     const ventFromField  = glazVal.toLowerCase().includes('вент');
     const glazFromField  = glazVal && glazVal !== 'Нет' && glazVal !== '—' && !ventFromField;
-    // _vis* и doorPosition хранятся в door.fields (rawFields из GAS)
     const fVis = door.fields || {};
     const visGlaz   = fVis['_visGlazing']  === 'true' || fVis['_visGlazing']  === true;
     const visVent   = fVis['_visVent']     === 'true' || fVis['_visVent']     === true;
     const visCloser = fVis['_visCloser']   === 'true' || fVis['_visCloser']   === true;
-    // doorPosition — прямое поле либо из fields
-    const doorPosFromFields = (fVis['doorPosition'] || fVis['ПОЗИЦИЯ'] || fVis['Позиция'] || '').toString().trim();
 
-    // Дополняем doorPositionLabel из fields если прямое поле пустое
-    if (!doorPositionLabel && doorPosFromFields) doorPositionLabel = doorPosFromFields;
+    const _doorPosFields = (fVis['doorPosition'] || fVis['ПОЗИЦИЯ'] || fVis['Позиция'] || '').toString().trim();
+    const doorPositionLabel = (door.doorPosition || _doorPosFields || '').toString().trim();
 
     const doorSvgMarkup = buildDoorSvgMarkup({
         h:          door.height || 2050,
@@ -4859,15 +4633,11 @@ window.printProductionSheet = function(rowIdx) {
         nalichnik:  nalichVal
     });
 
-    // doorPositionLabel уже заменён ниже после fVis-блока
-    let doorPositionLabel = (door.doorPosition || '').toString().trim();
-
     const html = `
 <style>
-/* ═══ НАРЯД — A4, всё на одну страницу ═══ */
+
 .nr { font-family: Arial, Helvetica, sans-serif; font-size: 9.5pt; color: #111; line-height: 1.35; }
 
-/* ── Шапка ── */
 .nr-top { margin-bottom: 3mm; }
 .nr-order-row { display: flex; align-items: stretch; border: 1.5px solid #222; margin-bottom: 0; }
 .nr-order-cell { padding: 2.5mm 3.5mm; border-right: 1px solid #999; }
@@ -4887,12 +4657,10 @@ window.printProductionSheet = function(rowIdx) {
 .nr-size-val { font-size: 15pt; font-weight: 900; color: #111; }
 .nr-client-row { border: 1.5px solid #222; border-top: none; padding: 2.5mm 4mm; font-size: 13pt; font-weight: 700; margin-bottom: 3mm; }
 
-/* ── Основной блок: дверь + параметры ── */
-.nr-main { display: flex; gap: 0; border: 1px solid #999; margin-bottom: 3mm; }
+.nr-main { display: flex; gap: 0; border: 1px solid #999; margin-bottom: 3mm; min-height: 100mm; }
 
-.nr-door-col { flex: 0 0 52%; border-right: 1.5px solid #bbb; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4mm 3mm; background: #fafafa; }
-.nr-door-col svg { display: block; max-width: 100%; }
-.nr-door-size-label { font-size: 8pt; color: #444; margin-top: 2mm; text-align: center; }
+.nr-door-col { flex: 0 0 55%; border-right: 1.5px solid #bbb; display: flex; flex-direction: column; align-items: stretch; justify-content: center; padding: 3mm; background: #fafafa; min-height: 90mm; }
+.nr-door-col svg { display: block; width: 100%; height: 100%; flex: 1; }
 
 .nr-params-col { flex: 1; display: flex; flex-direction: column; }
 .nr-params-hdr { background: #2a2a2a; color: #fff; font-size: 8pt; font-weight: 700; letter-spacing: 0.08em; padding: 2mm 3mm; text-transform: uppercase; }
@@ -4905,7 +4673,6 @@ window.printProductionSheet = function(rowIdx) {
 .nr-params-table .nr-ph { background: #f5f5f5; }
 .nr-params-table .nr-empty td:last-child { color: #aaa; font-weight: 400; }
 
-/* ── Итоги ── */
 .nr-footer { display: flex; gap: 0; border: 1px solid #999; border-top: none; }
 .nr-footer-cell { flex: 1; padding: 2mm 3mm; border-right: 1px solid #ddd; }
 .nr-footer-cell:last-child { border-right: none; }
@@ -4915,11 +4682,9 @@ window.printProductionSheet = function(rowIdx) {
 .nr-note .lbl { font-size: 7.5pt; color: #888; text-transform: uppercase; }
 .nr-note .val { font-size: 9.5pt; font-weight: 700; }
 
-/* ── Линия отреза ── */
 .nr-cut { display: flex; align-items: center; gap: 3mm; margin: 5mm 0 4mm; color: #aaa; font-size: 7.5pt; letter-spacing: 2px; }
 .nr-cut-line { flex: 1; border-top: 1px dashed #bbb; }
 
-/* ── Корешок ── */
 .nr-stub { border: 1.5px solid #222; }
 .nr-stub-top { display: flex; align-items: stretch; border-bottom: 1.5px solid #222; }
 .nr-stub-client { flex: 1; padding: 2.5mm 4mm; font-size: 12pt; font-weight: 700; border-right: 1.5px solid #222; }
@@ -4934,9 +4699,8 @@ window.printProductionSheet = function(rowIdx) {
 
 <div class="nr">
 
-<!-- ══ ШАПКА ══ -->
 <div class="nr-top">
-  <!-- Строка 1: НАРЯД / № / НАИМЕНОВАНИЕ / ОТКРЫВАНИЕ -->
+
   <div class="nr-order-row">
     <div class="nr-order-cell nr-cell-narad">
       <div class="lbl">Заказ-наряд</div>
@@ -4956,7 +4720,7 @@ window.printProductionSheet = function(rowIdx) {
     </div>
   </div>
 
-  <!-- Строка 2: Размеры -->
+
   <div class="nr-size-row">
     <div class="nr-size-cell" style="flex:1; background:#f5f5f5;">
       <span class="nr-size-label">Размеры (по коробке)</span>
@@ -4977,19 +4741,16 @@ window.printProductionSheet = function(rowIdx) {
   </div>
 </div>
 
-<!-- Клиент -->
 <div class="nr-client-row">${escapeHtml(door.client)}</div>
 
-<!-- ══ ОСНОВНОЙ БЛОК: SVG слева, параметры справа ══ -->
 <div class="nr-main">
 
-  <!-- Дверь — левая колонка -->
+
   <div class="nr-door-col">
     ${doorSvgMarkup}
-    <div class="nr-door-size-label">${door.width} × ${door.height} мм</div>
   </div>
 
-  <!-- Параметры — правая колонка -->
+
   <div class="nr-params-col">
     <div class="nr-params-hdr">Параметры двери</div>
     <table class="nr-params-table">
@@ -4999,7 +4760,6 @@ window.printProductionSheet = function(rowIdx) {
   </div>
 </div>
 
-<!-- ══ ИТОГИ ══ -->
 <div class="nr-footer">
   <div class="nr-footer-cell">
     <div class="lbl">Площадь</div>
@@ -5020,14 +4780,12 @@ window.printProductionSheet = function(rowIdx) {
 </div>
 ${door.note ? `<div class="nr-note"><div class="lbl">Примечание</div><div class="val">${escapeHtml(door.note)}</div></div>` : ''}
 
-<!-- ══ ЛИНИЯ ОТРЕЗА ══ -->
 <div class="nr-cut">
   <div class="nr-cut-line"></div>
   <span>✂ &nbsp; отрывной корешок</span>
   <div class="nr-cut-line"></div>
 </div>
 
-<!-- ══ КОРЕШОК ══ -->
 <div class="nr-stub">
   <div class="nr-stub-top">
     <div class="nr-stub-client">${escapeHtml(door.client)}</div>
@@ -5050,7 +4808,6 @@ ${door.note ? `<div class="nr-note"><div class="lbl">Примечание</div><
     document.getElementById('printSheetContent').innerHTML = html;
     document.getElementById('printSheetModal').classList.remove('hidden');
 
-    // Генерируем QR встроенно через Canvas (без внешних зависимостей)
     setTimeout(() => {
         const canvas = document.getElementById('qrCodeCanvas');
         if (canvas) drawQR(canvas, qrText, 130);
@@ -5063,7 +4820,6 @@ window.doPrintSheet = function() {
 
 </script>
 
-<!-- НАРЯД НА ПЕЧАТЬ -->
 <div id="printSheetModal" class="overlay hidden">
     <div class="overlay-header" style="grid-template-columns:1fr auto;">
         <h2>ЛИСТ НА ПРОИЗВОДСТВО</h2>
@@ -5077,7 +4833,6 @@ window.doPrintSheet = function() {
     </div>
 </div>
 
-<!-- Стили для печати -->
 <style>
 @media print {
     body > *:not(#printSheetModal) { display:none !important; }
@@ -5086,12 +4841,9 @@ window.doPrintSheet = function() {
     #printSheetContent { box-shadow:none !important; padding:0 !important; width:100% !important; }
 }
 
-
 #qrCodeImg { border:1px solid #ddd; display:block; }
 </style>
 
-<!-- ПОПАП НЕСОХРАНёННЫЕ ИЗМЕНЕНИЯ -->
-<!-- ПОПАП УДАЛЕНИЯ ЗАКАЗА -->
 <div id="deleteOrderModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:10000;display:none;align-items:center;justify-content:center;">
     <div style="background:#fff;border-radius:10px;padding:28px 32px;max-width:360px;width:90%;box-shadow:0 8px 40px rgba(0,0,0,0.2);font-family: 'Inter', system-ui, sans-serif;">
         <div style="font-size:1rem;font-weight:700;color:#dc2626;margin-bottom:10px;">
@@ -5105,8 +4857,6 @@ window.doPrintSheet = function() {
         </div>
     </div>
 </div>
-
-
 
 </body>
 </html>
