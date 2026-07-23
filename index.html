@@ -4422,8 +4422,8 @@ function buildDoorSvgMarkup(params) {
     const ARROW_BOT   = 20; // место для стрелки ширины + наличника снизу
     const padL = ARROW_LEFT + (hasNalich && nalichnikParsed.L > 0 ? NW + 2 : 2);
     const padR = hasNalich && nalichnikParsed.R > 0 ? NW + 4 : 4;
-    const padT = 4 + (hasNalich ? NW + 2 : 0);
-    const ARROW_BOT_BASE = 28; // место для стрелки ширины (линия + текст)
+    const padT = 10 + (hasNalich ? NW + 2 : 0); // 10px сверху для цифры ширины
+    const ARROW_BOT_BASE = 6; // минимальный отступ снизу
     const padB = ARROW_BOT_BASE + (hasNalichB ? NW + 2 : 0) + (hasPorch ? 10 : 0);
 
     const availW  = CANVAS_W - padL - padR;
@@ -4454,24 +4454,32 @@ function buildDoorSvgMarkup(params) {
 
     let o = '';
 
+    const NSW = SW * 2.2; // наличники в 2 раза толще
     if (hasNalich) {
         const n = nalichnikParsed;
-        const nL = n.L > 0 ? NW : 0, nR = n.R > 0 ? NW : 0;
-        const nx = boxX - nL, ny = boxY - NW, nw = totalBoxW + nL + nR;
-        o += `<rect x="${nx}" y="${ny}" width="${nw}" height="${NW}" fill="none" stroke="${C.nalich}" stroke-width="${SW}"/>`;
-        if (n.T > 0) o += `<text x="${nx+nw/2}" y="${ny+NW-2}" text-anchor="middle" font-size="6.5" font-weight="bold" fill="${C.text}" font-family="Arial">${n.T}</text>`;
-        if (n.L > 0) {
-            o += `<rect x="${boxX-NW}" y="${boxY}" width="${NW}" height="${boxH}" fill="none" stroke="${C.nalich}" stroke-width="${SW}"/>`;
-            o += `<text x="${boxX-NW/2}" y="${boxY+boxH/2}" text-anchor="middle" dominant-baseline="middle" font-size="6.5" font-weight="bold" fill="${C.text}" font-family="Arial" transform="rotate(-90,${boxX-NW/2},${boxY+boxH/2})">${n.L}</text>`;
+        const hasL = n.L > 0, hasR = n.R > 0, hasT = n.T > 0;
+        const hasB = hasNalichB && n.B > 0;
+
+        if (hasT) {
+            const ny = boxY - NW;
+            o += `<rect x="${boxX}" y="${ny}" width="${totalBoxW}" height="${NW}" fill="none" stroke="${C.nalich}" stroke-width="${NSW}"/>`;
         }
-        if (n.R > 0) {
-            const rx = boxX + totalBoxW;
-            o += `<rect x="${rx}" y="${boxY}" width="${NW}" height="${boxH}" fill="none" stroke="${C.nalich}" stroke-width="${SW}"/>`;
-            o += `<text x="${rx+NW/2}" y="${boxY+boxH/2}" text-anchor="middle" dominant-baseline="middle" font-size="6.5" font-weight="bold" fill="${C.text}" font-family="Arial" transform="rotate(90,${rx+NW/2},${boxY+boxH/2})">${n.R}</text>`;
+
+        if (hasL) {
+            const nyL = hasT ? boxY - NW : boxY;
+            const nhL = hasT ? boxH + NW : boxH;
+            o += `<rect x="${boxX - NW}" y="${nyL}" width="${NW}" height="${nhL}" fill="none" stroke="${C.nalich}" stroke-width="${NSW}"/>`;
         }
-        if (hasNalichB && n.B > 0) {
-            o += `<rect x="${boxX-nL}" y="${boxY+boxH}" width="${nw}" height="${NW}" fill="none" stroke="${C.nalich}" stroke-width="${SW}"/>`;
-            o += `<text x="${boxX-nL+nw/2}" y="${boxY+boxH+NW-2}" text-anchor="middle" font-size="6.5" font-weight="bold" fill="${C.text}" font-family="Arial">${n.B}</text>`;
+
+        if (hasR) {
+            const rx  = boxX + totalBoxW;
+            const nyR = hasT ? boxY - NW : boxY;
+            const nhR = hasT ? boxH + NW : boxH;
+            o += `<rect x="${rx}" y="${nyR}" width="${NW}" height="${nhR}" fill="none" stroke="${C.nalich}" stroke-width="${NSW}"/>`;
+        }
+
+        if (hasB) {
+            o += `<rect x="${boxX}" y="${boxY+boxH}" width="${totalBoxW}" height="${NW}" fill="none" stroke="${C.nalich}" stroke-width="${NSW}"/>`;
         }
     }
 
@@ -4532,32 +4540,25 @@ function buildDoorSvgMarkup(params) {
         o += `<rect x="${boxX}" y="${bottomY}" width="${totalBoxW}" height="${pthH}" fill="${C.thresh}" stroke="${C.stroke}" stroke-width="0.7"/>`;
         extraH = pthH;
         const pl = porchLabel && porchLabel !== '—' ? porchLabel : '';
-        if (pl) {
-            const pls = pl.length > 16 ? pl.substring(0,16)+'\u2026' : pl;
-            o += `<text x="${boxX+totalBoxW/2}" y="${bottomY+pthH*0.68}" text-anchor="middle" dominant-baseline="middle" font-size="4.5" fill="${C.stroke}" font-family="Arial">${pls}</text>`;
-        }
+        const pText = pl ? `Порог ${pl}` : 'Порог';
+        const pls = pText.length > 20 ? pText.substring(0,20)+'\u2026' : pText;
+        o += `<text x="${boxX+totalBoxW/2}" y="${bottomY+pthH*0.68}" text-anchor="middle" dominant-baseline="middle" font-size="4.5" fill="${C.stroke}" font-family="Arial">${pls}</text>`;
     }
 
     const aColor = '#4a6a8a';
-    const aFs = 5.5;
+    const aFs = 6;
 
-    const hvCx  = ARROW_LEFT / 2 - 1;          // центр стрелки по X
-    const hvY1  = boxY;
+    const hvY1  = hasNalich && nalichnikParsed && nalichnikParsed.T > 0 ? boxY - NW : boxY;
     const hvY2  = bottomY + extraH;
     const hvMid = (hvY1 + hvY2) / 2;
-    o += `<line x1="${hvCx}" y1="${hvY1}" x2="${hvCx}" y2="${hvY2}" stroke="${aColor}" stroke-width="0.8"/>`;
-    o += `<line x1="${hvCx-3}" y1="${hvY1}" x2="${hvCx+3}" y2="${hvY1}" stroke="${aColor}" stroke-width="0.8"/>`;
-    o += `<line x1="${hvCx-3}" y1="${hvY2}" x2="${hvCx+3}" y2="${hvY2}" stroke="${aColor}" stroke-width="0.8"/>`;
+    const hvCx  = ARROW_LEFT / 2;
     o += `<text x="${hvCx}" y="${hvMid}" text-anchor="middle" dominant-baseline="middle" font-size="${aFs}" font-weight="bold" fill="${aColor}" font-family="Arial" transform="rotate(-90,${hvCx},${hvMid})">${h}</text>`;
 
-    const awY   = hvY2 + (hasPorch ? 4 : 3);  // ниже порога (текст уже внутри прямоугольника)
     const awX1  = boxX;
     const awX2  = boxX + totalBoxW;
     const awMid = (awX1 + awX2) / 2;
-    o += `<line x1="${awX1}" y1="${awY+3}" x2="${awX2}" y2="${awY+3}" stroke="${aColor}" stroke-width="0.8"/>`;
-    o += `<line x1="${awX1}" y1="${awY}" x2="${awX1}" y2="${awY+6}" stroke="${aColor}" stroke-width="0.8"/>`;
-    o += `<line x1="${awX2}" y1="${awY}" x2="${awX2}" y2="${awY+6}" stroke="${aColor}" stroke-width="0.8"/>`;
-    o += `<text x="${awMid}" y="${awY+13}" text-anchor="middle" font-size="${aFs}" font-weight="bold" fill="${aColor}" font-family="Arial">${w}</text>`;
+    const awTextY = hasNalich && nalichnikParsed && nalichnikParsed.T > 0 ? boxY - NW - 3 : boxY - 4;
+    o += `<text x="${awMid}" y="${awTextY}" text-anchor="middle" font-size="${aFs}" font-weight="bold" fill="${aColor}" font-family="Arial">${w}</text>`;
 
     const svgH = padT + doorH + padB;
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${CANVAS_W} ${svgH}" width="100%" preserveAspectRatio="xMidYMid meet" style="display:block; height:auto;">${o}</svg>`;
