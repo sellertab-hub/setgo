@@ -388,7 +388,7 @@
 
         #unsavedModal {
             position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:9999;
-            display:flex;align-items:center;justify-content:center;
+            display:none;align-items:center;justify-content:center;
         }
         #unsavedModal .um-box {
             background:#fff;border-radius:10px;padding:28px 32px;
@@ -2082,19 +2082,19 @@ function closeOverlayForced() {
 
 function tryCloseOverlay() {
     if (orderDirty) {
-        document.getElementById('unsavedModal').classList.remove('hidden');
+        document.getElementById('unsavedModal').style.display = 'flex';
     } else {
         closeOverlayForced();
     }
 }
 
 document.getElementById('umLeaveBtn').addEventListener('click', () => {
-    document.getElementById('unsavedModal').classList.add('hidden');
+    document.getElementById('unsavedModal').style.display = 'none';
     closeOverlayForced();
 });
 
 document.getElementById('umSaveBtn').addEventListener('click', () => {
-    document.getElementById('unsavedModal').classList.add('hidden');
+    document.getElementById('unsavedModal').style.display = 'none';
     document.getElementById('saveOrderBtn').click();
 });
 
@@ -4663,7 +4663,7 @@ window.doPrintSheet = function() {
     </div>
 </div>
 
-<div id="unsavedModal" class="hidden">
+<div id="unsavedModal">
     <div class="um-box">
         <div class="um-title">Есть несохранённые изменения</div>
         <div class="um-text">Вы внесли изменения в заказ, но не сохранили его. Что хотите сделать?</div>
