@@ -3464,8 +3464,10 @@ function renderDoorSvg() {
     const SW        = 1.5;         // stroke-width основной
     const SWH       = 2.5;         // stroke-width ручка
 
-    // Заглушка слева если петли справа (и наоборот)
-    const stubOnLeft = hingeRight;
+    // Заглушка слева если петли справа (и наоборот) — актуально ТОЛЬКО для двупольной двери.
+    // Для однопольной stubW=0, и mainX должен всегда совпадать с boxX независимо от стороны петель,
+    // иначе полотно съезжает на FW при смене открывания (баг: сдвиг рамки без заглушки).
+    const stubOnLeft = is2P && hingeRight;
 
     // Позиции
     const mainX = stubOnLeft ? (boxX + FW + stubW) : boxX;
