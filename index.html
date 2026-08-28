@@ -956,13 +956,16 @@
             position: relative;
         }
         .prod-date-cell:hover::after {
-            content: "✏";
+            content: "";
             position: absolute;
             right: 4px;
             top: 50%;
+            width: 11px;
+            height: 11px;
             transform: translateY(-50%);
-            font-size: 11px;
-            color: #94a3b8;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%2394a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>');
+            background-size: contain;
+            background-repeat: no-repeat;
         }
     </style>
 </head>
@@ -1410,8 +1413,8 @@
 
         <div class="modal-actions">
             <button class="btn-cancel-modal" onclick="closePdfModal()">ОТМЕНА</button>
-            <button class="btn-download-pdf" id="btnDownloadExcel" onclick="generateExcel()" style="background:#1d6f42;">⬇ СКАЧАТЬ EXCEL</button>
-            <button class="btn-download-pdf" onclick="generatePDF()">⬇ СКАЧАТЬ PDF</button>
+            <button class="btn-download-pdf" id="btnDownloadExcel" onclick="generateExcel()" style="background:#1d6f42;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>СКАЧАТЬ EXCEL</button>
+            <button class="btn-download-pdf" onclick="generatePDF()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:5px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>СКАЧАТЬ PDF</button>
         </div>
     </div>
 </div>
@@ -1443,17 +1446,101 @@
 <script>
 const API_URL = "https://script.google.com/macros/s/AKfycbwi53HhkSBfPwvENZDvqCmIVGQkHTLaI2nMF3dTR44mae_QL4u1SAfaIzmHWRm0iES-/exec";
 
-const CORE_FIELDS = ["Коробка", "Открывание", "Металл", "Порог", "Цилиндр", "Доводчик", "Цвет", "Остекление"];
+// "Цвет" и "Остекление" убраны отсюда: в doors2 таких столбцов нет (данные по остеклению уже
+// содержатся в "Вид полотна"), поле "Цвет" реализовано отдельным collapsible-блоком с 4 RAL-полями.
+const CORE_FIELDS = ["Коробка", "Открывание", "Металл", "Порог", "Цилиндр", "Доводчик"];
 const ALL_POSSIBLE_FIELDS = [
     "Базовая цена", "Столбец 7", "Толщина металла полотна", "Упаковка", "Производство",
     "Наличник", "Наличник портала", "Фрамуга", "Заполнение", "Пакет в основную створку",
     "Тип пакета", "Отбойник", "Замок", "Ручка", "Антипаника", "СКУД", "Петли",
     "Вент решетка", "Вент решетка 2 точка привязки", "Тип отгрузки"
 ];
+// Полный список полей doors2, участвующих в динамической видимости конфигуратора
+// (объединение CORE_FIELDS + ALL_POSSIBLE_FIELDS) — используется для решения,
+// в какой блок формы попадёт поле: сразу видимое или в "Доп. параметры".
+const DOORS2_TOGGLE_FIELDS = [...CORE_FIELDS, ...ALL_POSSIBLE_FIELDS];
 // Специальные столбцы — свободный ввод, всегда доступны для добавления
 const SPECIAL_FIELDS = ["Примечание", "Цена", "Заводской номер"];
 
+// ===== VBA-ТОЧНЫЕ ПРАВИЛА (гэп-анализ, извлечено из исходных макросов) =====
+// Соответствие полного ключа doors2 ('ДВ1 (одн)') -> базовый VBA-код лимитов/правил
+function vbaBaseCode(doorKey) {
+    const base = (doorKey || '').replace(/\s*\((одн|двуп)\)$/, '').trim();
+    if (base === 'Комбинированная') return 'ДВ';
+    if (/^ДВ/.test(base)) return 'ДВ';         // ДВ, ДВ1, ДВ3, ДВ5, ДВ7 -> лимиты/правила ДВ
+    return base;                                  // ДП1, ДП2, ДН, ОБЛ, МАЯ, ЛП1, ЛП2 как есть
+}
+
+// Пределы габаритов «по коробке» (мм), Sub ЗадатьПределыГабаритов. dx/dy добавляются, если считаем «по проёму»: +30 ширина / +20 высота.
+// h_max_torc / w_max_torc — верхняя граница при Коробка = Торцевая (шире, чем при Угловой).
+const SIZE_LIMITS_VBA = {
+    'ДП1': { 1: { hMin: 1500, hMax: 2350, wMin: 700, wMax: 1100, wMaxTorc: 1150 },
+             2: { hMin: 1500, hMax: 2350, wMin: 1200, wMax: 1900 } },
+    'ДП2': { 1: { hMin: 1500, hMax: 2400, wMin: 700, wMax: 1150 },
+             2: { hMin: 1550, hMax: 2440, wMin: 1200, wMax: 1900 } },
+    'ДН':  { 1: { hMin: 400, hMax: 2440, wMin: 300, wMax: 1100, wMaxTorc: 1170, hMaxTorc: 2480 },
+             2: { hMin: 400, hMax: 2440, wMin: 1170, wMax: 2100, hMaxTorc: 2480 } },
+    'ДВ':  { 1: { hMin: 400, hMax: 2440, wMin: 300, wMax: 1100, wMaxTorc: 1170, hMaxTorc: 2480 },
+             2: { hMin: 400, hMax: 2440, wMin: 1170, wMax: 2100, hMaxTorc: 2480 } },
+    'ОБЛ': { 1: { hMin: 400, hMax: 2440, wMin: 300, wMax: 1100, wMaxTorc: 1170, hMaxTorc: 2480 },
+             2: { hMin: 400, hMax: 2440, wMin: 1170, wMax: 2100, hMaxTorc: 2480 } },
+    'ЛП1': { 1: { hMin: 400, hMax: 1500, wMin: 300, wMax: 1200 },
+             2: { hMin: 400, hMax: 1500, wMin: 300, wMax: 1200 } },
+    'ЛП2': { 1: { hMin: 400, hMax: 1500, wMin: 300, wMax: 1200 },
+             2: { hMin: 400, hMax: 1500, wMin: 300, wMax: 1200 } },
+    'МАЯ': { 1: { hMin: 1700, hMax: 2460, wMin: 700, wMax: 1180, hMaxTorc: 2500 },
+             2: { hMin: 1700, hMax: 2460, wMin: 1200, wMax: 2470, hMaxTorc: 2500 } },
+};
+
+// Возвращает {hMin,hMax,wMin,wMax} — эффективные пределы для конкретной комбинации: тип, число створок,
+// режим размеров (korobka|proem), тип коробки (Торцевая|Угловая).
+function getEffectiveSizeLimits(doorKey, sizeMode, korobkaType) {
+    const code = vbaBaseCode(doorKey);
+    const leafs = doorKey.includes('двуп') ? 2 : 1;
+    const lim = (SIZE_LIMITS_VBA[code] || {})[leafs];
+    if (!lim) return null;
+    const isTorc = (korobkaType || '').toLowerCase().startsWith('торц');
+    const dx = sizeMode === 'proem' ? 30 : 0;
+    const dy = sizeMode === 'proem' ? 20 : 0;
+    const wMax = (isTorc && lim.wMaxTorc) ? lim.wMaxTorc : lim.wMax;
+    const hMax = (isTorc && lim.hMaxTorc) ? lim.hMaxTorc : lim.hMax;
+    return { hMin: lim.hMin + dy, hMax: hMax + dy, wMin: lim.wMin + dx, wMax: wMax + dx };
+}
+
+// «Назначение» — доступно только для ДВ/ОБ (двери входные/межкомнатные/тамбурные и т.п.), значения ДВ1..ДВ7.
+// Для ЛП1/ЛП2 назначение фиксировано и совпадает с типом (не выбирается пользователем).
+const DV_NAZNACHENIE = {
+    'ДВ1': 'ДВ1 — межкомнатные',
+    'ДВ2': 'ДВ2 — входные в квартиру',
+    'ДВ3': 'ДВ3 — входные в помещения общественных зданий',
+    'ДВ5': 'ДВ5 — лестничной клетки',
+    'ДВ6': 'ДВ6 — санузлов',
+    'ДВ7': 'ДВ7 — тамбурные',
+};
+function naznachenieOptionsForKey(doorKey) {
+    const base = (doorKey || '').replace(/\s*\((одн|двуп)\)$/, '').trim();
+    if (/^ДВ\d$/.test(base)) return null; // уже конкретный подтип (ДВ1..ДВ7) — назначение фиксировано, выбор не нужен
+    if (base === 'ДВ' || base === 'Комбинированная') return Object.values(DV_NAZNACHENIE);
+    return null;
+}
+function naznachenieCodeForKey(doorKey) {
+    // VBA: If Left$(.ТипИзделия, 1) = "Д" Then .Назначение = .ТипИзделия — для всех «Д...»-типов по умолчанию Назначение = код типа.
+    // Для общего ДВ (без цифры, включая «Комбинированная») назначение двусмысленно — требует явного выбора (нет фиксации).
+    const base = (doorKey || '').replace(/\s*\((одн|двуп)\)$/, '').trim();
+    if (base === 'ДВ' || base === 'Комбинированная') return null; // требует явного выбора (Назначение двусмысленно)
+    if (base.startsWith('Д') || base === 'ЛП1' || base === 'ЛП2') return base; // ДВ1, ДВ3..., ДВ1, ДВ2, ДН, ДВ\d, ЛП1, ЛП2
+    return null; // МАЯ, ОБЛ — не начинаются с "Д", VBA не задаёт назначение вовсе для них
+}
+
 let doorTypes = [];
+// Флаги doors2: какие поля показывать сразу в конфигураторе (иначе — в Доп. параметрах),
+// какие поля включать в печатный наряд производства, какие столбцы показывать по умолчанию
+// в таблице собранных дверей справа (пока нет сохранённой ручной настройки).
+let doorsDefaultFields = new Set();
+let doorsNaryadFields  = new Set();
+let doorsTableFields   = new Set();
+// Поля, которые всегда статичны и не подчиняются doors2-флагам видимости конфигуратора
+const ALWAYS_STATIC_FIELDS = new Set(["Ширина", "Высота", "Толщина стены, мм", "Кол-во"]);
 let allClients = [];
 let allClientsFull = [];
 let allOrders = [];
@@ -1677,7 +1764,7 @@ async function migrateOrdersToV2() {
         const data = await res.json();
         if (data.error) throw new Error(data.error);
         alert('Миграция завершена. Перенесено заказов: ' + data.migrated);
-        if (mBtn) mBtn.textContent = 'Готово ✓';
+        if (mBtn) mBtn.textContent = 'Готово';
         // Перезагружаем данные
         await loadDataFromAPI();
     } catch (err) {
@@ -1703,6 +1790,9 @@ async function loadDataFromAPI() {
         if (data.error) throw new Error(data.error);
 
         parseDoorTypes(data.doors);
+        doorsDefaultFields = new Set(data.doorsDefaultFields || []);
+        doorsNaryadFields  = new Set(data.doorsNaryadFields  || []);
+        doorsTableFields   = new Set(data.doorsTableFields   || []);
         allClients = data.clients || [];
         allClientsFull = data.clientsFull || [];
         allOrders = data.orders || [];
@@ -2110,6 +2200,31 @@ window.duplicateGlobalOrder = function(clientName, orderId) {
 };
 
 // ===== ORDER MANAGEMENT =====
+
+// Применяет конфигурацию столбцов таблицы: сохранённую для этого заказа (если есть),
+// иначе дефолт из doorsTableFields (строка 3 в doors2). Не влияет на hiddenColumns базовых
+// полей через CORE_FIELDS — они всегда видимы по умолчанию (см. renderColManager neverAutoHide).
+function applyTableColumnsConfig(cfg) {
+    hiddenColumns.clear();
+    customUserColumns = [];
+    columnOrder = [];
+
+    if (cfg && (Array.isArray(cfg.hiddenColumns) || Array.isArray(cfg.columnOrder))) {
+        // Сохранённая настройка конкретного заказа
+        hiddenColumns = new Set(cfg.hiddenColumns || []);
+        customUserColumns = Array.isArray(cfg.customUserColumns) ? [...cfg.customUserColumns] : [];
+        columnOrder = Array.isArray(cfg.columnOrder) ? [...cfg.columnOrder] : [];
+        return;
+    }
+
+    // Дефолт из doorsTableFields: скрываем все колонки таблицы, кроме помеченных в третьей строке флагов doors2
+    if (doorsTableFields.size > 0) {
+        DOORS2_TOGGLE_FIELDS.forEach(f => {
+            if (!doorsTableFields.has(f) && !CORE_FIELDS.includes(f)) hiddenColumns.add(f);
+        });
+    }
+}
+
 document.getElementById("startNewOrderBtn").addEventListener("click", () => {
     currentOrderId = null;
     currentDoors = [];
@@ -2118,9 +2233,7 @@ document.getElementById("startNewOrderBtn").addEventListener("click", () => {
     currentOrderTotal = 0;
     signatureB64 = null;  // сбрасываем подпись для нового заказа
     usedExtraFields.clear();
-    hiddenColumns.clear();
-    customUserColumns = [];
-    columnOrder = [];
+    applyTableColumnsConfig(null);
     nextRequestNumber = 1;
     document.getElementById("configHeaderTitle").innerText = `НОВЫЙ ЗАКАЗ: ${selectedClient}`;
     markClean();
@@ -2152,6 +2265,9 @@ window.editOrder = async function(orderId) {
         const res = await fetch(API_URL + "?action=getOrderDoors&orderId=" + encodeURIComponent(orderId));
         const data = await res.json();
         if (data.error) throw new Error(data.error);
+        // Настройка столбцов таблицы — персональная для этого заказа (если сохранена), иначе дефолт из doorsTableFields.
+        // Важно: применяем ДО loadDoorsIntoConfig, чтобы автообнаруженные пользовательские столбцы дописались в массив, а не были затёрты.
+        applyTableColumnsConfig(data.tableColumnsConfig || null);
         loadDoorsIntoConfig(data.doors || []);
         document.getElementById("configHeaderTitle").innerText = `РЕДАКТИРОВАНИЕ ЗАКАЗА: ${selectedClient}`;
         openConfigurator();
@@ -2174,6 +2290,8 @@ window.duplicateOrder = async function(orderId) {
         const res = await fetch(API_URL + "?action=getOrderDoors&orderId=" + encodeURIComponent(orderId));
         const data = await res.json();
         if (data.error) throw new Error(data.error);
+        // Копия — новый заказ, настройку столбцов родителя НЕ переносим, берём дефолт из doorsTableFields
+        applyTableColumnsConfig(null);
         loadDoorsIntoConfig(data.doors || []);
         document.getElementById("configHeaderTitle").innerText = `КОПИЯ ЗАКАЗА: ${selectedClient}`;
         openConfigurator();
@@ -2186,9 +2304,8 @@ window.duplicateOrder = async function(orderId) {
 
 function loadDoorsIntoConfig(doorsArr) {
     usedExtraFields.clear();
-    hiddenColumns.clear();
-    customUserColumns = [];
-    columnOrder = [];
+    // hiddenColumns/customUserColumns/columnOrder теперь настраиваются отдельно через applyTableColumnsConfig()
+    // сразу после вызова этой функции — здесь их не трогаем.
 
     currentDoors = doorsArr.map((d, i) => {
         const newDoor = { ...d };
@@ -2370,7 +2487,13 @@ document.getElementById("saveOrderBtn").addEventListener("click", async () => {
         orderTotal: currentOrderTotal,
         doors: currentDoors,
         createdBy: currentUserLogin,
-        clientSignature: signatureB64 || ""  // base64 подпись покупателя
+        clientSignature: signatureB64 || "",  // base64 подпись покупателя
+        // Настройка столбцов таблицы — сохраняется персонально к заказу (порядок/скрытые/кастомные)
+        tableColumnsConfig: {
+            hiddenColumns: Array.from(hiddenColumns),
+            customUserColumns: [...customUserColumns],
+            columnOrder: [...columnOrder]
+        }
     };
 
     try {
@@ -2405,50 +2528,168 @@ function dm(mm) {
     return (sh - fix >= 0.5) ? fix + 1 : fix;
 }
 
+// П8: авто-текст сертификата/СТБ по типу изделия — точное воспроизведение VBA-блока формирования Паспорта (VesModul-2.txt)
+// Select Case Left$(.ТипИзделия, 2): "ДН", "ДП", "ОБ", "ДВ", Case Else
+function buildCertificateInfo(cfg) {
+    const key = cfg['doorKey'] || cfg['Ключ'] || '';
+    const base = key.replace(/\s*\((одн|двуп)\)$/, '').trim();
+    const vbaCode = vbaBaseCode(key); // ДН/ДП1/ДП2/ДВ/ОБЛ/МАЯ/ЛП1/ЛП2 (resolves "Комбинированная" -> "ДВ")
+    const code2 = vbaCode.substring(0, 2); // Left$(.ТипИзделия, 2)
+    const isGlazed = !!(cfg['Вид полотна'] && /остекл/i.test(cfg['Вид полотна']));
+    const isStainless = !!(cfg['Металл'] && /нержавею/i.test(cfg['Металл']));
+    const is2Leaf = key.includes('двуп');
+    let st = '', cert = '';
+
+    if (code2 === 'ДН') {
+        st = 'Двери наружные';
+        cert = 'СТБ 2433-2015';
+        st += isStainless ? ' из нержавеющей стали,' : ' стальные,';
+        st += isGlazed ? ' остекленные' : ' глухие';
+        st += is2Leaf ? ' двупольные' : ' однопольные';
+        st += '\n' + 'входные в жилые и общественные здания' + '\n' + cert;
+        return { title: st, certNumber: 'Сертификат соответствия BY/112 02.01. ТР013 022.01 01476', stb: cert };
+    }
+
+    if (code2 === 'ДП') {
+        st = 'Двери противопожарные стальные,';
+        cert = 'СТБ 1394-2003';
+        st += isGlazed ? ' частично остекленные' : ' глухие';
+        st += is2Leaf ? ' двупольные' : ' однопольные';
+        const digit = base.length >= 3 ? base[2] : '1'; // Mid$(.ТипИзделия, 3, 1) — "1" или "2" (ДП1/ДП2)
+        const ei = Math.round(60 / (parseInt(digit) || 1));
+        st += '\n' + 'с пределом огнестойкости EI-' + ei + '\n' + cert;
+        let certNumber;
+        if (digit === '1') {
+            certNumber = 'Сертификат соответствия № ЕАЭС BY/112 02.01. ТР043 031.02 00789';
+        } else if (!is2Leaf) {
+            certNumber = 'Сертификат соответствия № ЕАЭС BY/112 02.01. ТР043 022.01 00033';
+        } else {
+            certNumber = 'Сертификат соответствия № ЕАЭС BY/112 02.01. ТР043 031.02 00791';
+        }
+        return { title: st, certNumber, stb: cert };
+    }
+
+    if (code2 === 'ОБ') {
+        st = 'Блоки дверные внутренние';
+        cert = 'СТБ 2433-2015';
+        const naznBase = (cfg['Назначение'] || naznachenieCodeForKey(key) || '').substring(0, 3);
+        const NAZN_MAP = { 'ДВ3': ' входные в помещения общественных зданий', 'ДВ5': ' лестничной клетки', 'ДВ6': ' санузлов', 'ДВ7': ' тамбурные', 'ДВ2': ' входные в квартиру', 'ДВ1': ' межкомнатные' };
+        if (NAZN_MAP[naznBase]) st += NAZN_MAP[naznBase];
+        st += '\n' + 'стальные';
+        st += isGlazed ? ', остекленные' : ', глухие';
+        st += is2Leaf ? ', двупольные' : ', однопольные';
+        st += '\n' + cert;
+        return { title: st, certNumber: 'Сертификат соответствия BY/112 02.01. ТР013 022.01 00254', stb: cert };
+    }
+
+    if (code2 === 'ДВ') {
+        st = 'Двери внутренние';
+        cert = 'СТБ 2433-2015';
+        const naznBase = (cfg['Назначение'] || naznachenieCodeForKey(key) || '').substring(0, 3);
+        const NAZN_MAP = { 'ДВ3': ' входные в помещения общественных зданий', 'ДВ5': ' лестничной клетки', 'ДВ6': ' санузлов', 'ДВ7': ' тамбурные', 'ДВ2': ' входные в квартиру', 'ДВ1': ' межкомнатные' };
+        if (NAZN_MAP[naznBase]) st += NAZN_MAP[naznBase];
+        st += isStainless ? '\nиз нержавеющей стали' : '\nстальные';
+        st += isGlazed ? ', остекленные' : ', глухие';
+        st += is2Leaf ? ', двупольные' : ', однопольные';
+        st += '\n' + cert;
+        return { title: st, certNumber: 'Сертификат соответствия BY/112 02.01. ТР013 022.01 01476', stb: cert };
+    }
+
+    // Case Else — МАЯ/ОБЛ/ЛП1/ЛП2 — VBA не назначает сертификат для этих типов
+    return { title: '', certNumber: 'Сертификат соответствия', stb: '' };
+}
+
 function buildDoorName(door) {
+    // Точная реализация алгоритма Sub ОбновитьЗаписьОТекИзделии (VesModul-2.txt / OtdelnyeProtsedury-3.txt)
     const key = door['doorKey'] || door['Ключ'] || '';
-    const base = key.replace(/ \((одн|двуп)\)$/, '').trim();
+    const base = key.replace(/\s*\((одн|двуп)\)$/, '').trim();
+    const code = vbaBaseCode(key);          // ДП1/ДП2/ДН/ДВ/ОБЛ/МАЯ/ЛП1/ЛП2
     const is2P = key.includes('двуп');
+    const isLuk = /^ЛП/.test(base);           // Mid(тип,2,1)="П" — люки (ЛП1/ЛП2)
     const h = parseInt(door['Высота']) || 0;
     const w = parseInt(door['Ширина']) || 0;
+    const fromProem = !!door['_fromProem'];
     const isGlazed = (v) => v && v !== '—' && v !== 'Нет' && String(v).trim() !== '';
-
-    let name = '';
     const glazed = isGlazed(door['Остекление']);
 
-    if (base === 'МАЯ') {
-        // ДМ-Г-О или ДМ-О-Д (глухая/остеклённая, одно/двупольная)
-        name = 'ДМ-' + (glazed ? 'О-' : 'Г-') + (is2P ? 'Д ' : 'О ');
-        if (h > 0 && w > 0) name += dm(h) + '-' + dm(w);
-    } else if (base === 'ДП1' || base === 'ДП2') {
-        // ДВСГ/ДВСЧ + размеры через пробел
-        name = 'ДВС' + (glazed ? 'Ч' : 'Г');
-        if (h > 0 && w > 0) name += ' ' + dm(h) + '-' + dm(w);
-    } else {
-        // ДН, ДВ, ОБЛ, ЛП и прочие: ДНСГ/ДВСЧ и т.д.
-        const prefix = base.length >= 2 ? base : 'ДВ';
-        name = prefix + 'С' + (glazed ? 'Ч' : 'Г');
-        if (h > 0 && w > 0) name += ' ' + dm(h) + '-' + dm(w);
+    // высота фрамуги (добавляется к высоте двери при расчёте размера в имени)
+    const framRaw = door['Фрамуга'] || '';
+    const framSelected = framRaw && framRaw !== 'Без фрамуги' && framRaw !== '—' && String(framRaw).trim() !== '';
+    let framHeight = 0;
+    if (framSelected) {
+        const fm = framRaw.match(/(\d+)\s*мм/);
+        framHeight = fm ? parseInt(fm[1]) : 0;
     }
 
-    // Направление открывания
+    let name = '';
+
+    // -- Базовая часть имени --
+    if (isLuk) {
+        // ЛЮКИ: Left(Назначение,2) & "-" & Right(Назначение,1) & "-C-"
+        const nazn = naznachenieCodeForKey(key) || base;  // ЛП1/ЛП2
+        name = nazn.slice(0, 2) + '-' + nazn.slice(-1) + '-C-';
+    } else {
+        const naznMatch = door['Назначение'] ? String(door['Назначение']).match(/^ДВ\d/) : null;
+        const naznCode = naznMatch ? naznMatch[0] : (naznachenieCodeForKey(key) || '');
+        name = naznCode ? (naznCode.slice(0, 3) + 'С') : 'ДВС';
+    }
+
+    // -- Буква остекления --
+    if (!glazed) {
+        if (!isLuk) name += 'Г';   // для люков глухое полотно без буквы
+    } else {
+        if (code === 'ДП1' || code === 'ДП2') {
+            name += 'Ч';
+        } else {
+            name += 'Ч';
+            const paket = door['Пакет в основную створку'] || '';
+            if (/тип\s*3/i.test(paket)) name += '2';
+            else if (/тип\s*2/i.test(paket)) name += '1';
+        }
+    }
+
+    // -- Размеры + открывание + порог --
     const opening = door['Открывание'] || '';
-    if (is2P) {
-        if (opening.includes('Лев')) name += ' 2Л';
-        else if (opening.includes('Прав')) name += ' 2Пр';
-        else name += ' 2П';
+    const por = door['Порог'] || '';
+    const porSelected = por && por !== 'Без порога' && por !== '—' && String(por).trim() !== '';
+
+    if (isLuk) {
+        // Люк: "-" & КоличествоСтворок & ("л"|"п") & "-Рп-пл" & размер
+        name += '-' + (is2P ? 2 : 1);
+        if (opening.includes('Лев')) name += 'л';
+        else if (opening.includes('Прав')) name += 'п';
+        name += '-Рп-пл';
+        if (h + w > 100) {
+            if (fromProem) name += '-' + dm(h - 20 + framHeight) + '-' + dm(w - 30);
+            else name += '-' + dm(h + framHeight) + '-' + dm(w);
+        }
     } else {
-        if (opening.includes('Лев')) name += ' Л';
-        // правое — суффикса нет (по VBA)
+        if (h + w > 100) {
+            if (fromProem) name += ' ' + dm(h - 20 + framHeight) + '-' + dm(w - 30);
+            else name += ' ' + dm(h + framHeight) + '-' + dm(w);
+        }
+        if (opening.includes('Лев')) name += is2P ? ' 2Л' : ' Л';
+        else if (opening.includes('Прав')) name += is2P ? ' 2Пр' : '';
+        if (porSelected) name += ' П';
+        name = name.replace(/\s\s+/g, ' ').trim();
     }
 
-    // Порог → П
-    const por = door['Порог'] || '';
-    if (por && por !== 'Без порога' && por !== '—' && String(por).trim() !== '') name += ' П';
+    name = name.replace(/--/g, '-').trim();
 
-    // Фрамуга → Фр
-    const fram = door['Фрамуга'] || '';
-    if (fram && fram !== 'Без фрамуги' && fram !== '—' && String(fram).trim() !== '') name += ' Фр';
+    // -- Суффиксы по типу (переписывают или добавляют в конец итогового имени) --
+    if (code === 'ОБЛ') {
+        name = name + ' ZK';
+    }
+    if (code === 'МАЯ') {
+        // МАЯ пересобирает имя целиком: "ДМ-" & (Г/О) & "-" & (О/Д) & " " & размер
+        name = 'ДМ-' + (glazed ? 'О-' : 'Г-') + (is2P ? 'Д ' : 'О ');
+        if (h + w > 100) {
+            if (fromProem) name += dm(h - 20) + '-' + dm(w - 30);
+            else name += dm(h) + '-' + dm(w);
+        }
+    }
+    // Фрамуга → " Фр" (для всех типов, включая МАЯ, в самом конце)
+    if (framSelected) name += ' Фр';
 
     return name.trim().replace(/\s+/g, ' ').replace(/--/g, '-');
 }
@@ -2633,11 +2874,18 @@ function renderConfigForm() {
             <button id="modeProemBtn" onclick="setSizeMode('proem')">По проёму</button>
         </div>
     </div>`;
-    html += `<div class="form-group"><label id="lblHeight">ВЫСОТА (${type.heightMin}–${type.heightMax})</label><input type="number" id="cfg_Высота" value="${type.heightMin}" oninput="renderDoorSvg()"></div>`;
-    html += `<div class="form-group"><label id="lblWidth">ШИРИНА (${type.widthMin}–${type.widthMax})</label><input type="number" id="cfg_Ширина" value="${type.widthMin}" oninput="renderDoorSvg()"></div>`;
+    html += `<div class="form-group"><label id="lblHeight">ВЫСОТА (${type.heightMin}–${type.heightMax})</label><input type="number" id="cfg_Высота" value="${type.heightMin}" oninput="renderDoorSvg(); validateSizeField(this);"></div>`;
+    html += `<div class="form-group"><label id="lblWidth">ШИРИНА (${type.widthMin}–${type.widthMax})</label><input type="number" id="cfg_Ширина" value="${type.widthMin}" oninput="renderDoorSvg(); validateSizeField(this);"></div>`;
 
-    for (let f of CORE_FIELDS) {
-        let opts = type.options[f];
+    // Динамическая видимость: поле появляется сразу в конфигураторе, если оно помечено флагом
+    // "Параметры по умолчанию в конфигураторе" в doors2 (doorsDefaultFields), иначе оно уйдёт в
+    // "Дополнительные параметры" (renderExtraParams). Если флаги ещё не загружены (пустой Set),
+    // показываем все CORE_FIELDS как раньше (безопасный fallback).
+    const useFlags = doorsDefaultFields.size > 0;
+    for (let f of DOORS2_TOGGLE_FIELDS) {
+        const isDefault = useFlags ? doorsDefaultFields.has(f) : CORE_FIELDS.includes(f);
+        if (!isDefault) continue;
+        let opts = type.options[f] !== undefined ? type.options[f] : type.extraOptions[f];
         const safeId = 'cfg_' + f.replace(/\s+/g, '_');
         if (opts && opts.length) {
             html += `<div class="form-group"><label>${f.toUpperCase()}</label>`;
@@ -2650,8 +2898,38 @@ function renderConfigForm() {
         }
     }
 
+    // П11: «Назначение» — только для общего ДВ/Комбинированная (когда назначение двусмысленно и требует явного выбора)
+    const naznOpts = naznachenieOptionsForKey(currentTypeKey);
+    if (naznOpts) {
+        html += `<div class="form-group"><label>НАЗНАЧЕНИЕ</label>`;
+        html += makeCombo('cfg_Назначение', naznOpts, naznOpts[0]);
+        html += `</div>`;
+    }
+
     html += `<div class="form-group"><label>ТОЛЩИНА СТЕНЫ, ММ</label><input type="number" id="wallThick" value="0"></div>`;
     html += `<div class="form-group"><label>КОЛИЧЕСТВО</label><input type="number" id="quantity" value="1" min="1"></div>`;
+
+    // Цвет: общий сворачиваемый блок, раскрывается в 4 отдельных RAL-поля
+    html += `
+    <details class="details-summary" id="colorBlock" style="margin-top:15px;text-align:left;">
+        <summary style="text-align:center;">цвет</summary>
+        <div class="form-group">
+            <label>цвет короба снаружи (RAL)</label>
+            <input type="text" id="cfg_color_korob_out" placeholder="напр. RAL 9016">
+        </div>
+        <div class="form-group">
+            <label>цвет короба внутри (RAL)</label>
+            <input type="text" id="cfg_color_korob_in" placeholder="напр. RAL 9016">
+        </div>
+        <div class="form-group">
+            <label>цвет полотна снаружи (RAL)</label>
+            <input type="text" id="cfg_color_polotno_out" placeholder="напр. RAL 8017">
+        </div>
+        <div class="form-group">
+            <label>цвет полотна внутри (RAL)</label>
+            <input type="text" id="cfg_color_polotno_in" placeholder="напр. RAL 8017">
+        </div>
+    </details>`;
 
     formContainer.innerHTML = html;
 
@@ -2694,7 +2972,15 @@ function renderConfigForm() {
     // Wire change/input on configForm for SVG
     document.getElementById('configForm').addEventListener('change', renderDoorSvg);
     document.getElementById('configForm').addEventListener('input', renderDoorSvg);
+    // П1/П9/П10/П12: пересчёт лимитов и правила наличника при смене Коробка/типа
+    document.getElementById('configForm').addEventListener('change', (e) => {
+        if (e.target && e.target.closest && e.target.closest('#cfg_Коробка')) {
+            updateSizeLabels();
+            applyNalichnikRule();
+        }
+    });
 
+    updateSizeLabels();
     renderDoorSvg();
 }
 
@@ -2723,12 +3009,28 @@ function loadDoorIntoConfigurator(doorIdx) {
     if (wallEl) wallEl.value = door['Толщина стены, мм'] || 0;
     if (qtyEl)  qtyEl.value  = door['Кол-во'] || 1;
 
-    // Устанавливаем CORE_FIELDS через combo
-    for (const f of CORE_FIELDS) {
-        const safeId = 'cfg_' + f.replace(/\\s+/g, '_');
-        const el = document.getElementById(safeId);
-        if (el) el.value = door[f] || '—';
+    // Устанавливаем значения полей doors2 (и в основной форме, и в "Доп. параметрах" — независимо
+    // от того, куда конкретное поле попало при текущей раскладке флагов).
+    for (const f of DOORS2_TOGGLE_FIELDS) {
+        const safeIdCore  = 'cfg_'   + f.replace(/\s+/g, '_');
+        const safeIdExtra = 'extra_' + f.replace(/\s+/g, '_');
+        const elCore  = document.getElementById(safeIdCore);
+        const elExtra = document.getElementById(safeIdExtra);
+        if (elCore)  elCore.value  = door[f] || '—';
+        if (elExtra) elExtra.value = door[f] || '';
     }
+
+    // Восстанавливаем поля цвета (4 отдельных RAL-подполя)
+    const colorMap = {
+        cfg_color_korob_out:    'Цвет короба снаружи',
+        cfg_color_korob_in:     'Цвет короба внутри',
+        cfg_color_polotno_out:  'Цвет полотна снаружи',
+        cfg_color_polotno_in:   'Цвет полотна внутри'
+    };
+    Object.keys(colorMap).forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = door[colorMap[id]] || '';
+    });
 
     // Устанавливаем визуальные флаги
     const visG = document.getElementById('visGlazing');
@@ -2775,7 +3077,10 @@ function resetToNewDoor() {
 function getCfgValue(fieldName) {
     const safeId = 'cfg_' + fieldName.replace(/\s+/g, '_');
     const el = document.getElementById(safeId);
-    return el ? el.value : '—';
+    if (el) return el.value;
+    // если поле сейчас в "Доп. параметрах" из-за флага doors2, ищем там
+    const extraEl = document.getElementById('extra_' + fieldName.replace(/\s+/g, '_'));
+    return extraEl ? extraEl.value : '—';
 }
 
 function renderExtraParams() {
@@ -2785,8 +3090,16 @@ function renderExtraParams() {
     const container = document.getElementById("extraParamsContainer");
     let html = "";
 
-    for (let f of ALL_POSSIBLE_FIELDS) {
-        let opts = type.extraOptions[f];
+    // Динамическая видимость: сюда попадают все поля doors2, которые НЕ помечены флагом
+    // "по умолчанию в конфигураторе" — зеркально к renderConfigForm(). Если флаги ещё не
+    // загружены, используем прежнее статичное разбиение ALL_POSSIBLE_FIELDS (fallback).
+    const useFlags = doorsDefaultFields.size > 0;
+    const extraFieldsList = useFlags
+        ? DOORS2_TOGGLE_FIELDS.filter(f => !doorsDefaultFields.has(f))
+        : ALL_POSSIBLE_FIELDS;
+
+    for (let f of extraFieldsList) {
+        let opts = type.extraOptions[f] !== undefined ? type.extraOptions[f] : type.options[f];
         const safeId = 'extra_' + f.replace(/\s+/g, '_');
         if (opts && opts.length) {
             html += `<div class="form-group"><label>${f.toUpperCase()}</label>`;
@@ -2804,6 +3117,7 @@ function renderExtraParams() {
     document.getElementById('extraParamsContainer').addEventListener('change', renderDoorSvg);
     document.getElementById('extraParamsContainer').addEventListener('input', renderDoorSvg);
 
+    applyNalichnikRule(); // П12: актуализируем запрет сразу после перестройки списка Наличник
     renderDoorSvg();
 }
 
@@ -2823,7 +3137,66 @@ window.setSizeMode = function(mode) {
     } else {
         proemBtn.classList.add('active');    korobBtn.classList.remove('active');
     }
+    updateSizeLabels();
 };
+
+// П1/П9/П10: пересчитывает эффективные лимиты (тип + режим размеров + тип коробки) и обновляет подписи под полями высоты/ширины.
+function updateSizeLabels() {
+    const lblH = document.getElementById('lblHeight');
+    const lblW = document.getElementById('lblWidth');
+    if (!lblH || !lblW) return;
+    const korobkaType = getCfgValue('Коробка');
+    const lim = getEffectiveSizeLimits(currentTypeKey, currentSizeMode, korobkaType);
+    if (!lim) return;
+    lblH.textContent = `Высота (${lim.hMin}–${lim.hMax})`.toUpperCase();
+    lblW.textContent = `ширина (${lim.wMin}–${lim.wMax})`.toUpperCase();
+}
+
+// П1: мягкая подсветка поля при выходе за допустимый диапазон — визуальная подсказка, жёсткой блок будет в addDoorBtn.
+function validateSizeField(el) {
+    if (!el) return;
+    const isHeight = el.id === 'cfg_Высота';
+    const korobkaType = getCfgValue('Коробка');
+    const lim = getEffectiveSizeLimits(currentTypeKey, currentSizeMode, korobkaType);
+    if (!lim) { el.style.borderColor = ''; return; }
+    const val = parseInt(el.value) || 0;
+    const ok = isHeight ? (val >= lim.hMin && val <= lim.hMax) : (val >= lim.wMin && val <= lim.wMax);
+    el.style.borderColor = ok ? '' : '#dc2626';
+    el.style.background = ok ? '' : '#fef2f2';
+}
+
+// П12: «без наличника» недоступно при угловой коробке (VBA: If .Типкоробки < 2 Then сбезНаличника.Enabled=True Else Enabled=False)
+function applyNalichnikRule() {
+    const korobkaType = getCfgValue('Коробка');
+    const isUglovaya = /^углов/i.test((korobkaType || '').trim());
+    const input = document.getElementById('extra_Наличник') || document.getElementById('cfg_Наличник');
+    if (!input) return;
+    const idPrefix = input.id.startsWith('cfg_') ? 'cfg_' : 'extra_';
+    const dd = document.getElementById(idPrefix + 'Наличник_dd');
+    if (!dd) return;
+
+    const beznalOpt = Array.from(dd.querySelectorAll('.combo-option')).find(o => o.dataset.val === 'Без наличника');
+    if (beznalOpt) {
+        if (isUglovaya) {
+            beznalOpt.classList.add('combo-option-disabled');
+            beznalOpt.style.pointerEvents = 'none';
+            beznalOpt.style.opacity = '0.4';
+            beznalOpt.title = 'Недоступно при угловой коробке';
+        } else {
+            beznalOpt.classList.remove('combo-option-disabled');
+            beznalOpt.style.pointerEvents = '';
+            beznalOpt.style.opacity = '';
+            beznalOpt.title = '';
+        }
+    }
+
+    // если угловая коробка выбрана, а текущее значение — «без наличника», сбрасываем выбор и предупреждаем
+    if (isUglovaya && input.value === 'Без наличника') {
+        input.value = '';
+        showToast('При угловой коробке вариант «без наличника» недоступен — выберите размер наличника', true);
+        renderDoorSvg();
+    }
+}
 
 document.getElementById("addDoorBtn").addEventListener("click", () => {
     const type = doorTypes.find(t => t.key === currentTypeKey);
@@ -2832,6 +3205,23 @@ document.getElementById("addDoorBtn").addEventListener("click", () => {
     const rawH = parseInt(document.getElementById("cfg_Высота").value) || type.heightMin;
     const rawW = parseInt(document.getElementById("cfg_Ширина").value) || type.widthMin;
     const fromProem = currentSizeMode === 'proem';
+    const korobkaType = getCfgValue('Коробка');
+
+    // П1: жёсткая блокировка при выходе за допустимые пределы (аналогично VBA MsgBox + возврат фокуса)
+    const sizeLim = getEffectiveSizeLimits(currentTypeKey, currentSizeMode, korobkaType);
+    if (sizeLim) {
+        if (rawH < sizeLim.hMin || rawH > sizeLim.hMax) {
+            showToast(`Высота должна быть в диапазоне ${sizeLim.hMin}–${sizeLim.hMax} мм для этого типа двери`, true);
+            document.getElementById("cfg_Высота").focus();
+            return;
+        }
+        if (rawW < sizeLim.wMin || rawW > sizeLim.wMax) {
+            showToast(`Ширина должна быть в диапазоне ${sizeLim.wMin}–${sizeLim.wMax} мм для этого типа двери`, true);
+            document.getElementById("cfg_Ширина").focus();
+            return;
+        }
+    }
+
     let cfg = {
         doorKey: currentTypeKey,
         doorName: type.name,
@@ -2842,20 +3232,70 @@ document.getElementById("addDoorBtn").addEventListener("click", () => {
         "Кол-во": parseInt(document.getElementById("quantity").value) || 1,
     };
 
-    for (let f of CORE_FIELDS) {
-        cfg[f] = getCfgValue(f);
+    // Собираем значения doors2-полей независимо от того, в каком блоке форма их отрисовала
+    // (cfg_ = основная форма, extra_ = "Дополнительные параметры") — раскладка зависит от флагов doors2.
+    for (let f of DOORS2_TOGGLE_FIELDS) {
+        const coreEl  = document.getElementById('cfg_'   + f.replace(/\s+/g, '_'));
+        const extraEl = document.getElementById('extra_' + f.replace(/\s+/g, '_'));
+        if (coreEl) {
+            cfg[f] = coreEl.value;
+        } else if (extraEl) {
+            if (extraEl.value && extraEl.value !== '') {
+                cfg[f] = extraEl.value;
+                usedExtraFields.add(f);
+            }
+        }
     }
 
-    for (let f of ALL_POSSIBLE_FIELDS) {
-        const safeId = 'extra_' + f.replace(/\s+/g, '_');
-        const el = document.getElementById(safeId);
-        if (el && el.value && el.value !== '') {
-            cfg[f] = el.value;
-            usedExtraFields.add(f);
+    // Поля цвета (4 отдельных RAL-подполя из сворачиваемого блока "Цвет")
+    const colorFieldMap = {
+        cfg_color_korob_out:    'Цвет короба снаружи',
+        cfg_color_korob_in:     'Цвет короба внутри',
+        cfg_color_polotno_out:  'Цвет полотна снаружи',
+        cfg_color_polotno_in:   'Цвет полотна внутри'
+    };
+    Object.keys(colorFieldMap).forEach(id => {
+        const el = document.getElementById(id);
+        if (el && el.value && el.value.trim() !== '') {
+            cfg[colorFieldMap[id]] = el.value.trim();
+        }
+    });
+
+    // П11: Забираем «Назначение» — явный выбор (ДВ/Комбинированная) или авто-фиксация (ДВ1..ДВ7, ЛП1/ЛП2)
+    const naznEl = document.getElementById('cfg_Назначение');
+    if (naznEl && naznEl.value) {
+        cfg['Назначение'] = naznEl.value;
+    }
+
+    // П12: жёсткая блокировка — «без наличника» не допустимо при угловой коробке
+    const nalichnikVal = cfg['Наличник'] || '';
+    if (/^углов/i.test((korobkaType || '').trim()) && nalichnikVal === 'Без наличника') {
+        showToast('При угловой коробке вариант «без наличника» недоступен — выберите размер наличника', true);
+        return;
+    }
+
+    // П3: валидация высоты фрамуги — 100мм глухая / 250мм остеклённая (жёсткая блокировка)
+    const framVal = cfg['Фрамуга'] || '';
+    if (framVal && framVal !== 'Без фрамуги' && framVal !== '—' && String(framVal).trim() !== '') {
+        const fm = framVal.match(/(\d+)\s*мм/);
+        const framH = fm ? parseInt(fm[1]) : 0;
+        const isBlindFram = /глух/i.test(framVal);
+        const minFram = isBlindFram ? 100 : 250;
+        if (framH > 0 && framH < minFram) {
+            showToast(isBlindFram
+                ? 'Высота глухой фрамуги не может быть менее 100мм'
+                : 'Высота остеклённой фрамуги не может быть менее 250мм', true);
+            return;
         }
     }
 
     cfg.naimenovanie = buildDoorName(cfg);
+
+    // П8: автоматический расчёт сертификата/СТБ по типу изделия
+    const _certInfo = buildCertificateInfo(cfg);
+    cfg['Сертификат'] = _certInfo.certNumber;
+    cfg['СТБ'] = _certInfo.stb;
+    cfg._certTitle = _certInfo.title;
     cfg._visGlazing = document.getElementById('visGlazing')?.checked || false;
     cfg._visVent    = document.getElementById('visVent')?.checked    || false;
     cfg._visCloser  = document.getElementById('visCloser')?.checked  || false;
@@ -3254,8 +3694,8 @@ window.addExtraColumn = function(field) {
 // ===== RENDER RIGHT TABLE =====
 function renderRightTable() {
     const tbody = document.getElementById("doorsTbody");
-    const INTERNAL_COLS = new Set(['_visGlazing','_visVent','_visCloser','_manualName','_fromProem','_sigInited','doorName']);
-    const baseColumns = ['requestNumber', 'doorPosition', 'naimenovanie', 'doorKey', 'Тип размера', 'Высота', 'Ширина', ...CORE_FIELDS, 'Толщина стены, мм', 'Кол-во'];
+    const INTERNAL_COLS = new Set(['_visGlazing','_visVent','_visCloser','_manualName','_fromProem','_sigInited','doorName','_certTitle']);
+    const baseColumns = ['requestNumber', 'doorPosition', 'naimenovanie', 'doorKey', 'Тип размера', 'Высота', 'Ширина', ...CORE_FIELDS, 'Толщина стены, мм', 'Кол-во', 'Сертификат', 'СТБ'];
     const extraColumns = Array.from(usedExtraFields).filter(c => !INTERNAL_COLS.has(c));
     const allColumns = [...baseColumns, ...extraColumns.filter(c => !baseColumns.includes(c))];
 
@@ -3292,7 +3732,7 @@ function renderRightTable() {
             + ` ondragleave="rowDragLeave(event)"`
             + ` ondrop="rowDrop(event,${i})"`
             + ` ondragend="rowDragEnd(event)">`;
-        bodyHtml += `<td class="door-actions" style="cursor:default;"><button onclick="loadDoorIntoConfigurator(${i})" title="Редактировать в конфигураторе" style="color:#1e6db5;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button onclick="copyRow(${i})" title="Копировать"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button><button onclick="delRow(${i})" title="Удалить">❌</button></td>`;
+        bodyHtml += `<td class="door-actions" style="cursor:default;"><button onclick="loadDoorIntoConfigurator(${i})" title="Редактировать в конфигураторе" style="color:#1e6db5;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button onclick="copyRow(${i})" title="Копировать"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button><button onclick="delRow(${i})" title="Удалить" style="color:#c0392b;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button></td>`;
         for (let col of visibleColumns) {
             let value = d[col] !== undefined ? d[col] : "";
             const isNum = NUMBER_COLS.has(col);
@@ -3754,6 +4194,17 @@ document.getElementById("addPaymentRowBtn").addEventListener("click", () => {
 });
 
 document.getElementById("saveFinanceBtn").addEventListener("click", async () => {
+    // Принудительно считываем все видимые строки оплат из DOM перед отправкой — защита от случаев,
+    // когда пользователь ввёл значение и сразу кликнул «SAVE» без потери фокуса поля (blur).
+    const _rows = document.querySelectorAll('#paymentsRows .payments-row');
+    _rows.forEach((rowEl, i) => {
+        if (!currentPayments[i]) return;
+        const inputs = rowEl.querySelectorAll('input');
+        if (inputs[0]) currentPayments[i].date   = inputs[0].value;
+        if (inputs[1]) currentPayments[i].note   = inputs[1].value;
+        if (inputs[2]) currentPayments[i].amount = parseFloat(inputs[2].value) || 0;
+    });
+
     currentOrderTotal = parseFloat(document.getElementById("financeOrderTotalInput").value) || 0;
 
     if (!currentOrderId) {
@@ -3807,10 +4258,10 @@ function renderPaymentsRows() {
 
     box.innerHTML = currentPayments.map((p, i) => `
         <div class="payments-row">
-            <input type="date" value="${escapeAttr(p.date || '')}" onchange="updatePaymentField(${i}, 'date', this.value)">
-            <input type="text" placeholder="Комментарий / основание" value="${escapeAttr(p.note || '')}" onchange="updatePaymentField(${i}, 'note', this.value)">
-            <input type="number" step="0.01" placeholder="Сумма" value="${escapeAttr(p.amount || 0)}" onchange="updatePaymentField(${i}, 'amount', this.value)">
-            <button class="btn-small" onclick="removePaymentRow(${i})">✕</button>
+            <input type="date" value="${escapeAttr(p.date || '')}" oninput="updatePaymentField(${i}, 'date', this.value)">
+            <input type="text" placeholder="Комментарий / основание" value="${escapeAttr(p.note || '')}" oninput="updatePaymentField(${i}, 'note', this.value)">
+            <input type="number" step="0.01" placeholder="Сумма" value="${escapeAttr(p.amount || 0)}" oninput="updatePaymentField(${i}, 'amount', this.value)">
+            <button class="btn-small" onclick="removePaymentRow(${i})" title="удалить"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
         </div>
     `).join('');
 }
@@ -3899,11 +4350,13 @@ function escapeAttr(str) {
         .replace(/>/g, '&gt;');
 }
 
-function showToast(msg) {
+function showToast(msg, isError) {
     const t = document.getElementById("toast");
     t.textContent = msg;
     t.style.display = "block";
-    setTimeout(() => t.style.display = "none", 3000);
+    t.style.background = isError ? '#dc2626' : '';
+    t.style.color = isError ? '#fff' : '';
+    setTimeout(() => { t.style.display = "none"; t.style.background = ''; t.style.color = ''; }, isError ? 4500 : 3000);
 }
 
 function showLoading(text) {
@@ -4082,8 +4535,8 @@ window.generatePDF = function() {
     // ── ТАБЛИЦА
     // В PDF: requestNumber идёт как '№', doorPosition как 'Позиция', Тип размера — как записано
     // requestNumber — в PDF не выводится (заменяем на doorPosition если есть, иначе порядковый номер)
-    const PDF_EXCLUDE = new Set(['requestNumber', 'doorKey', '_visGlazing', '_visVent', '_visCloser', '_manualName', '_fromProem', '_sigInited', 'doorName']);
-    const baseColumns = ["doorPosition", "naimenovanie", "Тип размера", "Высота", "Ширина", ...CORE_FIELDS, "Толщина стены, мм", "Кол-во"];
+    const PDF_EXCLUDE = new Set(['requestNumber', 'doorKey', '_visGlazing', '_visVent', '_visCloser', '_manualName', '_fromProem', '_sigInited', 'doorName', '_certTitle']);
+    const baseColumns = ["doorPosition", "naimenovanie", "Тип размера", "Высота", "Ширина", ...CORE_FIELDS, "Толщина стены, мм", "Кол-во", "Сертификат", "СТБ"];
     const extraColumns = Array.from(usedExtraFields);
     const allColumns = [...baseColumns, ...extraColumns.filter(c => !baseColumns.includes(c))].filter(col => !hiddenColumns.has(col) && !PDF_EXCLUDE.has(col));
 
@@ -4121,26 +4574,38 @@ window.generatePDF = function() {
     }
     const totalRowIdx = (showQtyTotal || showTotal) ? tableData.length - 1 : -1;
 
+    // Веса столбцов — задают ПРОПОРЦИИ ширины, а не абсолютные мм. Ниже веса масштабируются
+    // так, чтобы сумма всех видимых столбцов точно заполняла доступную ширину страницы (cw),
+    // независимо от того, сколько столбцов сейчас выбрано пользователем.
+    const colWeights = {};
+    const colAlign = {};
+    allColumns.forEach((col, idx) => {
+        if (col==="doorPosition")         { colWeights[idx]=7; }
+        else if (col==="naimenovanie")    { colWeights[idx]=24; colAlign[idx]='left'; }
+        else if (col==="Тип размера")      { colWeights[idx]=11; }
+        else if (col==="Высота"||col==="Ширина") { colWeights[idx]=10; }
+        else if (col==="Кол-во")         { colWeights[idx]=9; }
+        else if (col==="Цена")            { colWeights[idx]=14; }
+        else if (col==="Примечание")    { colWeights[idx]=16; colAlign[idx]='left'; }
+        else if (col==="Заводской номер") { colWeights[idx]=13; }
+        else if (col==="Толщина стены, мм") { colWeights[idx]=13; }
+        else if (col==="doorKey")         { colWeights[idx]=10; }
+        else if (col==="Коробка")         { colWeights[idx]=19; colAlign[idx]='left'; }
+        else if (col==="Открывание")      { colWeights[idx]=16; colAlign[idx]='left'; }
+        else if (col==="Металл")          { colWeights[idx]=13; colAlign[idx]='left'; }
+        else if (col==="Порог")           { colWeights[idx]=12; colAlign[idx]='left'; }
+        else if (col==="Цилиндр")         { colWeights[idx]=16; colAlign[idx]='left'; }
+        else if (col==="Доводчик")        { colWeights[idx]=16; colAlign[idx]='left'; }
+        else if (col==="Цвет")            { colWeights[idx]=15; colAlign[idx]='left'; }
+        else if (col==="Остекление")      { colWeights[idx]=16; colAlign[idx]='left'; }
+        else { colWeights[idx]=14; } // произвольные/кастомные столбцы — средний вес
+    });
+    const totalWeight = Object.values(colWeights).reduce((a,b) => a+b, 0) || 1;
     const colStyles = {};
     allColumns.forEach((col, idx) => {
-        if (col==="doorPosition")         colStyles[idx]={cellWidth:7};
-        else if (col==="naimenovanie")    colStyles[idx]={cellWidth:24,halign:'left'};
-        else if (col==="Тип размера")      colStyles[idx]={cellWidth:11};
-        else if (col==="Высота"||col==="Ширина") colStyles[idx]={cellWidth:10};
-        else if (col==="Кол-во")         colStyles[idx]={cellWidth:9};
-        else if (col==="Цена")            colStyles[idx]={cellWidth:14};
-        else if (col==="Примечание")    colStyles[idx]={cellWidth:16,halign:'left'};
-        else if (col==="Заводской номер") colStyles[idx]={cellWidth:13};
-        else if (col==="Толщина стены, мм") colStyles[idx]={cellWidth:13};
-        else if (col==="doorKey")         colStyles[idx]={cellWidth:10};
-        else if (col==="Коробка")         colStyles[idx]={cellWidth:19, halign:'left'};
-        else if (col==="Открывание")      colStyles[idx]={cellWidth:16, halign:'left'};
-        else if (col==="Металл")          colStyles[idx]={cellWidth:13, halign:'left'};
-        else if (col==="Порог")           colStyles[idx]={cellWidth:12, halign:'left'};
-        else if (col==="Цилиндр")         colStyles[idx]={cellWidth:16, halign:'left'};
-        else if (col==="Доводчик")        colStyles[idx]={cellWidth:16, halign:'left'};
-        else if (col==="Цвет")            colStyles[idx]={cellWidth:15, halign:'left'};
-        else if (col==="Остекление")      colStyles[idx]={cellWidth:16, halign:'left'};
+        const width = (colWeights[idx] / totalWeight) * cw;
+        colStyles[idx] = { cellWidth: width };
+        if (colAlign[idx]) colStyles[idx].halign = colAlign[idx];
     });
 
     doc.autoTable({
@@ -4148,6 +4613,7 @@ window.generatePDF = function() {
         head: [colHeaders],
         body: tableData,
         margin: { left: margin, right: margin },
+        tableWidth: cw, // таблица всегда растягивается на всю доступную ширину страницы
         theme: 'plain',  // БЕЗ тёмных полос
         styles: {
             fontSize: SPEC_TABLE_SIZE,
@@ -4275,8 +4741,8 @@ window.generateExcel = function() {
     const showTotal    = document.getElementById("m_showTotal").checked;
     const showQtyTotal = document.getElementById("m_showQtyTotal").checked;
 
-    const PDF_EXCLUDE = new Set(['requestNumber', 'doorKey', '_visGlazing', '_visVent', '_visCloser', '_manualName', '_fromProem', '_sigInited', 'doorName']);
-    const baseColumns = ["doorPosition", "naimenovanie", "Тип размера", "Высота", "Ширина", ...CORE_FIELDS, "Толщина стены, мм", "Кол-во"];
+    const PDF_EXCLUDE = new Set(['requestNumber', 'doorKey', '_visGlazing', '_visVent', '_visCloser', '_manualName', '_fromProem', '_sigInited', 'doorName', '_certTitle']);
+    const baseColumns = ["doorPosition", "naimenovanie", "Тип размера", "Высота", "Ширина", ...CORE_FIELDS, "Толщина стены, мм", "Кол-во", "Сертификат", "СТБ"];
     const extraColumns = Array.from(usedExtraFields);
     const allColumns = [...baseColumns, ...extraColumns.filter(c => !baseColumns.includes(c))].filter(col => !hiddenColumns.has(col) && !PDF_EXCLUDE.has(col));
 
@@ -5166,6 +5632,14 @@ window.printProductionSheet = function(rowIdx) {
         if (door[key] !== undefined && door[key] !== "") return String(door[key]);
         return "";
     };
+    // Цвет: объединяем 4 RAL-подполя в одну краткую строку для печати/QR
+    const colorParts = [
+        get('Цвет короба снаружи')   && 'Короб снаружи: '   + get('Цвет короба снаружи'),
+        get('Цвет короба внутри')    && 'Короб внутри: '    + get('Цвет короба внутри'),
+        get('Цвет полотна снаружи') && 'Полотно снаружи: ' + get('Цвет полотна снаружи'),
+        get('Цвет полотна внутри')  && 'Полотно внутри: '  + get('Цвет полотна внутри')
+    ].filter(Boolean);
+    const colorSummary = colorParts.join(', ');
 
     // ── QR-данные ──
     // QR — компактный формат, влезает в версию 5-7
@@ -5175,35 +5649,30 @@ window.printProductionSheet = function(rowIdx) {
         door.naimenovanie,
         door.height + "x" + door.width,
         door.openingFull || door.opening,
-        get("Цвет") ? "RAL:" + get("Цвет") : "",
+        colorSummary ? "RAL:" + colorSummary : "",
         get("Заводской номер") ? "ЗН:" + get("Заводской номер") : "",
         door.invoiceNum  ? "СЧ:" + door.invoiceNum : "",
         currentUserLogin || ""
     ].filter(Boolean).join("|");
 
     // ── HTML наряда ──
+    // Список полей doors2 в наряд определяется флагом "Параметры передаваемые в наряд производства"
+    // (doorsNaryadFields). Открывание/Толщина стены/Примечание — не doors2-поля-флаги, показываем всегда.
+    // Если флаги ещё не загружены (пустой Set) — используем прежний статичный список полей (fallback).
+    const naryadFieldsUseFlags = doorsNaryadFields.size > 0;
+    const naryadFieldsList = naryadFieldsUseFlags
+        ? DOORS2_TOGGLE_FIELDS.filter(f => doorsNaryadFields.has(f))
+        : ["Коробка", "Металл", "Порог", "Цилиндр", "Доводчик", "Заполнение", "Петли", "Ручка", "Замок", "Антипаника", "Наличник", "Тип отгрузки", "Толщина металла полотна"];
+
     const paramRows = [
-        ["Коробка", get("Коробка")],
         ["Открывание", door.openingFull || door.opening],
-        ["Металл", get("Металл")],
-        ["Порог", get("Порог")],
-        ["Цилиндр", get("Цилиндр")],
-        ["Доводчик", get("Доводчик")],
-        ["Остекление", get("Остекление")],
-        ["Заполнение", get("Заполнение")],
-        ["Петли", get("Петли")],
-        ["Ручка", get("Ручка")],
-        ["Замок", get("Замок")],
-        ["Антипаника", get("Антипаника")],
-        ["Наличник", get("Наличник")],
-        ["Тип отгрузки", get("Тип отгрузки")],
-        ["Толщина металла полотна", get("Толщина металла полотна")],
+        ...naryadFieldsList.map(f => [f, get(f)]),
         ["Толщина стены, мм", get("Толщина стены, мм")],
         ["Примечание", get("Примечание")]
     ].filter(r => r[1] !== "");
 
     // Строки параметров — чередуем важные (выделяем)
-    const highlightFields = new Set(["Петли","Ручка","Замок","Антипаника","Цвет"]);
+    const highlightFields = new Set(["Петли","Ручка","Замок","Антипаника"]);
     const paramHtml = paramRows.map(([label, val]) => {
         const isEmpty = !val || val === '—' || val === '-';
         const isHL = highlightFields.has(label);
@@ -5214,7 +5683,7 @@ window.printProductionSheet = function(rowIdx) {
 
     // SVG-визуализация двери для наряда
     const porchVal  = get('Порог');
-    const glazVal   = get('Остекление');
+    const glazVal   = get('Вид полотна'); // данные остекления берём из «Вид полотна» (отдельного столбца «Остекление» в doors2 нет
     const closerVal = get('Доводчик');
     const nalichVal = get('Наличник');
     const ventFromField  = glazVal.toLowerCase().includes('вент');
@@ -5377,7 +5846,7 @@ html, body { height: auto !important; overflow: visible !important; }
     <div class="nr-params-hdr">Параметры двери</div>
     <table class="nr-params-table">
       ${paramHtml}
-      ${get("Цвет") ? `<tr><td>Цвет RAL</td><td>${escapeHtml(get("Цвет"))}</td></tr>` : ''}
+      ${colorSummary ? `<tr><td>Цвет RAL</td><td>${escapeHtml(colorSummary)}</td></tr>` : ''}
     </table>
   </div>
 </div>
@@ -5406,7 +5875,7 @@ ${door.note ? `<div class="nr-note"><div class="lbl">Примечание</div><
 <!-- ══ ЛИНИЯ ОТРЕЗА ══ -->
 <div class="nr-cut">
   <div class="nr-cut-line"></div>
-  <span>✂ &nbsp; отрывной корешок</span>
+  <span><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>&nbsp;отрывной корешок</span>
   <div class="nr-cut-line"></div>
 </div>
 
@@ -5419,7 +5888,7 @@ ${door.note ? `<div class="nr-note"><div class="lbl">Примечание</div><
   <div class="nr-stub-grid">
     <div class="nr-stub-cell"><div class="lbl">Открывание</div><div class="val">${escapeHtml(door.openingFull || door.opening)}</div></div>
     <div class="nr-stub-cell"><div class="lbl">Зав. номер</div><div class="val">${escapeHtml(get("Заводской номер") || door.prodNum)}</div></div>
-    <div class="nr-stub-cell"><div class="lbl">Цвет RAL</div><div class="val">${escapeHtml(get("Цвет") || '—')}</div></div>
+    <div class="nr-stub-cell"><div class="lbl">Цвет RAL</div><div class="val">${escapeHtml(colorSummary || '—')}</div></div>
     <div class="nr-stub-cell"><div class="lbl">Маркировка</div><div class="val" style="font-size:9pt;">${escapeHtml(door.naimenovanie)}</div></div>
     <div class="nr-stub-cell"><div class="lbl">В</div><div class="val">${door.height}</div></div>
     <div class="nr-stub-cell"><div class="lbl">Ш</div><div class="val">${door.width}</div></div>
