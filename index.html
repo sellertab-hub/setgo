@@ -1269,6 +1269,18 @@
                 </div>
             </div>
         </div>
+
+        <!-- ПОПАП НЕСОХРАНЁННЫЕ ИЗМЕНЕНИЯ — должен быть внутри #configOverlay (position:absolute относительно него), иначе он оказывается внутри другого скрытого оверлея и никогда не виден -->
+        <div id="unsavedModal" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,0.45);z-index:200;align-items:center;justify-content:center;">
+            <div class="um-box">
+                <div class="um-title">Есть несохранённые изменения</div>
+                <div class="um-text">Вы внесли изменения в заказ, но не сохранили его. Что хотите сделать?</div>
+                <div class="um-btns">
+                    <button id="umLeaveBtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Выйти без сохранения</button>
+                    <button id="umSaveBtn" style="background:#16a34a;color:#fff;border-color:#16a34a;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Сохранить</button>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -1293,18 +1305,6 @@
                 <div class="form-group"><label>ЛОГИН ПОЛЬЗОВАТЕЛЯ</label><input type="text" id="newClient_ownerLogin" disabled></div>
             </div>
             <button id="saveClientBtn" class="btn-save" style="width:100%; padding:14px; margin-top:20px;">СОХРАНИТЬ КЛИЕНТА</button>
-        </div>
-    </div>
-
-    <!-- ПОПАП НЕСОХРАНЁННЫЕ ИЗМЕНЕНИЯ — внутри overlay, position:absolute -->
-    <div id="unsavedModal" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,0.45);z-index:200;align-items:center;justify-content:center;">
-        <div class="um-box">
-            <div class="um-title">Есть несохранённые изменения</div>
-            <div class="um-text">Вы внесли изменения в заказ, но не сохранили его. Что хотите сделать?</div>
-            <div class="um-btns">
-                <button id="umLeaveBtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Выйти без сохранения</button>
-                <button id="umSaveBtn" style="background:#16a34a;color:#fff;border-color:#16a34a;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Сохранить</button>
-            </div>
         </div>
     </div>
 </div>
@@ -2909,25 +2909,31 @@ function renderConfigForm() {
     html += `<div class="form-group"><label>ТОЛЩИНА СТЕНЫ, ММ</label><input type="number" id="wallThick" value="0"></div>`;
     html += `<div class="form-group"><label>КОЛИЧЕСТВО</label><input type="number" id="quantity" value="1" min="1"></div>`;
 
-    // Цвет: общий сворачиваемый блок, раскрывается в 4 отдельных RAL-поля
+    // Цвет: общее поле всегда видно (заполняет все части сразу).
+    // Раскрывающийся блок ниже — для случаев, когда части нужно указать по-разному;
+    // заполненное под-поле имеет приоритет над общим значением для этой конкретной части.
     html += `
-    <details class="details-summary" id="colorBlock" style="margin-top:15px;text-align:left;">
-        <summary style="text-align:center;">цвет</summary>
+    <div class="form-group" style="margin-top:15px;">
+        <label>цвет (RAL)</label>
+        <input type="text" id="cfg_color_general" placeholder="напр. RAL 8017 — применится ко всем частям">
+    </div>
+    <details class="details-summary" id="colorBlock" style="text-align:left;">
+        <summary style="text-align:center;">указать цвета по отдельности</summary>
         <div class="form-group">
             <label>цвет короба снаружи (RAL)</label>
-            <input type="text" id="cfg_color_korob_out" placeholder="напр. RAL 9016">
+            <input type="text" id="cfg_color_korob_out" placeholder="по умолчанию — общий цвет">
         </div>
         <div class="form-group">
             <label>цвет короба внутри (RAL)</label>
-            <input type="text" id="cfg_color_korob_in" placeholder="напр. RAL 9016">
+            <input type="text" id="cfg_color_korob_in" placeholder="по умолчанию — общий цвет">
         </div>
         <div class="form-group">
             <label>цвет полотна снаружи (RAL)</label>
-            <input type="text" id="cfg_color_polotno_out" placeholder="напр. RAL 8017">
+            <input type="text" id="cfg_color_polotno_out" placeholder="по умолчанию — общий цвет">
         </div>
         <div class="form-group">
             <label>цвет полотна внутри (RAL)</label>
-            <input type="text" id="cfg_color_polotno_in" placeholder="напр. RAL 8017">
+            <input type="text" id="cfg_color_polotno_in" placeholder="по умолчанию — общий цвет">
         </div>
     </details>`;
 
@@ -3031,6 +3037,15 @@ function loadDoorIntoConfigurator(doorIdx) {
         const el = document.getElementById(id);
         if (el) el.value = door[colorMap[id]] || '';
     });
+    // Восстанавливаем общее поле цвета: если все заполненные значения одинаковы — показываем
+    // это значение в общем поле (и сворачиваем детальный блок); если значения различаются —
+    // общее поле оставляем пустым, деталь по частям видна при раскрытии блока.
+    const colorGeneralEl = document.getElementById('cfg_color_general');
+    if (colorGeneralEl) {
+        const colorVals = Object.values(colorMap).map(label => (door[label] || '').trim()).filter(v => v !== '');
+        const allSame = colorVals.length > 0 && colorVals.every(v => v === colorVals[0]);
+        colorGeneralEl.value = allSame ? colorVals[0] : '';
+    }
 
     // Устанавливаем визуальные флаги
     const visG = document.getElementById('visGlazing');
@@ -3254,10 +3269,19 @@ document.getElementById("addDoorBtn").addEventListener("click", () => {
         cfg_color_polotno_out:  'Цвет полотна снаружи',
         cfg_color_polotno_in:   'Цвет полотна внутри'
     };
+    const colorGeneralVal = (document.getElementById('cfg_color_general')?.value || '').trim();
+    const colorBlockEl = document.getElementById('colorBlock');
+    const colorBlockExpanded = !!(colorBlockEl && colorBlockEl.open);
     Object.keys(colorFieldMap).forEach(id => {
         const el = document.getElementById(id);
-        if (el && el.value && el.value.trim() !== '') {
-            cfg[colorFieldMap[id]] = el.value.trim();
+        const specificVal = el ? el.value.trim() : '';
+        // Если блок «указать цвета по отдельности» НЕ раскрыт — пользователь работает только
+        // с общим полем, и оно должно иметь приоритет, даже если в скрытых подполях
+        // осталось старое значение (например, при редактировании ранее сохранённой двери).
+        // Если блок раскрыт — считаем, что пользователь осознанно задаёт значения по отдельности.
+        const finalColorVal = colorBlockExpanded ? (specificVal || colorGeneralVal) : (colorGeneralVal || specificVal);
+        if (finalColorVal) {
+            cfg[colorFieldMap[id]] = finalColorVal;
         }
     });
 
@@ -3496,18 +3520,27 @@ function makeCellEditable(td, doorIdx, colName) {
 }
 
 // ===== COLUMN MANAGER =====
+// Столбцы которые никогда не скрываются автоматически — всегда видны и есть чип для них
+const NEVER_AUTO_HIDE_COLS = new Set(['requestNumber', 'doorKey', 'naimenovanie', 'Высота', 'Ширина', 'Кол-во', ...CORE_FIELDS]);
+
+// Считает столбцы, у которых во всех текущих дверях значение пустое/«—» — такие столбцы
+// не показываем ни в чипах менеджера, ни в самой таблице (иначе получается пустая колонка,
+// которую нечем скрыть — например «Сертификат»/«Стб» для дверей, где они не заполнены).
+function computeAutoEmptyColumns(allColumns) {
+    const autoEmpty = new Set();
+    allColumns.forEach(col => {
+        if (NEVER_AUTO_HIDE_COLS.has(col)) return;
+        const allEmpty = currentDoors.every(d => !d[col] || d[col] === '—' || d[col] === '');
+        if (allEmpty) autoEmpty.add(col);
+    });
+    return autoEmpty;
+}
+
 function renderColManager(allColumns) {
     const mgr = document.getElementById('colManager');
     if (!mgr) return;
 
-    // Столбцы которые никогда не скрываются автоматически — всегда в чипах
-    const neverAutoHide = new Set(['requestNumber', 'doorKey', 'naimenovanie', 'Высота', 'Ширина', 'Кол-во', ...CORE_FIELDS]);
-    const autoEmpty = new Set();
-    allColumns.forEach(col => {
-        if (neverAutoHide.has(col)) return;
-        const allEmpty = currentDoors.every(d => !d[col] || d[col] === '—' || d[col] === '');
-        if (allEmpty) autoEmpty.add(col);
-    });
+    const autoEmpty = computeAutoEmptyColumns(allColumns);
 
 
     // Строим чипы через DOM (не innerHTML — чтобы навесить live-обработчики)
@@ -3701,12 +3734,21 @@ function renderRightTable() {
 
     renderColManager(allColumns);
 
+    // Столбцы, во всех дверях заказа полностью пустые (например «Сертификат»/«СТБ» для типов
+    // без сертификации), не рисуем в таблице совсем — согласовано с менеджером столбцов,
+    // где для них тоже не показывается чип: иначе колонка остаётся висеть пустой без способа её скрыть.
+    const autoEmptyCols = computeAutoEmptyColumns(allColumns);
+
     // Используем columnOrder для порядка столбцов в таблице
     const orderedAll = columnOrder.length > 0
         ? columnOrder.filter(c => allColumns.includes(c))
         : allColumns;
-    // Filter visible columns
-    const visibleColumns = orderedAll.filter(col => !hiddenColumns.has(col));
+    // Filter visible columns: скрытые вручную + автоматически скрытые как пустые (если не добавлены вручную)
+    const visibleColumns = orderedAll.filter(col => {
+        if (hiddenColumns.has(col)) return false;
+        if (autoEmptyCols.has(col) && !usedExtraFields.has(col) && !customUserColumns.includes(col)) return false;
+        return true;
+    });
 
     let headerHtml = `<tr><th>ДЕЙСТВИЯ</th>`;
     for (let col of visibleColumns) {
