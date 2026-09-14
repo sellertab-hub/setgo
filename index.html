@@ -2888,6 +2888,18 @@ function renderConfigForm() {
         </div>
     </div>`;
 
+    // Ширина створки — только для двупольных дверей (перенос из VBA: сШиринаСтворки).
+    // Минимальный подход: отдельного переключателя "равнопольная/неравнопольная" нет —
+    // пустое поле = равнопольная дверь (створки поровну), заполненное = неравнопольная
+    // (конкретная ширина основной створки). 825мм показан только как подсказка (плейсхолдер),
+    // как значение по умолчанию в VBA, но не проставляется как фактическое значение поля.
+    if (initLeaf === 'двуп') {
+        html += `<div class="form-group">
+            <label>ШИРИНА СТВОРКИ, ММ</label>
+            <input type="number" id="cfg_leafWidth" placeholder="напр. 825 (пусто = равнопольная)">
+        </div>`;
+    }
+
     html += `
     <div class="form-group">
         <label style="margin-bottom:6px;display:block;">РАЗМЕРЫ УКАЗАНЫ</label>
@@ -3046,6 +3058,11 @@ function loadDoorIntoConfigurator(doorIdx) {
     if (posEl)   posEl.value   = door.doorPosition || '';
     if (floorEl) floorEl.value = door.floor || '';
     if (roomEl)  roomEl.value  = door.room || '';
+
+    // Ширина створки (только для двупольных дверей — поле существует в DOM, только если
+    // renderConfigForm() определил initLeaf === 'двуп' для этого типа двери).
+    const leafWidthEl = document.getElementById('cfg_leafWidth');
+    if (leafWidthEl) leafWidthEl.value = door.leafWidth || '';
 
     // Устанавливаем значения полей doors2 (и в основной форме, и в "Доп. параметрах" — независимо
     // от того, куда конкретное поле попало при текущей раскладке флагов).
@@ -3334,6 +3351,7 @@ document.getElementById("addDoorBtn").addEventListener("click", () => {
         doorPosition: (document.getElementById("cfg_doorPosition")?.value || '').trim(),
         floor: (document.getElementById("cfg_Floor")?.value || '').trim(),
         room: (document.getElementById("cfg_Room")?.value || '').trim(),
+        leafWidth: (document.getElementById("cfg_leafWidth")?.value || '').trim(),
     };
 
     // Собираем значения doors2-полей независимо от того, в каком блоке форма их отрисовала
