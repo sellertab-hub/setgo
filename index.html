@@ -1449,10 +1449,14 @@ const API_URL = "https://script.google.com/macros/s/AKfycbwi53HhkSBfPwvENZDvqCmI
 // "Цвет" и "Остекление" убраны отсюда: в doors2 таких столбцов нет (данные по остеклению уже
 // содержатся в "Вид полотна"), поле "Цвет" реализовано отдельным collapsible-блоком с 4 RAL-полями.
 const CORE_FIELDS = ["Коробка", "Открывание", "Металл", "Порог", "Цилиндр", "Доводчик"];
+// П13 (гэп-анализ VBA, 10.09): Отбойник/Замок/Ручка/Антипаника/СКУД убраны отсюда — сверка всех 9
+// форм оригинального макроса + референс-скриншота показала, что реальных элементов управления для
+// этих полей на форме нет (только мёртвые обработчики _Click в VesModul-2.txt от старой версии
+// интерфейса). Подтверждено пользователем: в новую панель не включать.
 const ALL_POSSIBLE_FIELDS = [
     "Базовая цена", "Столбец 7", "Толщина металла полотна", "Упаковка", "Производство",
     "Наличник", "Наличник портала", "Фрамуга", "Заполнение", "Пакет в основную створку",
-    "Тип пакета", "Отбойник", "Замок", "Ручка", "Антипаника", "СКУД", "Петли",
+    "Тип пакета", "Петли",
     "Вент решетка", "Вент решетка 2 точка привязки", "Тип отгрузки"
 ];
 // Полный список полей doors2, участвующих в динамической видимости конфигуратора
@@ -2846,6 +2850,24 @@ function renderConfigForm() {
     });
     html += `</select></div>`;
 
+    // П13: Позиция / Этаж / Помещение — точно как в исходной панели макроса (сПозиция, сЭтаж,
+    // cПомещение). Хранятся в самом объекте двери (doorPosition/floor/room), бэкенд не требует
+    // изменений схемы — двери сериализуются целиком в DoorsJSON.
+    html += `<div class="form-group" style="display:flex;gap:8px;">
+        <div style="flex:1;">
+            <label>ПОЗИЦИЯ</label>
+            <input type="text" id="cfg_doorPosition" placeholder="№">
+        </div>
+        <div style="flex:1;">
+            <label>ЭТАЖ</label>
+            <input type="text" id="cfg_Floor" placeholder="этаж">
+        </div>
+        <div style="flex:1.4;">
+            <label>ПОМЕЩЕНИЕ</label>
+            <input type="text" id="cfg_Room" placeholder="помещение">
+        </div>
+    </div>`;
+
     html += `<div class="form-group">
         <label>КОЛИЧЕСТВО СТВОРОК</label>
         <div class="leaf-toggle" id="leafToggle">
@@ -2985,6 +3007,8 @@ function renderConfigForm() {
             applyNalichnikRule();
         }
     });
+    // П14: Заполнение ↔ Пакет в основную створку/Тип пакета — взаимоисключение
+    document.getElementById('configForm').addEventListener('change', applyZapolnenieOsteklenieRule);
 
     updateSizeLabels();
     renderDoorSvg();
@@ -3014,6 +3038,14 @@ function loadDoorIntoConfigurator(doorIdx) {
     const qtyEl  = document.getElementById('quantity');
     if (wallEl) wallEl.value = door['Толщина стены, мм'] || 0;
     if (qtyEl)  qtyEl.value  = door['Кол-во'] || 1;
+
+    // П13: Позиция / Этаж / Помещение
+    const posEl   = document.getElementById('cfg_doorPosition');
+    const floorEl = document.getElementById('cfg_Floor');
+    const roomEl  = document.getElementById('cfg_Room');
+    if (posEl)   posEl.value   = door.doorPosition || '';
+    if (floorEl) floorEl.value = door.floor || '';
+    if (roomEl)  roomEl.value  = door.room || '';
 
     // Устанавливаем значения полей doors2 (и в основной форме, и в "Доп. параметрах" — независимо
     // от того, куда конкретное поле попало при текущей раскладке флагов).
@@ -3131,6 +3163,9 @@ function renderExtraParams() {
 
     document.getElementById('extraParamsContainer').addEventListener('change', renderDoorSvg);
     document.getElementById('extraParamsContainer').addEventListener('input', renderDoorSvg);
+    // П14: Заполнение ↔ Пакет в основную створку/Тип пакета — взаимоисключение (поля могут
+    // оказаться в "Доп. параметрах" в зависимости от флагов doors2)
+    document.getElementById('extraParamsContainer').addEventListener('change', applyZapolnenieOsteklenieRule);
 
     applyNalichnikRule(); // П12: актуализируем запрет сразу после перестройки списка Наличник
     renderDoorSvg();
@@ -3178,6 +3213,57 @@ function validateSizeField(el) {
     const ok = isHeight ? (val >= lim.hMin && val <= lim.hMax) : (val >= lim.wMin && val <= lim.wMax);
     el.style.borderColor = ok ? '' : '#dc2626';
     el.style.background = ok ? '' : '#fef2f2';
+}
+
+// П14 (Этап 2, гэп-анализ VBA VesModul-2.txt строки 561-935: сГлухоеПолотно_Click /
+// сОстекленноеПолотно_Click): «Заполнение» (утеплитель глухого полотна) и «Пакет в основную
+// створку»/«Тип пакета» (остекление) физически взаимоисключающие — полотно либо глухое
+// (с заполнением), либо остеклённое (с пакетом), но не оба сразу. В отличие от VBA-оригинала
+// (где это управлялось явным переключателем ВидПолотна, которого нет в веб-панели — Решение №2:
+// не хардкодим скрытые enum'ы), правило реализовано обобщённо: заполнение одного поля из пары
+// очищает поля другой, независимо от конкретных текстов вариантов (динамика из таблицы сохранена).
+function getFieldInput(fieldName) {
+    const safeId = fieldName.replace(/\s+/g, '_');
+    return document.getElementById('cfg_' + safeId) || document.getElementById('extra_' + safeId);
+}
+
+function clearFieldIfSet(fieldName) {
+    const el = getFieldInput(fieldName);
+    if (el && el.value && el.value !== '—') {
+        el.value = '';
+    }
+}
+
+function applyZapolnenieOsteklenieRule(e) {
+    if (!e || !e.target || !e.target.classList || !e.target.classList.contains('combo-input')) return;
+    const id = e.target.id;
+    const isZapolnenie = id === 'cfg_Заполнение' || id === 'extra_Заполнение';
+    const isPaket = id === 'cfg_Пакет_в_основную_створку' || id === 'extra_Пакет_в_основную_створку' ||
+                    id === 'cfg_Тип_пакета' || id === 'extra_Тип_пакета';
+    if (!isZapolnenie && !isPaket) return;
+
+    const val = (e.target.value || '').trim();
+    if (!val || val === '—') return; // очистка поля пользователем не должна ничего затирать
+
+    if (isZapolnenie) {
+        const hadPaket = (getFieldInput('Пакет в основную створку')?.value || '') !== '' &&
+                          (getFieldInput('Пакет в основную створку')?.value || '') !== '—';
+        const hadTip = (getFieldInput('Тип пакета')?.value || '') !== '' &&
+                        (getFieldInput('Тип пакета')?.value || '') !== '—';
+        clearFieldIfSet('Пакет в основную створку');
+        clearFieldIfSet('Тип пакета');
+        if (hadPaket || hadTip) {
+            showToast('«Пакет в основную створку» и «Тип пакета» сброшены — полотно с заполнением не может быть остеклённым', false);
+        }
+    } else {
+        const hadZap = (getFieldInput('Заполнение')?.value || '') !== '' &&
+                        (getFieldInput('Заполнение')?.value || '') !== '—';
+        clearFieldIfSet('Заполнение');
+        if (hadZap) {
+            showToast('«Заполнение» сброшено — остеклённое полотно не может иметь заполнение', false);
+        }
+    }
+    renderDoorSvg();
 }
 
 // П12: «без наличника» недоступно при угловой коробке (VBA: If .Типкоробки < 2 Then сбезНаличника.Enabled=True Else Enabled=False)
@@ -3245,6 +3331,9 @@ document.getElementById("addDoorBtn").addEventListener("click", () => {
         _fromProem: fromProem,
         "Толщина стены, мм": parseInt(document.getElementById("wallThick").value) || 0,
         "Кол-во": parseInt(document.getElementById("quantity").value) || 1,
+        doorPosition: (document.getElementById("cfg_doorPosition")?.value || '').trim(),
+        floor: (document.getElementById("cfg_Floor")?.value || '').trim(),
+        room: (document.getElementById("cfg_Room")?.value || '').trim(),
     };
 
     // Собираем значения doors2-полей независимо от того, в каком блоке форма их отрисовала
@@ -3332,7 +3421,9 @@ document.getElementById("addDoorBtn").addEventListener("click", () => {
             ...cfg,
             id: existing.id,
             requestNumber: existing.requestNumber,
-            doorPosition: existing.doorPosition,
+            // П13: Позиция теперь редактируется прямо в панели (cfg.doorPosition) — берём её оттуда,
+            // а не старое значение, чтобы изменения сохранялись.
+            doorPosition: cfg.doorPosition || existing.doorPosition,
             _manualName: existing._manualName,
         };
         if (existing._manualName) {
