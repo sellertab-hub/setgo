@@ -519,6 +519,25 @@
         .size-mode-toggle button.active { background:#1e6db5; color:#fff; }
         .size-mode-toggle button:first-child { border-right:1px solid #cbd5e0; }
 
+        /* ===== VBA-СТИЛЬ: переключатели-кнопки (точная копия визуала оригинального Excel-макроса) ===== */
+        .vba-field-row { margin-bottom: 11px; }
+        .vba-field-row > label { font-weight:700; display:block; margin-bottom:6px; font-size:0.85rem; letter-spacing:.02em; color:#374151; }
+        .vba-toggle-group { display:flex; flex-wrap:wrap; gap:0; border-radius:4px; overflow:hidden; width:fit-content; box-shadow:0 0 0 1px #c7c7c7; }
+        .vba-btn { background:#ededed; border:none; border-right:1px solid #c7c7c7; color:#333333; font-size:11.5px; font-family:Play,sans-serif; font-weight:600; padding:6px 12px; cursor:pointer; white-space:nowrap; transition:background .1s; }
+        .vba-btn:last-child { border-right:none; }
+        .vba-btn:hover { background:#e2e2f5; }
+        .vba-btn.active { background:#c9c8f5; color:#2626b8; box-shadow:inset 0 0 0 1px #8f8ee0; position:relative; z-index:1; }
+        .vba-select { background:#fff; border:1px solid #c7c7c7; border-radius:4px; color:#333; font-size:11.5px; font-family:Play,sans-serif; padding:6px 10px; cursor:pointer; min-width:160px; }
+        .vba-inline-row { display:flex; align-items:flex-end; gap:10px; flex-wrap:wrap; }
+        .vba-mm-input { width:64px; padding:5px 8px; border:1px solid #b0b0b0; border-radius:3px; font-size:11.5px; font-family:Play,sans-serif; text-align:center; }
+        .vba-mm-suffix { font-size:11px; color:#6b7280; margin-left:4px; }
+        .vba-radio-row { display:flex; align-items:center; gap:20px; }
+        .vba-radio-opt { display:flex; align-items:center; gap:6px; font-size:0.85rem; font-weight:600; color:#374151; cursor:pointer; }
+        .vba-radio-opt input[type=radio] { width:15px; height:15px; accent-color:#1e6db5; cursor:pointer; margin:0; }
+        .vba-ral-row { display:flex; align-items:center; gap:10px; }
+        .vba-ral-row label { font-weight:700; font-size:0.85rem; color:#374151; margin:0; }
+        .vba-ral-input { width:78px; padding:6px 8px; border:1px solid #c7c7c7; border-radius:4px; font-size:0.85rem; font-family:Play,sans-serif; text-align:center; }
+
         .door-actions button {
             background: none;
             border: none;
@@ -1252,7 +1271,7 @@
                         <button id="saveOrderBtn" class="btn-save"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> СОХРАНИТЬ</button>
                     </div>
                 </div>
-                <div class="col-manager" id="colManager"></div>
+                <div class="col-manager" id="colManager" style="display:none;"></div>
                 <div class="table-wrapper">
                     <table class="doors-table">
                         <thead id="tableHeader"></thead>
@@ -2711,6 +2730,53 @@ function makeCombo(id, options, currentVal) {
     </div>`;
 }
 
+// ===== VBA-СТИЛЬ ПЕРЕКЛЮЧАТЕЛЬ (кнопочная группа, визуальная копия оригинального макроса) =====
+// Совместимость по контракту с makeCombo(): создаёт СКРЫТЫЙ <input id="${id}"> с value,
+// который получают/слушают весь существующий код (getCfgValue, cfg[f]=coreEl.value,
+// e.target.closest('#cfg_Коробка') и т.д.) — визуально же вместо текстового поля рисуется
+// ряд кнопок. Клик по кнопке переставляет value скрытого инпута и диспатчит bubbling 'change'
+// НА САМОМ ИНПУТЕ — событие всплывает от инпута через его реальных родителей в DOM ровно так
+// же, как делает makeCombo при выборе .combo-option, поэтому все привязанные выше по дереву
+// делегированные слушатели ('#configForm'.addEventListener('change', ...)) продолжают работать.
+// Если опций много (>6) — вместо кнопок используем компактный нативный <select> (тоже сохраняя id).
+function makeToggleGroup(id, options, currentVal) {
+    const safeVal = currentVal !== undefined && currentVal !== null && currentVal !== '' ? String(currentVal) : (options.length > 0 ? options[0] : '');
+    if (options.length > 6) {
+        const optHtml = options.map(o => `<option value="${escapeAttr(o)}" ${o === safeVal ? 'selected' : ''}>${escapeHtml(o)}</option>`).join('');
+        return `<select class="vba-select" id="${id}">${optHtml}</select>`;
+    }
+    let html = `<input type="hidden" id="${id}" value="${escapeAttr(safeVal)}">`;
+    html += `<div class="vba-toggle-group" data-target="${id}">`;
+    options.forEach(o => {
+        html += `<button type="button" class="vba-btn${o === safeVal ? ' active' : ''}" data-val="${escapeAttr(o)}">${escapeHtml(o)}</button>`;
+    });
+    html += `</div>`;
+    return html;
+}
+
+// После программной установки .value скрытого input'а (например при загрузке двери на
+// редактирование) — визуальная кнопочная группа сама по себе не подсвечивает активную кнопку,
+// т.к. это не нативный элемент формы. Эта функция синхронизирует подсветку с текущим value.
+function syncToggleGroupUI(id) {
+    const input = document.getElementById(id);
+    if (!input) return;
+    const group = document.querySelector('.vba-toggle-group[data-target="' + id + '"]');
+    if (!group) return;
+    group.querySelectorAll('.vba-btn').forEach(b => b.classList.toggle('active', b.dataset.val === input.value));
+}
+
+document.addEventListener('click', function(e) {
+    const btn = e.target.closest('.vba-toggle-group .vba-btn');
+    if (!btn) return;
+    const group = btn.closest('.vba-toggle-group');
+    const input = document.getElementById(group.dataset.target);
+    if (!input) return;
+    group.querySelectorAll('.vba-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    input.value = btn.dataset.val;
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+});
+
 // ===== COMBO HELPERS =====
 function openComboDropdown(input) {
     let dd = document.getElementById(input.id + '_dd');
@@ -2901,11 +2967,11 @@ function renderConfigForm() {
     }
 
     html += `
-    <div class="form-group">
-        <label style="margin-bottom:6px;display:block;">РАЗМЕРЫ УКАЗАНЫ</label>
-        <div class="size-mode-toggle">
-            <button id="modeKorobBtn" class="active" onclick="setSizeMode('korobka')">По коробу</button>
-            <button id="modeProemBtn" onclick="setSizeMode('proem')">По проёму</button>
+    <div class="vba-field-row">
+        <label>РАЗМЕРЫ</label>
+        <div class="vba-radio-row">
+            <label class="vba-radio-opt"><input type="radio" name="sizeModeRadio" id="modeProemBtn" onclick="setSizeMode('proem')"> по проёму</label>
+            <label class="vba-radio-opt"><input type="radio" name="sizeModeRadio" id="modeKorobBtn" checked onclick="setSizeMode('korobka')"> по коробке</label>
         </div>
     </div>`;
     html += `<div class="form-group"><label id="lblHeight">ВЫСОТА (${type.heightMin}–${type.heightMax})</label><input type="number" id="cfg_Высота" value="${type.heightMin}" oninput="renderDoorSvg(); validateSizeField(this);"></div>`;
@@ -2916,19 +2982,47 @@ function renderConfigForm() {
     // "Дополнительные параметры" (renderExtraParams). Если флаги ещё не загружены (пустой Set),
     // показываем все CORE_FIELDS как раньше (безопасный fallback).
     const useFlags = doorsDefaultFields.size > 0;
-    for (let f of DOORS2_TOGGLE_FIELDS) {
-        const isDefault = useFlags ? doorsDefaultFields.has(f) : CORE_FIELDS.includes(f);
-        if (!isDefault) continue;
+    // VBA-порядок отображения полей на левой панели (скриншот "3582-05_Агромашресурс"):
+    // Коробка → Наличник → Порог → Открывание → Металл → Доводчик → Цилиндр(Сердцевина) → Производство.
+    // Не изменяет сам CORE_FIELDS (используется в других местах — логика колонок таблицы и т.д.),
+    // только порядок вывода в этой конкретной форме.
+    const FIELD_DISPLAY_PRIORITY = ["Коробка", "Наличник", "Порог", "Открывание", "Металл", "Доводчик", "Цилиндр", "Производство"];
+    const FIELD_DISPLAY_LABELS = { "Цилиндр": "СЕРДЦЕВИНА" };
+    const defaultFieldsSet = new Set(DOORS2_TOGGLE_FIELDS.filter(f => useFlags ? doorsDefaultFields.has(f) : CORE_FIELDS.includes(f)));
+    const orderedFields = [
+        ...FIELD_DISPLAY_PRIORITY.filter(f => defaultFieldsSet.has(f)),
+        ...DOORS2_TOGGLE_FIELDS.filter(f => defaultFieldsSet.has(f) && !FIELD_DISPLAY_PRIORITY.includes(f))
+    ];
+    for (let f of orderedFields) {
         let opts = type.options[f] !== undefined ? type.options[f] : type.extraOptions[f];
         const safeId = 'cfg_' + f.replace(/\s+/g, '_');
+        const label = FIELD_DISPLAY_LABELS[f] || f.toUpperCase();
+        // Только подтверждённые VBA-переключатели-кнопки (всегда имеют активный вариант, как физические
+        // option-button в оригинале) получают дефолт-выбор первого значения. Любое другое поле,
+        // случайно попавшее в default через флаг doors2 (напр. Фрамуга/Заполнение), сохраняет
+        // старое поведение makeCombo — по умолчанию ничего не выбрано ('—'), чтобы не сломать
+        // зависящую логику (П3/П14 и т.д.), которая проверяет отсутствие выбора через '—'.
+        const isPhysicalToggle = FIELD_DISPLAY_PRIORITY.includes(f);
         if (opts && opts.length) {
-            html += `<div class="form-group"><label>${f.toUpperCase()}</label>`;
-            html += makeCombo(safeId, ['—', ...opts], '—');
+            html += `<div class="vba-field-row"><label>${label}</label>`;
+            html += isPhysicalToggle ? makeToggleGroup(safeId, opts, opts[0]) : makeToggleGroup(safeId, ['—', ...opts], '—');
             html += `</div>`;
         } else {
-            html += `<div class="form-group hidden-field"><label>${f.toUpperCase()}</label>`;
-            html += makeCombo(safeId, ['—'], '—');
+            html += `<div class="vba-field-row hidden-field"><label>${label}</label>`;
+            html += makeToggleGroup(safeId, ['—'], '—');
             html += `</div>`;
+        }
+
+        // После Цилиндра (Сердцевина) вставляем новое поле "Портал" — точно как в скриншоте.
+        // Жёстко зашито (не связано с doors2/doors2-синхроном) — по разрешению пользователя.
+        if (f === "Цилиндр") {
+            html += `<div class="vba-field-row">
+                <label>ПОРТАЛ</label>
+                <div class="vba-inline-row">
+                    ${makeToggleGroup('cfg_portal', ['нет', 'есть', 'подготовка'], 'нет')}
+                    <span><input type="number" class="vba-mm-input" id="cfg_portalThickness" placeholder="0"><span class="vba-mm-suffix">мм</span></span>
+                </div>
+            </div>`;
         }
     }
 
@@ -2947,9 +3041,11 @@ function renderConfigForm() {
     // Раскрывающийся блок ниже — для случаев, когда части нужно указать по-разному;
     // заполненное под-поле имеет приоритет над общим значением для этой конкретной части.
     html += `
-    <div class="form-group" style="margin-top:15px;">
-        <label>цвет (RAL)</label>
-        <input type="text" id="cfg_color_general" placeholder="напр. RAL 8017 — применится ко всем частям">
+    <div class="vba-field-row" style="margin-top:15px;">
+        <div class="vba-ral-row">
+            <label>RAL</label>
+            <input type="text" class="vba-ral-input" id="cfg_color_general" placeholder="7024">
+        </div>
     </div>
     <details class="details-summary" id="colorBlock" style="text-align:left;">
         <summary style="text-align:center;">указать цвета по отдельности</summary>
@@ -3071,9 +3167,15 @@ function loadDoorIntoConfigurator(doorIdx) {
         const safeIdExtra = 'extra_' + f.replace(/\s+/g, '_');
         const elCore  = document.getElementById(safeIdCore);
         const elExtra = document.getElementById(safeIdExtra);
-        if (elCore)  elCore.value  = door[f] || '—';
+        if (elCore)  { elCore.value  = door[f] || '—'; syncToggleGroupUI(safeIdCore); }
         if (elExtra) elExtra.value = door[f] || '';
     }
+
+    // Портал (жёстко зашитое поле, не входит в DOORS2_TOGGLE_FIELDS)
+    const portalEl = document.getElementById('cfg_portal');
+    if (portalEl) { portalEl.value = door.portalState || 'нет'; syncToggleGroupUI('cfg_portal'); }
+    const portalThickEl = document.getElementById('cfg_portalThickness');
+    if (portalThickEl) portalThickEl.value = door.portalThickness || '';
 
     // Восстанавливаем поля цвета (4 отдельных RAL-подполя)
     const colorMap = {
@@ -3199,11 +3301,9 @@ window.setSizeMode = function(mode) {
     const korobBtn = document.getElementById('modeKorobBtn');
     const proemBtn = document.getElementById('modeProemBtn');
     if (!korobBtn || !proemBtn) return;
-    if (mode === 'korobka') {
-        korobBtn.classList.add('active');    proemBtn.classList.remove('active');
-    } else {
-        proemBtn.classList.add('active');    korobBtn.classList.remove('active');
-    }
+    // С версии VBA-радиокнорок (native radio) активность управляется .checked, а не .classList.
+    korobBtn.checked = (mode === 'korobka');
+    proemBtn.checked = (mode === 'proem');
     updateSizeLabels();
 };
 
@@ -3287,30 +3387,49 @@ function applyZapolnenieOsteklenieRule(e) {
 function applyNalichnikRule() {
     const korobkaType = getCfgValue('Коробка');
     const isUglovaya = /^углов/i.test((korobkaType || '').trim());
+    // Поле Наличник теперь рендерится через makeToggleGroup(): либо скрытый input +
+    // .vba-toggle-group с кнопками .vba-btn (если опций ≤ 6), либо <select class="vba-select"> напрямую
+    // (если опций больше) — старый механизм с combo-dropdown (`_dd`) больше не используется.
     const input = document.getElementById('extra_Наличник') || document.getElementById('cfg_Наличник');
     if (!input) return;
-    const idPrefix = input.id.startsWith('cfg_') ? 'cfg_' : 'extra_';
-    const dd = document.getElementById(idPrefix + 'Наличник_dd');
-    if (!dd) return;
 
-    const beznalOpt = Array.from(dd.querySelectorAll('.combo-option')).find(o => o.dataset.val === 'Без наличника');
-    if (beznalOpt) {
+    if (input.tagName === 'SELECT') {
+        // Вариант <select> (больше 6 вариантов наличника)
+        const opt = Array.from(input.options).find(o => o.value === 'Без наличника');
+        if (opt) {
+            opt.disabled = isUglovaya;
+            opt.title = isUglovaya ? 'Недоступно при угловой коробке' : '';
+        }
+        if (isUglovaya && input.value === 'Без наличника') {
+            input.value = '';
+            showToast('При угловой коробке вариант «без наличника» недоступен — выберите размер наличника', true);
+            renderDoorSvg();
+        }
+        return;
+    }
+
+    // Вариант кнопочной группы (vba-toggle-group)
+    const group = document.querySelector('.vba-toggle-group[data-target="' + input.id + '"]');
+    if (!group) return;
+    const beznalBtn = Array.from(group.querySelectorAll('.vba-btn')).find(b => b.dataset.val === 'Без наличника');
+    if (beznalBtn) {
         if (isUglovaya) {
-            beznalOpt.classList.add('combo-option-disabled');
-            beznalOpt.style.pointerEvents = 'none';
-            beznalOpt.style.opacity = '0.4';
-            beznalOpt.title = 'Недоступно при угловой коробке';
+            beznalBtn.disabled = true;
+            beznalBtn.style.pointerEvents = 'none';
+            beznalBtn.style.opacity = '0.4';
+            beznalBtn.title = 'Недоступно при угловой коробке';
         } else {
-            beznalOpt.classList.remove('combo-option-disabled');
-            beznalOpt.style.pointerEvents = '';
-            beznalOpt.style.opacity = '';
-            beznalOpt.title = '';
+            beznalBtn.disabled = false;
+            beznalBtn.style.pointerEvents = '';
+            beznalBtn.style.opacity = '';
+            beznalBtn.title = '';
         }
     }
 
     // если угловая коробка выбрана, а текущее значение — «без наличника», сбрасываем выбор и предупреждаем
     if (isUglovaya && input.value === 'Без наличника') {
         input.value = '';
+        syncToggleGroupUI(input.id);
         showToast('При угловой коробке вариант «без наличника» недоступен — выберите размер наличника', true);
         renderDoorSvg();
     }
@@ -3352,6 +3471,8 @@ document.getElementById("addDoorBtn").addEventListener("click", () => {
         floor: (document.getElementById("cfg_Floor")?.value || '').trim(),
         room: (document.getElementById("cfg_Room")?.value || '').trim(),
         leafWidth: (document.getElementById("cfg_leafWidth")?.value || '').trim(),
+        portalState: (document.getElementById("cfg_portal")?.value || 'нет').trim(),
+        portalThickness: parseInt(document.getElementById("cfg_portalThickness")?.value) || 0,
     };
 
     // Собираем значения doors2-полей независимо от того, в каком блоке форма их отрисовала
@@ -3833,37 +3954,82 @@ window.addExtraColumn = function(field) {
 
 
 
-// ===== RENDER RIGHT TABLE =====
+// ===== RENDER RIGHT TABLE (VBA-точная таблица «табло», стр. Заказ — фиксированный набор столбцов,
+// без кастомизации пользователем) =====
+//
+// Порядок и состав восстановлены из констант столбцов Табло (Struktura.txt строки 35-38:
+// тНаименование=1..тПроизводство=21) + ведущий столбец «№ п/п». Столбцы с flag
+// reveal:true скрыты по умолчанию (ширина 0 в VesModul-2.txt стр. 2300) и показываются, только
+// если хотя бы у одной двери в текущем заказе есть реальное значение (односторонний рост,
+// как в оригинале — столбец не прятается обратно). Поля «Столбец 7»/«Заводской номер»/
+// «Сертификат»/«Стб» и произвольные колонки пользователя в этой таблице больше не управляются —
+// по решению пользователя экран заказа копирует оригинал «жёстко», без настраиваемых столбцов.
+// Примечание: «Скуд»/«Ручка» в VBA тоже были reveal-колонками, но в этой системе для них
+// нет элементов управления (подтверждено пользователем в гэп-анализе левой панели), так что они
+// исключены из списка столбцов.
+const FIXED_VBA_COLUMNS = [
+    { key: 'requestNumber', label: '№',            reveal: false, align: 'center' },
+    { key: 'naimenovanie',  label: 'Наименование', reveal: false, align: 'left'   },
+    { key: 'Высота',        label: 'Высота',        reveal: false, align: 'center' },
+    { key: 'Ширина',        label: 'Ширина',        reveal: false, align: 'center' },
+    { key: 'Коробка',       label: 'Коробка',       reveal: false, align: 'left'   },
+    { key: 'Фрамуга',       label: 'Фрамуга',       reveal: true,  align: 'left'   },
+    { key: 'Наличник',      label: 'Наличник',      reveal: true,  align: 'left'   },
+    { key: 'Металл',        label: 'Металл',        reveal: false, align: 'left'   },
+    { key: 'Открывание',    label: 'Открывание',    reveal: false, align: 'left'   },
+    { key: 'Цвет',          label: 'Цвет',          reveal: false, align: 'left'   },
+    { key: 'Порог',         label: 'Порог',         reveal: false, align: 'left'   },
+    { key: 'Доводчик',      label: 'Доводчик',      reveal: true,  align: 'left'   },
+    { key: 'Остекление',    label: 'Остекление',    reveal: false, align: 'left'   },
+    { key: 'Вент решетка',  label: 'Вент. решетка', reveal: true,  align: 'left'   },
+    { key: 'Примечание',    label: 'Примечание',    reveal: false, align: 'left'   },
+    { key: 'Кол-во',        label: 'Кол-во',        reveal: false, align: 'center' },
+    { key: 'Портал',        label: 'Портал',        reveal: true,  align: 'left'   },
+    { key: 'Наличник портала', label: 'Нал. портала', reveal: true, align: 'left' },
+    { key: 'Цилиндр',       label: 'Цилиндр',       reveal: false, align: 'left'   },
+    { key: 'Производство',  label: 'Производство', reveal: false, align: 'left'   },
+];
+// Ключи, для которых значение на double двери не хранится как прямое свойство — вычисляется на лету.
+const COMPUTED_GRID_COLS = new Set(['Цвет', 'Остекление', 'Портал']);
+
+// Вычисляет текстовое значение ячейки таблицы для составных/специальных колонок.
+function getGridValue(door, key) {
+    if (key === 'Портал') {
+        const st = door.portalState || 'нет';
+        if (st === 'нет' || !st) return '';
+        if (st === 'подготовка') return 'Подготовка';
+        if (st === 'есть') return door.portalThickness > 0 ? (door.portalThickness + ' мм') : 'Есть';
+        return '';
+    }
+    if (key === 'Цвет') {
+        const vals = ['Цвет короба снаружи', 'Цвет короба внутри', 'Цвет полотна снаружи', 'Цвет полотна внутри']
+            .map(f => (door[f] || '').trim()).filter(v => v !== '');
+        if (vals.length === 0) return '';
+        const allSame = vals.every(v => v === vals[0]);
+        return allSame ? vals[0] : vals.join(' / ');
+    }
+    if (key === 'Остекление') {
+        return (door._visGlazing === true || door._visGlazing === 'true') ? 'Остекление' : '';
+    }
+    return door[key] !== undefined ? door[key] : '';
+}
+
 function renderRightTable() {
     const tbody = document.getElementById("doorsTbody");
-    const INTERNAL_COLS = new Set(['_visGlazing','_visVent','_visCloser','_manualName','_fromProem','_sigInited','doorName','_certTitle']);
-    const baseColumns = ['requestNumber', 'doorPosition', 'naimenovanie', 'doorKey', 'Тип размера', 'Высота', 'Ширина', ...CORE_FIELDS, 'Толщина стены, мм', 'Кол-во', 'Сертификат', 'СТБ'];
-    const extraColumns = Array.from(usedExtraFields).filter(c => !INTERNAL_COLS.has(c));
-    const allColumns = [...baseColumns, ...extraColumns.filter(c => !baseColumns.includes(c))];
 
-    renderColManager(allColumns);
-
-    // Столбцы, во всех дверях заказа полностью пустые (например «Сертификат»/«СТБ» для типов
-    // без сертификации), не рисуем в таблице совсем — согласовано с менеджером столбцов,
-    // где для них тоже не показывается чип: иначе колонка остаётся висеть пустой без способа её скрыть.
-    const autoEmptyCols = computeAutoEmptyColumns(allColumns);
-
-    // Используем columnOrder для порядка столбцов в таблице
-    const orderedAll = columnOrder.length > 0
-        ? columnOrder.filter(c => allColumns.includes(c))
-        : allColumns;
-    // Filter visible columns: скрытые вручную + автоматически скрытые как пустые (если не добавлены вручную)
-    const visibleColumns = orderedAll.filter(col => {
-        if (hiddenColumns.has(col)) return false;
-        if (autoEmptyCols.has(col) && !usedExtraFields.has(col) && !customUserColumns.includes(col)) return false;
-        return true;
+    // Reveal-on-use: столбец с reveal:true показываем только если хотя бы в одной двери
+    // заказа есть непустое значение — иначе столбец остаётся скрытым (как ширина=0 в VBA).
+    const visibleColumns = FIXED_VBA_COLUMNS.filter(col => {
+        if (!col.reveal) return true;
+        return currentDoors.some(d => {
+            const v = getGridValue(d, col.key);
+            return v && v !== '—' && String(v).trim() !== '';
+        });
     });
 
     let headerHtml = `<tr><th>ДЕЙСТВИЯ</th>`;
     for (let col of visibleColumns) {
-        const COL_NAMES = { requestNumber: 'N', doorPosition: 'ПОЗИЦИЯ', naimenovanie: 'НАИМЕНОВАНИЕ', doorKey: 'ТИП', 'Тип размера': 'ТИП РАЗМЕРА' };
-        let name = COL_NAMES[col] || col.toUpperCase();
-        headerHtml += `<th>${escapeHtml(name)}</th>`;
+        headerHtml += `<th>${escapeHtml(col.label)}</th>`;
     }
     headerHtml += `</tr>`;
     document.getElementById("tableHeader").innerHTML = headerHtml;
@@ -3885,27 +4051,21 @@ function renderRightTable() {
             + ` ondragend="rowDragEnd(event)">`;
         bodyHtml += `<td class="door-actions" style="cursor:default;"><button onclick="loadDoorIntoConfigurator(${i})" title="Редактировать в конфигураторе" style="color:#1e6db5;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button onclick="copyRow(${i})" title="Копировать"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button><button onclick="delRow(${i})" title="Удалить" style="color:#c0392b;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button></td>`;
         for (let col of visibleColumns) {
-            let value = d[col] !== undefined ? d[col] : "";
-            const isNum = NUMBER_COLS.has(col);
-            if (col === 'requestNumber') {
-                // Порядковый номер — нередактируемый, серый
+            const key = col.key;
+            const value = getGridValue(d, key);
+            const alignStyle = col.align === 'center' ? 'text-align:center;' : 'text-align:left;';
+            const isNum = NUMBER_COLS.has(key);
+            if (key === 'requestNumber') {
                 bodyHtml += `<td style="cursor:default;font-weight:600;text-align:center;color:#9ca3af;background:#f8fafc;font-size:11px;">${d.requestNumber}</td>`;
-            } else if (col === 'doorPosition') {
-                // Позиция — редактируемый, копируется
-                const pv = d.doorPosition || '';
-                bodyHtml += `<td onclick="makeCellEditable(this,${i},'doorPosition')" title="Клик для редактирования" style="cursor:pointer;text-align:center;" class="editable-cell">${pv ? escapeHtml(pv) : '<span style="color:#cbd5e0">—</span>'}</td>`;
-            } else if (col === 'Тип размера') {
-                // Проём/Коробок — нередактируемый
-                const label = d._fromProem ? 'Проём' : 'Короб.';
-                const color = d._fromProem ? '#b45309' : '#64748b';
-                bodyHtml += `<td style="cursor:default;text-align:center;font-size:11px;color:${color};font-weight:600;">${label}</td>`;
-            } else if (col === 'naimenovanie') {
-                const isManual = d._manualName ? '' : '';
-                bodyHtml += `<td onclick="makeCellEditable(this,${i},'naimenovanie')" title="Клик для редактирования" style="cursor:pointer;text-align:left;font-size:11px;color:#1e3a5f;font-weight:700;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" class="editable-cell">${escapeHtml(String(value))}${isManual}</td>`;
+            } else if (key === 'naimenovanie') {
+                bodyHtml += `<td onclick="makeCellEditable(this,${i},'naimenovanie')" title="Клик для редактирования" style="cursor:pointer;text-align:left;font-size:11px;color:#1e3a5f;font-weight:700;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" class="editable-cell">${escapeHtml(String(value))}</td>`;
+            } else if (COMPUTED_GRID_COLS.has(key)) {
+                // Составные/вычисляемые столбцы — только отображение, редактируются через конфигуратор.
+                bodyHtml += `<td style="cursor:default;${alignStyle}font-size:11px;">${value ? escapeHtml(String(value)) : '<span style="color:#cbd5e0">—</span>'}</td>`;
             } else {
                 const title = isNum ? "Двойной клик для редактирования" : "Клик для редактирования";
-                const event = isNum ? `ondblclick="makeCellEditable(this,${i},'${col}')"` : `onclick="makeCellEditable(this,${i},'${col}')"`;
-                bodyHtml += `<td ${event} title="${title}" style="cursor:pointer;" class="editable-cell">${value ? escapeHtml(String(value)) : '<span style="color:#cbd5e0">—</span>'}</td>`;
+                const event = isNum ? `ondblclick="makeCellEditable(this,${i},'${key}')"` : `onclick="makeCellEditable(this,${i},'${key}')"`;
+                bodyHtml += `<td ${event} title="${title}" style="cursor:pointer;${alignStyle}" class="editable-cell">${value ? escapeHtml(String(value)) : '<span style="color:#cbd5e0">—</span>'}</td>`;
             }
         }
         bodyHtml += `</tr>`;
